@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('无形资产凭证管理','','')">
+
+</head>
+<body>
+<!-- 搜索界面 -->
+
+<div class="easyui-panel" style="height: auto; width:100%;padding: 8px 0px 0px 0px;overflow: hidden;">
+    <form id="serachFrom" method="post" style="margin-bottom:0;">
+        <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="width:12%;text-align: right;" >
+                    <label>无形资产类别:</label>
+                </td>
+                <td style="width:20%;" ondblclick="getAssetType1()">
+                    <input style="width:60%;" id="fixedAssetsType" name="assetType" class="easyui-textbox" editable="false" data-options="prompt: '请输入无形资产类别'">
+                </td>
+                <td style="width:12%;text-align: right;" >
+                    <label>无形资产编码:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:90px;" id="fixedAssetsCode" name="assetCode" class="easyui-textbox asset1"  editable="false" disabled="disabled" data-options="prompt: '请输入无形资产编码',onSelect:compareAssetCode">&nbsp;-&nbsp;
+                    <input style="width:90px;" id="fixedAssetsCodeEnd" name="assetCode1" class="easyui-textbox asset1"  editable="false" disabled="disabled" data-options="prompt: '请输入无形资产编码',onSelect:compareAssetCode">
+                </td>
+                <td style="width:12%;text-align: right;" >
+                    <label>卡片编号:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:90px;" id="cardCode" name="cardCode" class="easyui-textbox card1" data-options="prompt: '卡片编号',validType:['integer','length[0,5]']">&nbsp;-&nbsp;
+                    <input style="width:90px;" id="cardCodeEnd" name="cardCode1" class="easyui-textbox card1" data-options="prompt: '卡片编号' ,validType:['integer','length[0,5]']">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:12%;text-align: right;" >
+                    <label>是否已经生成凭证:</label>
+                </td>
+                <td style="width:15%;">
+                    <input style="width:60%;" id="isNotVoucher" name="isNotVoucher" class="easyui-combobox" editable="false" data-options="prompt: '请选择'">
+                </td>
+                <td style="width:12%;text-align: right;" >
+                    <label>预计使用总量:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:90px;" id="useAmount" name="depYears" class="easyui-textbox" data-options="prompt: '请输入预计使用总量'">&nbsp;-&nbsp;
+                    <input style="width:90px;" id="useAmountMax" name="depYears1" class="easyui-textbox" data-options="prompt: '请输入预计使用总量'">
+                </td>
+                <td style="width:12%;text-align: right;" >
+                    <label>累计摊销额:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:90px;" id="depreciationValue" name="endDepreMoney" class="easyui-numberbox" data-options="prompt: '请输入累计折旧金额',precision:2">&nbsp;-&nbsp;
+                    <input style="width:90px;" id="depreciationValueMax" name="endDepreMoney1" class="easyui-numberbox" data-options="prompt: '请输入累计折旧金额',precision:2">
+                </td>
+            </tr>
+
+            <tr>
+                <td style="width:12%;text-align: right;" >
+                    <label>是否包括已停用卡片:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:60%;" id="stopFlag" name="stopCard" class="easyui-combobox" editable="false" data-options="prompt: '请选择'">
+                </td>
+                <td style="width:12%;text-align: right;" >
+                    <label>启用时间:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:90px;" id="timeStart" name="useStartDate" editable="false" class="easyui-datebox" data-options="prompt: '请输入启用时间', onSelect:onSelect">&nbsp;-&nbsp;
+                    <input style="width:90px;" id="timeEnd" name="useStartDate1" editable="false" class="easyui-datebox" data-options="prompt: '请输入启用时间', onSelect:onSelect">
+                </td>
+                <td style="width:12%;text-align: right;" >
+                    <label>原值:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:90px;" id="originalValue" name="assetOriginValue" class="easyui-numberbox" data-options="prompt: '请输入原值',precision:2">&nbsp;-&nbsp;
+                    <input style="width:90px;" id="originalValueMax" name="assetOriginValue1" class="easyui-numberbox" data-options="prompt: '请输入原值',precision:2">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:12%;text-align: right;" >
+                    <label>是否包括已清理卡片:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:60%;" id="clearFlag" name="cleanCard" class="easyui-combobox"  editable="false" data-options="prompt: '请选择'">
+                </td>
+                <td style="width:12%;text-align: right;" >
+                    <label>摊销至日期:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:60%;" id="depreUtilDate" name="depreUtilDate" editable="false" class="easyui-datebox" data-options="prompt: '请输入摊销至日期'">
+                </td>
+                <td style="width:12%;text-align: right;" >
+                    <label>净值:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:90px;" id="netWeight" name="assetNetValue" class="easyui-numberbox" data-options="prompt: '请输入净值',precision:2">&nbsp;-&nbsp;
+                    <input style="width:90px;" id="netWeightMax" name="assetNetValue1" class="easyui-numberbox" data-options="prompt: '请输入净值',precision:2">
+                </td>
+
+            </tr>
+
+            <tr>
+                <td style="width:12%;text-align: right;" >
+                    <label>变动类型:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:60%;" id="changeType" name="changeType" class="easyui-combobox" editable="false" data-options="prompt: '请选择变动类型'">
+                </td>
+                <td style="width:10%;text-align: right;" >
+                    <label>变动日期:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:60%;" id="changeDate" name="changeDate" class="easyui-datebox" editable="false" data-options="prompt: '请输入变动日期'">
+                </td>
+                <td style="width:12%;text-align: right;" >
+                    <label>变动信息:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:60%;" id="changeMessage" name="changeMessage" class="easyui-combobox" editable="false" data-options="prompt: '请选择变更信息'">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" >
+                    <label>制单人:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:60%;" id="madeBy" name="createOper" class="easyui-textbox" data-options="prompt: '请输入制单人'">
+                </td>
+                <td style="width:12%;text-align: right;" >
+                    <label>使用部门:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:60%;" id="unitCode" name="unitCode" class="easyui-combobox" editable="false" data-options="prompt: '请输入使用部门'">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="8" style="text-align: right; padding-right: 20px;">
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-search'" style="width: 8%;" onclick="serach()" >查询</a>
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-refresh'" style="width: 8%;" onclick="reset()">重置</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-download'" style="width: 8%;" onclick="export_('无形资产凭证管理信息表')">导出</a>
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-print'" style="width: 8%;" onclick="print_()">打印</a>
+                </td>
+            </tr>
+        </table>
+
+    </form>
+    <!-- 展示搜索结果 -->
+    <table id = "sg" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"></table>
+</div>
+
+<!--新建、编辑弹框-->
+<div id="dlg" class="easyui-dialog" style="width: 600px;padding: 10px 20px" align="center"
+     data-options="modal:true,closed:true,resizable:true,maximizable:true"  buttons="#dlg-buttons1">
+    <form id="fm" method="post">
+        <table cellpadding="4" class="tt">
+            <tr bgcolor="#6c90da">
+                <th colspan="4">基本信息</th>
+            </tr>
+            <tr>
+                <td style="width:20%;text-align: right;" class="ttd ltd"><label>卡片编号:</label></td>
+                <td class="ttd rtd" colspan="3">
+                    <input class="easyui-textbox" style="width: 99%;" id="cardCode1" name="cardCode" data-options="prompt:'卡片编号'">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:20%;text-align: right;" class="ttd ltd"><label>无形资产类别<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd" ondblclick="getAssetType()">
+                    <input class="easyui-textbox" id="assetType" name="assetType" required="required" data-options="prompt:'无形资产类别'">
+                </td>
+                <td style="width:20%;text-align: right;" class="ttd ltd"><label>摊销方法:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-combobox" id="depType" name="depType" editable="false" data-options="prompt:'摊销方法'" />
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>无形资产名称<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd">
+                    <input  class="easyui-textbox" id="assetName1" name="assetName" required="required" data-options="prompt:'无形资产名称'">
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>无形资产编号<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id ="assetCode" name="assetCode"  required="required" data-options="prompt:'系统自动生成'" >
+
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>开始使用日期<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-datebox" id="useStartDate" name="useStartDate" required="required" data-options="prompt:'开始使用日期'" />
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>使用状态:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-combobox" editable="false" id="useFlag" name="useFlag" data-options="prompt:'使用状态'" />
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>摊销起始日期:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="depreFromDate" name="depreFromDate" data-options="prompt:'折旧起始日期'" />
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>已摊销至日期:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="depreToDate" name="depreToDate" data-options="prompt:'已折旧至日期'" />
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>期初已摊销月份:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="initDepreAmount" name="initDepreAmount" data-options="prompt:'期初摊销量'" />
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>期初摊销金额:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-numberbox" id="initDepreMoney" name="initDepreMoney" data-options="prompt:'期初摊销金额',groupSeparator:','" />
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>原值(元)<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-numberbox" id="assetOriginValue" name="assetOriginValue" required="required" data-options="prompt:'原值',groupSeparator:','" />
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>进项税额<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-numberbox" id="inputTax" name="inputTax" required="required" data-options="prompt:'系统自动计算',groupSeparator:','" />
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>减值准备<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-numberbox" id="impairment" name="impairment" required="required" data-options="prompt:'减值准备',groupSeparator:','" />
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>无形资产净值:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-numberbox" id="assetNetValue" name="assetNetValue" data-options="prompt:'系统自动计算',groupSeparator:','" />
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>增值税率<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="addedTax" name="addedTax" required="required" data-options="prompt:'增值税率'" />
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>金额<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-numberbox" id="sum" name="sum" required="required" data-options="prompt:'系统自动计算',groupSeparator:','" />
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>预计残值率<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="remainsRate" name="remainsRate" required="required" data-options="prompt:'预计残值率'" />
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>预计残值:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-numberbox" id="remainsValue" name="remainsValue" data-options="prompt:'由系统自动计算',groupSeparator:','" />
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>付款方式<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="payWay" name="payWay" required="required" data-options="prompt:'付款方式'" />
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>付款专项:</label></td>
+                <td class="ttd rtd" ondblclick="treeValue()">
+                    <input class="easyui-textbox" id="payCode" name="payCode" data-options="prompt:'付款专项'" />
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>摊销计提状态:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-combobox" id="depreFlag" name="depreFlag" editable="false" data-options="prompt:'摊销计提状态'" />
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>使用年限(月)<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd">
+                    <input  class="easyui-textbox" id="depYears" name="depYears" required="required" data-options="prompt:'使用年限(月)'">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>凭证号:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="voucherNo" name="voucherNo" data-options="prompt:'凭证号'" />
+                </td>
+            </tr>
+            <!--<tr id="cf" >-->
+                <!--<td style="width:15%;text-align: right;" class="ttd ltd"><label>清理状态:</label></td>-->
+                <!--<td class="ttd rtd">-->
+                    <!--<input class="easyui-combobox" editable="false" id="clearFlag1" name="clearFlag1" data-options="prompt:'清理状态',-->
+                            <!--valueField: 'value',textField: 'text',-->
+                            <!--data: [{value: '',text: '未清理'},{value: '0',text: '未清理'},{value: '1',text: '已清理'}]" />-->
+                <!--</td>-->
+            <!--</tr>-->
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>备注:</label></td>
+                <td class="ttd rtd" colspan="3">
+                    <input class="easyui-textbox" style="width: 100%" id="temp" name="temp" data-options="prompt:'备注'" />
+                </td>
+            </tr>
+            <!--<tr>-->
+            <!--<td style="text-align: right;" class="ttd ltd"><label>期末累计摊销月份:</label></td>-->
+            <!--<td class="ttd rtd">-->
+            <!--<input class="easyui-textbox" id="endDepreAmount" name="endDepreAmount" data-options="prompt:'期末累计摊销月份'" />-->
+            <!--</td>-->
+            <!--<td style="text-align: right;" class="ttd ltd"><label>期末累计摊销金额:</label></td>-->
+            <!--<td class="ttd rtd">-->
+            <!--<input class="easyui-combobox" id="endDepreMoney" name="endDepreMoney" data-options="prompt:'期末累计摊销金额'" />-->
+            <!--</td>-->
+            <!--</tr>-->
+            <tr bgcolor="#6c90da" id="changehg1">
+              <th colspan="4">变动信息</th>
+            </tr>
+        </table>
+          <div id="changehg2"><table id = "cg" class="easyui-datagrid"></table></div>
+    </form>
+    <br>
+    <div id="dlg-buttons1" align="right">
+        <a href="#" id="saveButton" class="easyui-linkbutton" iconCls="e-icon fa fa-save" onclick="saveSpecial()">保存</a>
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-remove" onclick="cancel()">取消</a>
+    </div>
+</div>
+<div id="dlgC"  class="easyui-dialog" style="width: 400px; padding: 10px 20px" align="center"
+     data-options="modal:true,closed:true,resizable:true,maximizable:true"  buttons="#dlg-buttons">
+    <form id="fmC" method="post">
+        <table class="tt">
+            <tr>
+                <td style="width:15%;text-align: right;"><label>制单日期:</label></td>
+                <td style="width:18%;">
+                    <input class="easyui-datebox"  id="voucherDate"  name="voucherDate" editable="false"  style="width:140px;" data-options="prompt:'制单日期',missingMessage:'请输入制单日期'">
+                </td>
+            </tr>
+        </table>
+    </form>
+    <br>
+    <div id="dlg-buttons" align="right">
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-check" onclick="confirmC()">保存</a>
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-remove" onclick="javascript:$('#dlgC').dialog('close')">取消</a>
+    </div>
+</div>
+<div id="intangAssetTypeGrid" class="easyui-dialog" style="width: 40%;top: 25%;padding:10px 10px 10px 10px;" data-options="modal:true,closed:true,resizable:false,collapsible:false,minimizable:false,maximizable:true" buttons="#roleData-buttons1">
+    <div class="easyui-panel" style="width: 100%;">
+        <ul id="intangAssetTypeTree" class="easyui-tree"  data-options="method:'get',animate:true,checkbox:true,onlyLeafCheck:true,cascadeCheck:false"></ul>
+    </div>
+    <div id="roleData-buttons1">
+        <a href="#" class="easyui-linkbutton" iconCls="icon-ok icon-large" onclick="saveSuperType1()">确定</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove icon-large" onclick="javascript:$('#intangAssetTypeGrid').dialog('close')">取消</a>
+
+    </div>
+</div>
+
+<div id="waitMenu" class="easyui-dialog" style="width: 300px; height: 100px; padding: 10px 20px;" closed="true" align="center" data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+    <div id="msg"></div>
+</div>
+
+<script th:src="@{/js/intangiblecardvoucherExport.js}"></script>
+<script th:src="@{/js/windowOpenNewPage.js}"></script>
+<script type="text/javascript">
+    $(function () {
+        $('#sg').datagrid({
+            url: '/intangiblecard/list',
+            striped: true,  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false,
+            method: 'post', //默认为 post
+            pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。默认false
+            //,rownumbers: true //设置为 true，则显示带有行号的列。默认false
+            fitColumns: true,//设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            //,autoRowHeight: true //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能。
+            //   singleSelect: true,//设置为 true，则只允许选中一行。 默认false
+            checkOnSelect: true, //如果设置为 true，当用户点击某一行时，则会选中/取消选中复选框。
+            pagePosition: 'bottom', //定义分页栏的位置。可用的值有：'top'、'bottom'、'both'。 默认 bottom
+            pageList: [10, 20, 30, 40, 50], //当设置了 pagination 属性时，初始化页面尺寸的选择列表。
+            nowrap: true,
+            remoteSort: false,
+            /**
+             * field: 列的字段名
+             * width: 列的宽度。如果未定义，则宽度会自动扩展以适应它的内容。没有定义宽度将会降低性能。
+             * align： 指示如何对齐该列的数据，可以用 'left'、'right'、'center'。 默认undefined
+             * halign：指示如何对齐该列的头部，可能的值：'left'、'right'、'center'。如果没有分配值，则头部对齐方式将与通过 'align' 属性定义的数据对齐方式一致。该属性自版本 1.3.2 起可用。
+             * sortable： 设置为 true，则允许该列被排序。
+             * order：默认的排序顺序，只能用 'asc' 或 'desc'。该属性自版本 1.3.2 起可用。
+             * resizable：设置为 true，则允许该列可调整尺寸。
+             * fixed: 设置为 true，则当 'fitColumns' 设置为 true 时放置调整宽度。
+             * hidden: 设置为 true，则隐藏该列。
+             * checkbox: 设置为 true，则显示复选框。复选框有固定宽度。
+             * formatter: 单元格的格式化函数，需要三个参数：value：字段的值。rowData：行的记录数据。rowIndex：行的索引。
+             */
+            columns: [
+                [
+                    {field: 'ck', checkbox: true,  width: '3%', halign: 'center', align: 'center'}
+                    , {field: 'cardCode', title: '卡片编码', width: '5%', halign: 'center', align: 'center', sortable: 'true', order: 'asc',formatter:function(value,row){
+                        return "<span onclick='checkThat("+JSON.stringify(row)+")' style='cursor:pointer;color:blue;'>"+row.cardCode+"</span>";
+                    }}
+                    ,{field:'voucherNo',title:'凭证号',width:'7%',halign:'center',align:'center',formatter: function(value,row,index){
+                        if (value) {
+                            return "<span style='color: blue; cursor: pointer;' onclick='lookVoucherInfo("+JSON.stringify(row)+")'>" + value + "</span>";
+                        }
+                        return value;},sortable:true, sorter:function(a,b) {return a>b?1:-1
+                    }}
+                    , {field: 'assetCode', title: '无形资产编码', width: '7%', halign: 'center', align: 'center',sortable:true,
+                            sorter:function(a,b) {return a>b?1:-1
+                    }}
+                    , {field: 'assetType', title: '无形资产类别', width: '7%', halign: 'center', align: 'center'}
+                    , {field: 'articleCode1', title: '无形资产专项', width: '4%', halign: 'center', align: 'center'}
+                    , {field: 'assetName', title: '无形资产名称', width: '7%', halign: 'center', align: 'center'}
+                    , {field: 'assetOriginValue', title: '原值', width: '4%', halign: 'center', align: 'right',formatter: function(value,row) {
+                        if(row.assetOriginValue!=null) return formate(value);},sortable:true,
+                        sorter:function(a,b) {return a>b?1:-1
+                    }}
+                    , {field: 'assetNetValue', title: '净值', width: '4%', halign: 'center', align: 'right',formatter: function(value,row) {
+                        if(row.assetNetValue!=null) return formate(value);},sortable:true,
+                         sorter:function(a,b) {return a>b?1:-1
+                    }}
+                    , {field: 'monthDepreMoney', title: '本月摊销金额', width: '8%', halign: 'center', align: 'right',formatter: function(value,row) {
+                        if(row.monthDepreMoney!=null) return formate(value);},sortable:true,
+                        sorter:function(a,b) {return a>b?1:-1
+                    }}
+                    , {field: 'endDepreMoney', title: '累计摊销额', width: '8%', halign: 'center', align: 'right',formatter: function(value,row) {
+                        if(row.endDepreMoney!=null) return formate(value);},sortable:true,
+                            sorter:function(a,b) {return a>b?1:-1
+                    }}
+                    , {field: 'depYears', title: '预计使用总月份', width: '7%', halign: 'center', align: 'right',sortable:true,
+                            sorter:function(a,b) {return a>b?1:-1
+                    }}
+                    , {field: 'endDepreAmount', title: '已摊销月份', width: '8%', halign: 'center', align: 'right',sortable:true,
+                            sorter:function(a,b) {return parseInt(a)>parseInt(b)?1:-1
+                    }}
+                    , {field: 'remainsValue', title: '预计残值', width: '6%', halign: 'center', align: 'right',formatter: function(value,row) {
+                        if(row.remainsValue!=null) return formate(value);},sortable:true,
+                            sorter:function(a,b) {return a>b?1:-1
+                    }}
+                    , {field: 'remainsRate', title: '预计残值率', width: '8%', halign: 'center', align: 'right',formatter: function(value,row) {
+                        if(row.remainsRate!=null) return value.toFixed(4);},sortable:true,
+                            sorter:function(a,b) {return a>b?1:-1
+                    }}
+                    , {field: 'useStartDate', title: '启用日期', width: '6%', halign: 'center', align: 'center',sortable:true,
+                        sorter:function(a,b){ //2019-10-18
+                            a = a.split('-');
+                            b = b.split('-');
+                            if (a[2] == b[2]){
+                                if (a[0] == b[0]){
+                                    return (a[1]>b[1]?1:-1);
+                                } else {
+                                    return (a[0]>b[0]?1:-1);
+                                }
+                            } else {
+                                return (a[2]>b[2]?1:-1);
+                            }
+                    }}
+                    , {field: 'useFlag', title: '状态', width: '4%', halign: 'center', align: 'center',formatter:function (value) {
+                        if (value == '0') {
+                            return "停用";
+                        } else if (value == '1') {
+                            return "使用";
+                        }
+                    }}
+                    , {field: 'temp', title: '备注', width: '6%', halign: 'center', align: 'center'}
+                ]
+            ],
+            /*,toolbar: '#tbar'*/    //通过id选择器引用
+            toolbar: [{
+                text: '生成凭证',
+                iconCls: 'e-icon fa fa-newspaper-o',
+                plain: true,
+                handler: createVoucher
+            },'-'
+                ,{
+                    text: '生账回退',
+                    iconCls: 'e-icon fa fa-mail-reply-all',
+                    plain: true,
+                    handler: revokeVoucher
+                }],
+            loadMsg: '加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        });
+
+        //摊销至日期 事件绑定  用于时间校验
+        $('#depreUtilDate').datebox({
+            onChange:function(n,o){
+                var data = {"depreUtilDate":n};
+                $.post('/intangiblecard/checkDepreToDate', data, function(result){
+                    if(!result.success){
+                        $.messager.alert("提示",result.errorMsg,"error");
+                        $('#depreUtilDate').textbox('setValue',result.data.substring(0,4)+"-"+result.data.substring(4,6)+"-01");
+                        return false;
+                    }
+                },'json');
+            }
+        });
+
+        // 部门
+        $('#unitCode').combobox({
+            valueField:'value',
+            textField:'text',
+            url: '/fixedassetscard/unitCode'
+        });
+
+        //摊销方法
+        $('#depType').combobox({
+            valueField:'value',
+            textField:'text',
+            url: '/codeSelect?type=deprMethod',
+            method:'GET',
+            panelHeight:'60'
+        });
+    });
+    $('#changeMessage').combobox({
+        valueField:'value',
+        textField:'text',
+        url:'/codeSelect?type=changeMessage',
+        method:'GET',
+        panelHeight:'90',
+        // onChange:function(newValue,oldValue){
+        //     if(newValue==1){
+        //         $('#changeDate').combobox('readonly',true);
+        //         $('#changeType').combobox('readonly',true)
+        //     }else{
+        //         $('#changeDate').combobox('readonly',false);
+        //         $('#changeType').combobox('readonly',false)
+        //     }
+        // }
+
+    });
+    $('#isNotVoucher').combobox({
+        valueField:'value',
+        textField:'text',
+        url:'/codeSelect?type=isNotVoucher',
+        method:'GET',
+        panelHeight:'60'
+    });
+    $('#changeType').combobox({
+        valueField:'value',
+        textField:'text',
+        url:'/codeSelect?type=changeType',
+        method:'GET',
+        panelHeight:'90'
+    });
+    $('#stopFlag').combobox({
+        valueField:'value',
+        textField:'text',
+        url:'/codeSelect?type=stopCard',
+        method:'GET',
+        panelHeight:'60'
+    });
+    $('#clearFlag').combobox({
+        valueField:'value',
+        textField:'text',
+        url:'/codeSelect?type=cleanCard',
+        method:'GET',
+        panelHeight:'90'
+    });
+    //摊销计提状态
+    $('#depreFlag').combobox({
+        valueField:'value',
+        textField:'text',
+        url: '/codeSelect?type=deprCalculationFlag',
+        method:'GET',
+        panelHeight:'60'
+    });
+    //无形资产类别
+    $('#assetType').combobox({
+        valueField:'value',
+        textField:'text',
+        url: '/intangiblecard/assetType',
+        onSelect: function (){
+            //自动生成 无形资产编号
+            $('#assetCode').textbox('setValue', $('#assetType').combobox('getValue')+"0001");
+            $('#assetCode').textbox({readonly:true});
+        }
+    });
+    //无形资产类别 双击事件 查询界面
+    function getAssetType1() {
+        var codeValue = "";
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：请稍等');//打开等待窗口
+        //无形资产类别
+        $('#intangAssetTypeTree').tree({
+            url:'/intangiblecard/assetType?value='+encodeURI(codeValue)+'&onlyLastStage=N',
+            onSelect: function (node) {
+                var cknodes = $('#intangAssetTypeTree').tree("getChecked");
+                for (var i = 0; i < cknodes.length; i++) {
+                    if (cknodes[i].id != node.id) {
+                        $('#intangAssetTypeTree').tree("uncheck", cknodes[i].target);
+                    }
+                }
+                if (node.checked) {
+                    $('#intangAssetTypeTree').tree('uncheck', node.target);
+                } else {
+                    $('#intangAssetTypeTree').tree('check', node.target);
+                }
+            },
+            onLoadSuccess: function (node, data) {
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                $('#intangAssetTypeGrid').dialog('open').dialog('setTitle','无形资产类别');
+                $(this).find('span.tree-checkbox').unbind().click(function () {
+                    $('#intangAssetTypeTree').tree('select', $(this).parent());
+                    return false;
+                });
+            }
+        });
+    }
+    //保存树状选择信息 查询界面
+    function saveSuperType1(){
+        var superCode="";
+        var superName="";
+        var nodes = $('#intangAssetTypeTree').tree('getChecked');//获取选中类别信息
+        if (nodes.length>0) {
+            superCode = nodes[0].id;
+            superName = nodes[0].text;
+            $('#fixedAssetsType').textbox("setValue", superCode);
+            $('#intangAssetTypeGrid').dialog('close');
+            $('#fixedAssetsCode').combobox({disabled:false});
+            $('#fixedAssetsCodeEnd').combobox({disabled:false});
+            $('#fixedAssetsCode').combobox({
+                valueField:'value',
+                textField:'text',
+                url:'/intangiblecard/assetcodelist?intangAssetType='+superCode,
+                method:'GET',
+                panelHeight:'100'
+            });
+            $('#fixedAssetsCodeEnd').combobox({
+                valueField:'value',
+                textField:'text',
+                url:'/intangiblecard/assetcodelist?intangAssetType='+superCode,
+                method:'GET',
+                panelHeight:'100'
+            });
+        }else {
+            $('#fixedAssetsType').textbox("setValue", "");
+            $('#intangAssetTypeGrid').dialog('close');
+            $('#fixedAssetsCode').combobox({disabled:true});
+            $('#fixedAssetsCodeEnd').combobox({disabled:true});
+        }
+    }
+    //查看（详情）
+    function checkThat(row) {
+        $('#changehg1').show();
+        $('#changehg2').show();
+        $('#fm').form('clear');
+       // console.log(row);
+        //详情页面赋值
+        $('#fm').find(".easyui-combobox").combobox({readonly:true});
+        $('#fm').find(".easyui-textbox").textbox({readonly:true});
+        $('#fm').find(".easyui-combotree").combotree({readonly:true});
+        row.addedTax = row.addedTax.toFixed(4);
+        row.remainsRate = row.remainsRate.toFixed(4);
+        $('#fm').form('load',row);
+
+        document.getElementById('saveButton').style.display='none';
+        var num1=0;
+        $('#cg').datagrid({
+            url: '/intangiblecard/getChange',
+            queryParams: row,
+            striped:true,
+            method:'post',
+            //   pagination:true,
+            fitColumns:true,
+            singleSelect: false,
+            checkOnSelect:true,
+            //  pagePosition:'bottom',
+            // pageList:[10,20,30,40,50],
+            nowrap:true,
+
+            columns:[
+                [
+                    {field: 'test', title: '序号', width: '8%', align: 'center', formatter: function(value,row) {
+                            num1=parseInt(num1+1);
+                            return num1;
+                        }}
+                    , {field: 'changeTypeName', title: '变动类别', width: '17%', align: 'center'}
+                    , {field: 'changeOldDataName', title: '变动前', width: '20%', align: 'center',formatter:function (value) {
+                        return "<span title='"+value+"'>"+value+"</span>";
+                    }}
+                    , {field: 'changeNewDataName', title: '变动后', width: '20%', align: 'center',formatter:function (value) {
+                        return "<span title='"+value+"'>"+value+"</span>";
+                    }}
+                    , {field: 'changeReason', title: '变动原因', width: '22%', align: 'center',formatter:function (value) {
+                        return "<span title='"+value+"'>"+value+"</span>";
+                    }}
+                    , {field: 'changeDate', title: '变动日期', width: '16%', align: 'center'}
+                ]
+            ],
+            onLoadSuccess: function (data) {
+                if (data.total <= 0) {
+                    $('#changehg1').hide();
+                    $('#changehg2').hide();
+                }
+            },
+            onClickRow: function (rowIndex, rowData) {
+                $(this).datagrid('unselectRow', rowIndex);
+            },
+            loadMsg:'加载中......',
+
+        });
+        $('#dlg').dialog('open').dialog('setTitle','无形资产凭证管理详情展示');
+    }
+
+    //搜索
+    function serach(){
+      /*  if(($("#cardCode").val().length!=5&&$("#cardCode").val()!="") ||($("#cardCodeEnd").val().length!=5&&$("#cardCodeEnd").val()!="")){
+            $.messager.alert('提示','卡片编号请输入长度length为5的数字！','warning');
+            return;
+        }*/
+        if (parseInt($('#cardCode').val()) > parseInt($('#cardCodeEnd').val())) {
+            $.messager.alert('提示', '-卡片编号-请按照从小到大的顺序填写', 'warning');
+            return;
+        }
+        //console.log("--"+$('#originalValue').val()+"="+$('#originalValueMax').val());
+        if(parseFloat($('#originalValue').val())>parseFloat($('#originalValueMax').val())){
+            $.messager.alert('提示','-原值-请按照从小到大的顺序填写','warning');
+            return;
+        }
+        if(parseFloat($('#netWeight').val())>parseFloat($('#netWeightMax').val())){
+            $.messager.alert('提示','-净值请-按照从小到大的顺序填写','warning');
+            return;
+        }
+        if(parseFloat($('#depreciationValue').val())>parseFloat($('#depreciationValueMax').val())){
+            $.messager.alert('提示','-累计摊销额-请按照从小到大的顺序填写','warning');
+            return;
+        }
+        if(parseFloat($('#useAmount').val())>parseInt($('#useAmountMax').val())){
+            $.messager.alert('提示','-预计使用总量-请按照从小到大的顺序填写','warning');
+            return;
+        }
+        var timeStart=$('#timeStart').datebox('getValue');
+        var depreUtilDate=$('#depreUtilDate').datebox('getValue');
+        if(new Date(timeStart).getTime()>new Date(depreUtilDate).getTime()){
+            $.messager.alert('提示','摊销至日期必须大于启用时间起始日期','warning');
+            return;
+        }
+
+            var params = {};
+            $('#serachFrom').find('input').each(function(){
+                var obj = $(this);
+                var name = obj.attr('name');
+                if(name){
+                    params[name] = obj.val();
+                }
+            });
+          /*  //使用参数执行一次查询
+            $("#sg").datagrid({
+                queryParams: params,
+                onLoadSuccess: function(data){
+                    if(data.total<=0)
+                        $.messager.alert("提示","未查询到相关数据","info");
+                }
+            });*/
+        $("#sg").datagrid('load',params);
+
+    }
+    //重置
+    function reset(){
+        $('#serachFrom').form('clear');
+        $('#fixedAssetsCode').combobox({disabled:true});
+        $('#fixedAssetsCodeEnd').combobox({disabled:true});
+    }
+
+    //导出
+    function export_(xlsName){
+        //准备参数
+        var result = prepareParam(xlsName);
+        if (result == "false") {
+            return false;
+        }
+        //使用参数执行一次查询，且将查询数据导出
+        jsutil.core.download(
+            'intangiblecardvoucherdownload',
+            result);
+    }
+
+    //准备参数
+    function prepareParam(xlsName) {
+        var param = {
+            name : xlsName,
+            queryConditions : {},
+            cols : intangiblevoucherExportXls
+        };
+        var grid = $("#sg");
+        var datas = grid.datagrid("getRows");
+        if (datas.length > 0) {
+            //查询之前验证
+            $('#serachFrom').find('input').each(
+                function() {
+                    var obj = $(this);
+                    var name = obj.attr('name');
+                    if (name) {
+                        param.queryConditions[name] = obj.val();
+                    }
+                });
+            return param;
+        } else {
+            $.messager.alert("提示", "请先查询或者没有要导出的数据", "warning");
+            return "false";
+        }
+    }
+    function onClose() {
+        clearInterval(loading);
+    }
+    //等待
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+    var ii = 2;
+    function showalert() {
+        var text = "";
+        var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+
+
+   /* //不加制单日期--生成凭证
+    function createVoucher(){
+        var rows = $('#sg').datagrid('getSelections');//获取所有选中的信息
+        if(rows.length == 0){
+            $.messager.alert('提示','请选择要生成凭证的卡片！','warning');return false;
+        }
+        var codeTypeArr = new Array();
+        var cardCodeArr = new Array();
+        for(var i=0; i<rows.length; i++){
+            if(rows[i].voucherNo!=null&&rows[i].voucherNo!=""){
+                $.messager.alert('提示', '卡片'+rows[i].cardCode+'已生成凭证'+rows[i].voucherNo+'，请勿重复生成！','warning');return false;
+            }
+            codeTypeArr[i] = rows[i].codeType;
+            cardCodeArr[i] = rows[i].cardCode;
+        }
+        var data = [{name:'codeType',value:codeTypeArr.join(',')},{name:'cardCode',value:cardCodeArr.join(',')}];
+        $.messager.confirm('凭证生成','是否将选中记录生成一张凭证',function(r){
+            if(r){
+                $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+                $.ajax({
+                    url:'/intangiblecardvoucher/createVoucher',
+                    data: data,
+                    type: 'POST',
+                    async: false,
+                    success: function(result){
+                        console.log(result);
+                        $('#waitMenu').dialog('close');//关闭等待窗口
+                        if(result.success){//操作成功
+                            $('#sg').datagrid('reload');//操作成功后重新加载页面
+                            $.messager.show({title:'提示',msg:'操作成功'});//给出操作成功提示信息
+                        } else{
+                            $.messager.show({title: '提示' , msg: result.errorMsg });//操作失败，给出失败信息
+                        }
+                    }
+                })
+            }
+        })
+    }*/
+    //加上制单日期--生成凭证
+    var datas=null;
+    function createVoucher(){
+        var rows = $('#sg').datagrid('getSelections');//获取所有选中的信息
+        if(rows.length == 0){
+            $.messager.alert('提示','请选择要生成凭证的卡片！','warning');return false;
+        }
+        var codeTypeArr = new Array();
+        var cardCodeArr = new Array();
+        for(var i=0; i<rows.length; i++){
+            if(rows[i].voucherNo!=null&&rows[i].voucherNo!=""){
+                $.messager.alert('提示', '卡片'+rows[i].cardCode+'已生成凭证'+rows[i].voucherNo+'，请勿重复生成！','warning');return false;
+            }
+            codeTypeArr[i] = rows[i].codeType;
+            cardCodeArr[i] = rows[i].cardCode;
+        }
+        datas = [{name:'codeType',value:codeTypeArr.join(',')},{name:'cardCode',value:cardCodeArr.join(',')}];
+        //打开制单日期页面
+        if(rows.length >0){
+            $('#fmC').form('clear');
+            $('#dlgC').dialog('open').dialog('setTitle','生成凭证');
+            $('#voucherDate').datebox('setValue',date());
+        }
+    }
+    function confirmC(){
+        var datas1=[];
+        for(var i=0;i<datas.length;i++){
+            datas1[i]=datas[i];
+        }
+        var voucherDate=$('#voucherDate').datebox('getValue');
+        datas1.push({name:'createTime',value:voucherDate});
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        $.ajax({
+            url:'/intangiblecardvoucher/createVoucher',
+            data: datas1,
+            type: 'POST',
+            async: false,
+            success: function(result){
+                //console.log(result);
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                if(result.success){//操作成功
+                    $('#dlgC').dialog('close');
+                    $('#sg').datagrid('reload');//操作成功后重新加载页面
+                    $.messager.show({title:'提示',msg:'操作成功'});//给出操作成功提示信息
+                } else{
+                    $.messager.show({title: '提示' , msg: result.errorMsg });//操作失败，给出失败信息
+                }
+            }
+        })
+    }
+    //生账回退
+    function revokeVoucher(){
+        var rows = $('#sg').datagrid('getSelections');//获取所有选中的信息
+        if(rows.length == 0){
+            $.messager.alert('提示','请选择要回退凭证的卡片！','warning');return false;
+        }
+        var codeTypeArr = new Array();
+        var cardCodeArr = new Array();
+        for(var i=0; i<rows.length; i++){
+            if(rows[i].voucherNo==null||rows[i].voucherNo==""){
+                $.messager.alert('提示',rows[i].cardCode+'卡片未生成凭证，无法回退！','warning');return false;
+            }
+            codeTypeArr[i] = rows[i].codeType;
+            cardCodeArr[i] = rows[i].cardCode;
+        }
+        var cardcodess="";
+        console.log(rows);
+        for(var i=0; i<rows.length; i++){
+            if(rows[i].clearFlag=="1"){
+                cardcodess=cardcodess+" "+rows[i].cardCode;
+            }
+        }
+        if(cardcodess!=""){
+            $.messager.alert('提示','卡片'+cardcodess+'已清理，无法回退！','warning');return false;
+        }
+        var data = [{name:'codeType',value:codeTypeArr.join(',')},{name:'cardCode',value:cardCodeArr.join(',')}];
+        $.messager.confirm('凭证回退','是否将包含选中记录的凭证生成操作回退',function(r){
+            if(r){
+                $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+                $.post('/intangiblecardvoucher/revokeVoucher',data,function(result){
+                    $('#waitMenu').dialog('close');//关闭等待窗口
+                    if(result.success){//操作成功
+                        $('#sg').datagrid('reload');//操作成功后重新加载页面
+                        $.messager.show({title:'提示',msg:'操作成功'});//给出操作成功提示信息
+                    } else{
+                        $.messager.alert({title: '提示' , msg: result.errorMsg });//操作失败，给出失败信息
+                    }
+                }, 'json');
+            }
+        })
+    }
+
+    //返回或关闭
+    function cancel() {
+        $('#dlg').dialog('close');
+    }
+
+    //校验
+    function onSelect(d) {
+        var timeStart = $('#timeStart').datebox('getValue');
+        var timeEnd = $('#timeEnd').datebox('getValue');
+        /*
+                var issd = this.id == 'timeStart', timeStart = issd ? d : new Date($('#timeStart').datebox('getValue')), timeEnd = issd ? new Date($('#timeEnd').datebox('getValue')) : d;
+        */
+        if (timeStart != "" && timeEnd != "" && timeEnd < timeStart) {
+            $.messager.alert({title: '提示', msg: "开始日期不能大于结束日期！"});
+            $('#timeEnd').datebox('setValue', '').datebox('showPanel');
+        }
+    };
+    //无形资产编码校验
+    function compareAssetCode() {
+        var start=$('#fixedAssetsCode').combobox('getValue');
+        var end=$('#fixedAssetsCodeEnd').combobox('getValue');
+        if(start>end&&end!=null&&end!=""){
+            $.messager.alert("提示","起始编码不能大于终止编码！","info");
+            //$('#fixedAssetsCode').combobox('setValue','');
+            $('#fixedAssetsCodeEnd').combobox('setValue','');
+        }
+    };
+
+    //查看
+    function lookVoucherInfo(row) {
+        var url = '/voucher/look';
+        addTab(row.voucherNo+'查看', '/voucher/look?voucherNo='+row.voucherNo+'&type='+'CM');
+    }
+
+    function addTab(subtitle, url) {
+        if (!parent.$('#tabs').tabs('exists', subtitle)) {
+            parent.$('#tabs').tabs(
+                'add',
+                {
+                    title: subtitle,
+                    content: createFrame(url),
+                    closable: true,
+                    width: parent.$('#mainPanle').width() - 10,
+                    height: parent.$('#mainPanle').height() - 26
+                });
+        } else {
+            parent.$('#tabs').tabs('select', subtitle);
+        }
+    }
+
+    function createFrame(url) {
+        var s = '<iframe name="mainFrame" fit="true" scrolling="auto" frameborder="0"  overflow-y:"hidden" src="'
+            + url + '" style="width:100%;height:100%;"></iframe>';
+        return s;
+    }
+    function formate(data) {
+        if (data || (data+'')=='0') {
+            return formatNumber(data*1, 2, 1);
+        }
+        return data;
+    }
+    $(function(){
+        // $("#cardCode").textbox('textbox').bind('keyup', function(e){
+        //     $("#cardCode").textbox('setValue', $(this).val().replace(/\D/g,''));
+        // });
+        //
+        // $("#cardCodeEnd").textbox('textbox').bind('keyup', function(e){
+        //     $("#cardCodeEnd").textbox('setValue', $(this).val().replace(/\D/g,''));
+        // });
+        // $("#fixedAssetsCode").textbox('textbox').bind('keyup', function(e){
+        //     $("#fixedAssetsCode").textbox('setValue', $(this).val().replace(/\D/g,''));
+        // });
+        // $("#fixedAssetsCodeEnd").textbox('textbox').bind('keyup', function(e){
+        //     $("#fixedAssetsCodeEnd").textbox('setValue', $(this).val().replace(/\D/g,''));
+        // });
+       /* $("input",$(".card1").next("span")).blur(function(){
+            var cardCode = $("#cardCode").val();
+            var cardCodeEnd = $("#cardCodeEnd").val();
+            if ( cardCodeEnd<cardCode) {
+                alert("请按照从小到大的顺序填写");
+            }
+        });*/
+
+    });
+    function date(){
+        var date=new Date();
+        var str = date.getFullYear()+"-";
+        str += date.getMonth()+1+"-";
+        str += date.getDate()+"-";
+        return str;
+    }
+    //打印
+    function print_() {
+        //先查询出数据
+        var params = {};
+        $('#serachFrom').find('input').each(function () {
+            var obj = $(this);
+            var name = obj.attr('name');
+            if (name) {
+                params[name] = obj.val();
+            }
+        });
+        //使用参数执行一次查询
+        $.ajax({
+            type:"post",
+            url:'/intangiblecard/listPrint',
+            data:params,
+            //  async:false,
+            success:function (result){
+                if(result.total<= 0){
+                    $.messager.alert('提示', '没有可打印的数据！', 'warning');
+                }else{
+                    windowOpenNewPage('/intangiblecardvoucher/print',
+                        params
+                    );
+                }
+            }
+
+        });
+
+    }
+</script>
+
+</body>
+</html>

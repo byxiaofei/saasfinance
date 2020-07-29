@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('损益结转科目设置','','')">
+
+</head>
+<body>
+<!-- 搜索模块 -->
+<div class="easyui-panel"
+     style="height: auto; width:100%;padding: 8px 0px 0px 0px;overflow: hidden;">
+    <form id="searchFrom" method="post" style="margin-bottom:0;">
+        <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="width:10%;text-align: right;" ><label>本年利润科目:</label></td>
+                <td style="width:18%;">
+                    <input style="width:100%;" id="rightsInterestsCodeF" name="rightsInterestsCode" class="easyui-combobox" data-options="prompt: '本年利润科目'">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="8" style="text-align: right; padding-right: 20px;">
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-search'" style="width: 8%;" onclick="searchF()" >查询</a>
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-refresh'" style="width: 8%;" onclick="reset()">重置</a>
+                </td>
+            </tr>
+        </table>
+    </form>
+    <!-- 展示搜索结果 -->
+    <table id = "dg"></table>
+</div>
+
+<!--  编辑/查看弹框界面-->
+<div id="dlg" class="easyui-dialog" style="width: 600px; padding: 10px 15px" align="center"
+     data-options="title:'编辑损益结转科目',modal:true,closed:true"  buttons="#dlg-buttons">
+    <form id="fm" method="post">
+        <table>
+            <tr>
+                <td style="text-align: right;"><label>损益科目代码<!--<span style="color: red">*</span>-->:</label></td>
+                <td>
+                    <input style="width: 95%" class="easyui-textbox" name="profitLossCode" data-options="prompt:'损益科目代码',readonly:true">
+                </td>
+                <td style="text-align: right;"><label>损益科目名称<!--<span style="color: red">*</span>-->:</label></td>
+                <td>
+                    <input style="width: 95%" class="easyui-textbox" name="profitLossCodeName" data-options="prompt:'损益科目名称',readonly:true">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%; text-align: right;"><label>末级标志<!--<span style="color: red">*</span>-->:</label></td>
+                <td style="width:18%">
+                    <input style="width: 95%" class="easyui-textbox" name="endFlag" data-options="prompt:'末级标志',readonly:true">
+                </td>
+                <td style="width:15%; text-align: right;"><label>本年利润科目<span style="color: red">*</span>:</label></td>
+                <td style="width:18%">
+                    <input style="width: 95%" class="easyui-combobox" id="rightsInterestsCode" name="rightsInterestsCode" data-options="prompt:'本年利润科目',required:true,missingMessage:'请选择'">
+                </td>
+            </tr>
+            <tr class="lookTRTD">
+                <td style="text-align: right;"><label>创建人<!--<span style="color: red">*</span>-->:</label></td>
+                <td>
+                    <input style="width: 95%" class="easyui-textbox" name="createByName" data-options="prompt:'创建人',readonly:true">
+                </td>
+                <td style="text-align: right;"><label>创建时间<!--<span style="color: red">*</span>-->:</label></td>
+                <td>
+                    <input style="width: 95%" class="easyui-textbox" name="createTime" data-options="prompt:'创建时间',readonly:true">
+                </td>
+            </tr>
+            <tr class="lookTRTD">
+                <td style="text-align: right;"><label>修改人<!--<span style="color: red">*</span>-->:</label></td>
+                <td>
+                    <input style="width: 95%" class="easyui-textbox" name="lastModifyByName" data-options="prompt:'修改人',readonly:true">
+                </td>
+                <td style="text-align: right;"><label>修改时间<!--<span style="color: red">*</span>-->:</label></td>
+                <td>
+                    <input style="width: 95%" class="easyui-textbox" name="lastModifyTime" data-options="prompt:'修改时间',readonly:true">
+                </td>
+            </tr>
+        </table>
+        <input type='hidden' name="token" value="">
+    </form>
+
+    <div id="dlg-buttons">
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-floppy-o" onclick="save()" id="saveID">保存</a>
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-close" onclick="javascript:$('#dlg').dialog('close')">取消</a>
+    </div>
+</div>
+
+<div id="waitMenu" class="easyui-dialog" style="width: 300px; height: 100px; padding: 10px 20px;" closed="true"
+     align="center" data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+    <div id="msg"></div>
+</div>
+
+</body>
+
+<script type="text/javascript">
+
+    var oldDataAllRowNum = 0;
+    var checkAllFlag = 'uncheck';
+    var rightsInterestsCode = '4103/01/01/';
+    var rightsInterestsCodeName = '本年利润';
+
+    $(function () {
+        $('#dg').datagrid({
+            /*url: '/profitlosscarrydownsubject/list',*/
+            striped: true,  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false,
+            method: 'post', //默认为 post
+            rownumbers: true,//如果为true，则显示一个行号列。
+            //pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。默认false
+            fitColumns: true,//设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            singleSelect: true,//设置为 true，则只允许选中一行。 默认false
+            //checkOnSelect: true, //如果设置为 true，当用户点击某一行时，则会选中/取消选中复选框。
+            //pagePosition: 'bottom', //定义分页栏的位置。可用的值有：'top'、'bottom'、'both'。 默认 bottom
+            //pageList: [10, 20, 30, 40, 50], //当设置了 pagination 属性时，初始化页面尺寸的选择列表。
+            nowrap: false,
+            columns: [
+                [
+                    {field: 'profitLossCode', title: '损益科目代码', width: '18%', align: 'left', halign: 'center', formatter: function(value,row,index){
+                        return "<span style='color: blue; cursor: pointer;' onclick='lookInfo("+JSON.stringify(row)+")'>" + value + "</span>";
+                    }},
+                    {field: 'profitLossCodeName', title: '损益科目名称', width: '32%', align: 'left', halign: 'center'},
+                    {field: 'endFlag', title: '末级标志', width: '8%', align: 'center', halign: 'center'},
+                    {field: 'rightsInterestsCodeName', title: '本年利润科目', width: '27%', align: 'left', halign: 'center'},
+                    {field: 'rightsInterestsCode', title: '操作', width: '14%', align: 'center', halign: 'center', formatter: function(value,row,index){
+                        return "<button class='sino-btn sino sino-btn-xs' onclick='editInfo("+JSON.stringify(row)+")'>编辑</button>";
+                    }}
+                ]
+            ],
+            toolbar: [
+                /*{
+                    id: 'uncheckToolbar',
+                    text: '默认选择本年利润科目为决算科目',
+                    iconCls: 'e-icon fa fa-square-o',
+                    plain: true,
+                    handler: function(){
+                        checkAll();
+                    }
+                }, '-',
+                {
+                    id: 'checkToolbar',
+                    text: '默认选择本年利润科目为决算科目',
+                    iconCls: 'e-icon fa fa-check-square-o',
+                    plain: true,
+                    handler: function(){
+                        checkAll();
+                    }
+                }, '-',*/
+                {
+                    id: 'saveAllToolbar',
+                    text: '默认设置',
+                    /*iconCls: 'e-icon fa fa-floppy-o',*/
+                    iconCls: 'e-icon fa fa-wrench',
+                    plain: true,
+                    handler: function(){
+                        saveAll();
+                    }
+                }
+            ],
+            loadMsg: '加载中...',  //当从远程站点加载数据时，显示的提示消息。
+            onLoadSuccess: function(data){
+                if(data.total<1) {
+                    oldDataAllRowNum = 0;
+                    $.messager.show({
+                        title:'消息提示',
+                        msg:'未查到匹配数据',
+                        timeout:5000,
+                        showType:'slide'
+                    });
+                } else {
+                    oldDataAllRowNum = data.total;
+                    datagridToolbarAssignIdHide('checkToolbar');
+                }
+                //$('#dg').datagrid('resize');
+            }
+        });
+
+        $('#rightsInterestsCodeF').combobox({
+            valueField:'value',
+            textField:'text',
+            url: '/profitlosscarrydownsubject/combobox?type=rightsInterestsCodeNotSet',
+            method:'GET',
+            editable:false
+        });
+        $('#rightsInterestsCode').combobox({
+            valueField:'value',
+            textField:'text',
+            url:'/profitlosscarrydownsubject/combobox?type=rightsInterestsCode',
+            method:'GET',
+            editable:false
+        });
+
+        searchF();
+    });
+
+    function editInfo(row) {
+        //获取token,防止表单重复提交
+        jsutil.tool.refreshToken('',$('#fm').find('input[name="token"]'));
+
+        $('#rightsInterestsCode').combobox({
+            valueField:'value',
+            textField:'text',
+            url:'/profitlosscarrydownsubject/combobox?type=rightsInterestsCode',
+            method:'GET',
+            editable:false
+        });
+
+        $(".lookTRTD").hide();
+        $("#saveID").show();
+        $('#rightsInterestsCode').combobox({required:true}).combobox({readonly:false});
+        $('#dlg').window('center');//使Dialog居中显示
+        $('#dlg').dialog('open').dialog('setTitle','编辑损益结转科目');
+
+        $('#fm').form('clear'); //clear对readonly有影响，clear放在readonly后input显示为灰色；celar放在readonly之前无颜色变化，看不出只读
+
+        $('#fm').form('load', row)
+        url = '/profitlosscarrydownsubject/save';
+    }
+
+    function lookInfo(row) {
+        $(".lookTRTD").show();
+        $("#saveID").hide();
+        $('#rightsInterestsCode').combobox({required:false}).combobox({readonly:true});
+        $('#dlg').window('center');//使Dialog居中显示
+        $('#dlg').dialog('open').dialog('setTitle','查看损益结转科目');
+
+        $('#fm').form('clear'); //clear对readonly有影响，clear放在readonly后input显示为灰色；celar放在readonly之前无颜色变化，看不出只读
+
+        $('#fm').form('load', row)
+        $('#rightsInterestsCode').combobox('setText',row.rightsInterestsCodeName);
+    }
+
+    function save(){
+        //表单数据序列化  jquery的方法
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        if($('#fm').form('validate')){
+            var data = $('#fm').serialize();
+            $.ajax({
+                type: 'POST'  //默认值:"GET")。请求方式("POST" 或 "GET")，默认为"GET"。注意：其它HTTP请求方法，如PUT和DELETE也可以使用，但仅部分浏览器支持。
+                ,url: url
+                ,data: data //发送到服务器的数据。将自动转换为请求字符串格式。
+                ,dataType: 'json'
+                ,success: function(result){
+                    $('#waitMenu').dialog('close');//关闭等待窗口
+                    if(result.success){
+                        $.messager.alert('提示','操作成功！', 'info');
+                        $('#dlg').dialog('close');
+                        $('#dg').datagrid('reload');
+                    }else{
+                        $.messager.alert('提示',result.errorMsg,'error');
+                    }
+                }
+                ,error: function(xmlHttpRequest , msg){
+
+                }
+            });
+        }else{
+            return false;
+        }
+    }
+
+    function saveAll(){
+        var rows = $('#dg').datagrid('getRows');
+        if (rows.length>0) {
+            var name1 = '本页全部损益科目';
+            var name2 = rightsInterestsCodeName+'('+rightsInterestsCode+')';
+            $.messager.confirm('提示','确认将<span style="color: red;">'+name1+'</span>结转至<span style="color: red;">'+name2+'</span>科目吗？',function(r){
+                if (r) {
+                    $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+                    var profitLossCodes = '';
+                    for (var i=0;i<rows.length;i++) {
+                        profitLossCodes += rows[i].profitLossCode + ','
+                    }
+                    profitLossCodes = profitLossCodes.substring(0, profitLossCodes.length-1);
+                    $.ajax({
+                        url:'/profitlosscarrydownsubject/saveAll',
+                        type:'post',
+                        data:{'profitLossCodes':profitLossCodes, 'rightsInterestsCode': rightsInterestsCode},
+                        dataType:'json',
+                        success:function(result) {
+                            $('#waitMenu').dialog('close');//关闭等待窗口
+                            if (result.success) {
+                                //$.messager.alert('提示','操作成功！', 'info');
+                                $.messager.show({ title:'提示', msg:'操作成功！', timeout:3000, showType:'slide' });
+                                $('#dg').datagrid('reload');
+                            } else {
+                                $.messager.alert('提示',result.errorMsg,'error');
+                            }
+                        },
+                        error: function(xmlHttpRequest , msg){
+
+                        }
+                    });
+                }
+            });
+        } else {
+            $.messager.alert('提示','无需要保存的数据！','error');
+        }
+
+        /*if (checkAllFlag == 'uncheck') {
+            //非默认选择本年利润科目为决算科目
+            $.messager.alert('提示','未选择默认本年利润科目为决算科目<br/>此操作无意义','error');
+        } else {
+            var rows = $('#dg').datagrid('getRows');
+            if (rows.length>0) {
+                //校验数据完整性
+                for (var i=0;i<rows.length;i++) {
+                    if (!rows[i].rightsInterestsCode) {
+                        $.messager.alert('提示','第'+(i+1)+'行无本年利润科目数据','error');
+                        return false;
+                    }
+                }
+
+                $.ajax({
+                    url:'/profitlosscarrydownsubject/saveAll',
+                    type:'post',
+                    data:{dataAll: JSON.stringify(rows)},
+                    dataType:'json',
+                    success:function(result) {
+                        if (result.success) {
+                            $.messager.alert('提示','操作成功！', 'info');
+                            $('#dg').datagrid('reload');
+                        } else {
+                            $.messager.alert('提示',result.errorMsg,'error');
+                        }
+                    },
+                    error: function(xmlHttpRequest , msg){
+
+                    }
+                });
+            } else {
+                $.messager.alert('提示','无需要保存的数据！','error');
+            }
+        }*/
+    }
+
+    function checkAll(){
+        if (checkAllFlag == 'uncheck') {
+            datagridToolbarAssignIdHide('uncheckToolbar');
+            datagridToolbarAssignIdShow('checkToolbar');
+            checkAllFlag = 'check';
+
+            //勾选默认选择本年利润科目为决算科目
+            //更新本地数据，非远程数据
+            for (var i=0;i<oldDataAllRowNum;i++) {
+                $('#dg').datagrid('updateRow',{
+                    index: i,
+                    row: {
+                        rightsInterestsCode: rightsInterestsCode,
+                        rightsInterestsCodeName: rightsInterestsCodeName
+                    }
+                });
+            }
+        } else if (checkAllFlag == 'check') {
+            datagridToolbarAssignIdHide('checkToolbar');
+            datagridToolbarAssignIdShow('uncheckToolbar');
+            checkAllFlag = 'uncheck';
+
+            //去勾选默认选择本年利润科目为决算科目
+            searchF();
+        }
+    }
+
+    //隐藏指定ID的 datagrid toolbar 按钮
+    function datagridToolbarAssignIdHide(assignId) {
+        //获取所有的toolbar按钮
+        var button=$('div.datagrid div.datagrid-toolbar a');
+        //如果按钮都没权限，若都需要隐藏，可直接隐藏toolbar eg：$('div.datagrid div.datagrid-toolbar').hide();
+        for (var i = 0; i < button.length; i++) {
+            if (button[i].id == assignId) {
+                //隐藏第 i 个按钮
+                $('div.datagrid div.datagrid-toolbar a').eq(i).hide();
+                //隐藏第 i 条分隔线
+                $('div.datagrid-toolbar div').eq(i).hide();
+
+                break;// break 退出当前循环，continue 退出本次循环，return 直接结束当前方法
+            }
+        }
+    }
+    //显示指定ID的 datagrid toolbar 按钮
+    function datagridToolbarAssignIdShow(assignId) {
+        //获取所有的toolbar按钮
+        var button=$('div.datagrid div.datagrid-toolbar a');
+        for (var i = 0; i < button.length; i++) {
+            if (button[i].id == assignId) {
+                //显示第 i 个按钮
+                $('div.datagrid div.datagrid-toolbar a').eq(i).show();
+                //显示第 i 条分隔线
+                $('div.datagrid-toolbar div').eq(i).show();
+                break;// break 退出当前循环，continue 退出本次循环，return 直接结束当前方法
+            }
+        }
+    }
+
+    //重置
+    function reset() {
+        $('#searchFrom').form('clear');
+    }
+    //搜索
+    function searchF() {
+        if ($('#searchFrom').form('validate')) {
+            var params = {};
+            $('#searchFrom').find('input').each(function(){
+                var obj = $(this);
+                var id =obj.attr('name');
+                if(id){
+                    if(obj.val()!=""){
+                        params[id]=obj.val();
+                    }
+                }
+            });
+            //使用参数执行一次查询
+            $("#dg").datagrid({
+                url: '/profitlosscarrydownsubject/list',
+                queryParams: params,
+                onLoadSuccess: function(data){
+                    if(data.total<=0) {
+                        oldDataAllRowNum = 0;
+                        $.messager.alert("提示","未查询到相关数据","info");
+                    } else {
+                        oldDataAllRowNum = data.total;
+                        datagridToolbarAssignIdHide('checkToolbar');
+                    }
+                }
+            });
+        }
+    }
+
+    //等待
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+    var ii = 2;
+    function showalert() {
+        var text = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+    function onClose() {
+        clearInterval(loading);
+    }
+
+</script>
+</html>

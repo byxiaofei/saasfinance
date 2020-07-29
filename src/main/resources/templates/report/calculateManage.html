@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('计算管理','','')">
+
+</head>
+<body>
+<div class="easyui-panel" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+    <!-- 筛选条件 -->
+    <form id="searchForm" method="post" style="margin-bottom: 0">
+        <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="width:8%;text-align: right;" >
+                    <label>账套:</label>
+                </td>
+                <td style="width:13%;">
+                    <input style="width:100%;" id="accBookCode" name="accBookCode" class="easyui-combobox" data-options="prompt: '账套',required:true,editable:false">
+                </td>
+                <td style="width:8%;text-align: right;" >
+                    <label>版本号:</label>
+                </td>
+                <td style="width:13%;">
+                    <input style="width:100%;" id="version" name="version" class="easyui-combobox" data-options="prompt: '版本号',required:true,editable:false">
+                </td>
+                <td style="width:8%;text-align: right;" >
+                    <label>报表名称:</label>
+                </td>
+                <td colspan="2">
+                    <input style="width:50%;" id="reportCode"  name="reportCode" class="easyui-combobox" data-options="prompt: '报表名称',required:true,disabled:true,editable:false">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7" style="text-align: right; padding-right: 20px" >
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="searchF()"  data-options="iconCls:'e-icon fa fa-search'" style="width:8%;">查询</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="create()" data-options="iconCls:'e-icon fa fa-refresh'" style="width:11%;">生成新版本</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="resetF()" data-options="iconCls:'e-icon fa fa-refresh'" style="width:8%;">重置</a>
+                </td>
+            </tr>
+        </table>
+    </form>
+
+    <table id="dynamictDatagridList" class="easyui-datagrid" toolbar="#toolbar" title="报表计算逻辑" style="width:auto;height:auto"
+           data-options="singleSelect:true,autoRowHeight:true,nowrap:false,fitColumns:false,closed:true">
+    </table>
+    <div id="toolbar">
+        <a href="#"class="easyui-linkbutton" iconCls="icon-edit icon-large" plain="true" onclick="vindivate()">公式维护</a>
+    </div>
+</div>
+<!--  新增弹框界面-->
+<div id="dlg1" class="easyui-dialog" style="width: 800px; padding: 10px 20px" align="center"
+     data-options="title:'公式维护',modal:true,closed:true"  buttons="#dlg1-buttons">
+    <form id="fm1" method="post">
+        <table>
+            <tr>
+                <td style="text-align: right;"><label>项目:</label></td>
+                <td><input type="text"  name="name1" class="easyui-textbox" /></td>
+                <td style="text-align: right;"><label>行次:</label></td>
+                <td><input  type="text"  name="name2" class="easyui-textbox"  /></td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>本月数逻辑:</label></td>
+                <td colspan="3"><textarea name="name3" class="easyui-validatebox" disabled=true style="width: 600px; height: 60px;"></textarea></td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>计算公式:</label></td>
+                <td colspan="3"><textarea name="name3k" class="easyui-validatebox" style="width: 600px; height: 30px;"></textarea></td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>计算因子:</label></td>
+                <td colspan="3"><textarea name="name3v" class="easyui-validatebox" style="width: 600px; height: 30px;"></textarea></td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>本年累计逻辑:</label></td>
+                <td colspan="3"><textarea name="name4" class="easyui-validatebox" disabled=true style="width: 600px; height: 60px;"></textarea></td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>计算公式:</label></td>
+                <td colspan="3"><textarea name="name4k" class="easyui-validatebox" style="width: 600px; height: 30px;"></textarea></td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>计算因子:</label></td>
+                <td colspan="3"><textarea name="name4v" class="easyui-validatebox" style="width: 600px; height: 30px;"></textarea></td>
+            </tr>
+        </table>
+        <input type='hidden' name="accBookCode" value="">
+        <input type='hidden' name="accBookType" value="">
+        <input type='hidden' name="reportCode" value="">
+        <input type='hidden' name="version" value="">
+        <input type='hidden' name="number" value="">
+        <input type='hidden' name="token" value="">
+    </form>
+    <div id="dlg1-buttons">
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-floppy-o" onclick="saveCal(1)">保存</a>
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-close" onclick="javascript:$('#dlg1').dialog('close')">取消</a>
+    </div>
+</div>
+<!--  新增弹框界面-->
+<div id="dlg2" class="easyui-dialog" style="width: 800px; padding: 10px 20px;top:100px; left:200px;" align="center"
+     data-options="title:'公式维护',modal:true,closed:true"  buttons="#dlg2-buttons">
+    <form id="fm2" method="post">
+        <table>
+            <tr>
+                <td style="text-align: right;"><label>资产:</label></td>
+                <td><input type="text"  name="name1" class="easyui-textbox" /></td>
+                <td style="text-align: right;"><label>行次:</label></td>
+                <td><input  type="text"  name="name2" class="easyui-textbox"  /></td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>期初数逻辑:</label></td>
+                <td colspan="3"><textarea name="name3" class="easyui-validatebox" disabled=true style="width: 600px; height: 60px;"></textarea></td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>计算公式:</label></td>
+                <td colspan="3"><textarea name="name3k" class="easyui-validatebox" style="width: 600px; height: 30px;"></textarea></td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>计算因子:</label></td>
+                <td colspan="3"><textarea name="name3v" class="easyui-validatebox" style="width: 600px; height: 30px;"></textarea></td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>期末数逻辑:</label></td>
+                <td colspan="3"><textarea name="name4" class="easyui-validatebox" disabled=true style="width: 600px; height: 60px;"></textarea></td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>计算公式:</label></td>
+                <td colspan="3"><textarea name="name4k" class="easyui-validatebox" style="width: 600px; height: 30px;"></textarea></td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>计算因子:</label></td>
+                <td colspan="3"><textarea name="name4v" class="easyui-validatebox" style="width: 600px; height: 30px;"></textarea></td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>负债及所有者权益:</label></td>
+                <td><input type="text"  name="name5" class="easyui-textbox" /></td>
+                <td style="text-align: right;"><label>行次:</label></td>
+                <td><input  type="text"  name="name6" class="easyui-textbox"  /></td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>期初数逻辑:</label></td>
+                <td colspan="3"><textarea name="name7" class="easyui-validatebox" disabled=true style="width: 600px; height: 60px;"></textarea></td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>计算公式:</label></td>
+                <td colspan="3"><textarea name="name7k" class="easyui-validatebox" style="width: 600px; height: 30px;"></textarea></td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>计算因子:</label></td>
+                <td colspan="3"><textarea name="name7v" class="easyui-validatebox" style="width: 600px; height: 30px;"></textarea></td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>期末数逻辑:</label></td>
+                <td colspan="3"><textarea name="name8" class="easyui-validatebox" disabled=true style="width: 600px; height: 60px;"></textarea></td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>计算公式:</label></td>
+                <td colspan="3"><textarea name="name8k" class="easyui-validatebox" style="width: 600px; height: 30px;"></textarea></td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>计算因子:</label></td>
+                <td colspan="3"><textarea name="name8v" class="easyui-validatebox" style="width: 600px; height: 30px;"></textarea></td>
+            </tr>
+        </table>
+        <input type='hidden' name="accBookCode" value="">
+        <input type='hidden' name="accBookType" value="">
+        <input type='hidden' name="reportCode" value="">
+        <input type='hidden' name="version" value="">
+        <input type='hidden' name="number" value="">
+        <input type='hidden' name="token" value="">
+    </form>
+    <div id="dlg2-buttons">
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-floppy-o" onclick="saveCal(2)">保存</a>
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-close" onclick="javascript:$('#dlg2').dialog('close')">取消</a>
+    </div>
+</div>
+</body>
+<script>
+    $(function() {
+
+        $('#version').combobox({
+            url:'/codeSelect?type=version',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#accBookCode').combobox({
+            data: [{
+                text: '行政账套',
+                value: '000001'
+            },{
+                text: '基金财产险账套',
+                value: '000002'
+            },{
+                text: '基金人身险账套',
+                value: '000003'
+            }],
+            valueField:'value',
+            textField:'text',
+            onChange:function(newValue,oldValue){
+                $('#reportCode').combobox({
+                    disabled:false,
+                    url: '/codeSelect/hasParam?type=zdyReportName&param='+newValue,
+                    method:'GET',
+                    valueField:'value',
+                    textField:'text'
+                });
+            }
+        });
+    });
+    //搜索
+    function searchF() {
+        if(!$('#searchForm').form('validate')){
+            $.messager.show({
+                title : '提示',
+                msg : '请填写必输项',
+                timeout:2000
+            });
+            return false;
+        }
+        $('#dynamictDatagridList').datagrid({
+            closed: false
+        });
+        var params = {};
+        $('#searchForm').find('input').each(function () {
+            var obj = $(this);
+            var name = obj.attr('name');
+            if (name) {
+                params[name] = obj.val();
+            }
+        });
+        $.ajax({
+            url: "/calculateManage/getZDYRepotHead", //获取表头
+            type: 'post',
+            dataType: 'json',
+            data:params,
+            success: function (data) {
+                var msg = JSON.parse(data.obj);
+                console.log(msg.title);
+                $("#dynamictDatagridList").datagrid({
+                    columns: msg.title    //动态取标题
+                });
+            }
+        });
+       $('#dynamictDatagridList').datagrid({
+            url: '/calculateManage/ZDYlist',
+            queryParams: params
+        });
+    }
+
+    //重置
+    function resetF(){
+        $('#searchForm').form("clear");
+    }
+    function vindivate() {
+        var rows = $('#dynamictDatagridList').datagrid('getSelections');
+        if (rows.length == 0 || rows.length > 1) {
+            $.messager.alert('提示', '请选择一个指标进行公式维护!', 'info');
+            return;
+        }
+        console.log(rows[0])
+        var reportCode=$('#reportCode').combobox('getValue');
+        if(reportCode=="3#1"||reportCode=="3#2"||reportCode=="3#3"){
+            $('#dlg2').dialog('open').dialog('setTitle','公式维护');
+            $('#fm2').form('clear');
+            $('#fm2').form('load', rows[0]);
+        }else if(reportCode=="4#1"||reportCode=="4#2"||reportCode=="4#3"){
+            $('#dlg1').dialog('open').dialog('setTitle','公式维护');
+            $('#fm1').form('clear');
+            $('#fm1').form('load', rows[0]);
+        }else{
+            $.messager.alert('提示', '请选择正确的报表!', 'info');
+        }
+    }
+    function saveCal(type) {
+        if(type==1){
+            if($('#fm1').form('validate')){
+                var data = $('#fm1').serialize();
+                $.ajax({
+                    type: 'POST'
+                    ,url: '/calculateManage/checkFormula'
+                    ,data: data
+                    ,dataType: 'json'
+                    ,success: function(result){
+                        if(result.success){
+                            $.ajax({
+                                type: 'POST'
+                                ,url: '/calculateManage/saveZDYCal'
+                                ,data: data
+                                ,dataType: 'json'
+                                ,success: function(result){
+                                    if(result.success){
+                                        $.messager.alert('提示','操作成功！', 'info');
+                                        $('#dlg1').dialog('close');
+                                        $('#dynamictDatagridList').datagrid('reload');
+                                    }else{
+                                        $.messager.alert('提示',result.errorMsg,'error');
+                                    }
+                                }
+                            });
+                        }else{
+                            $.messager.alert('提示',result.errorMsg,'error');
+                        }
+                    }
+                });
+            }else{
+                return false;
+            }
+        }else{
+            if($('#fm2').form('validate')){
+                var data = $('#fm2').serialize();
+                $.ajax({
+                    type: 'POST'
+                    ,url: '/calculateManage/checkFormula'
+                    ,data: data
+                    ,dataType: 'json'
+                    ,success: function(result){
+                        if(result.success){
+                            $.ajax({
+                                type: 'POST'
+                                ,url: '/calculateManage/saveZDYCal'
+                                ,data: data
+                                ,dataType: 'json'
+                                ,success: function(result){
+                                    if(result.success){
+                                        $.messager.alert('提示','操作成功！', 'info');
+                                        $('#dlg2').dialog('close');
+                                        $('#dynamictDatagridList').datagrid('reload');
+                                    }else{
+                                        $.messager.alert('提示',result.errorMsg,'error');
+                                    }
+                                }
+                            });
+                        }else{
+                            $.messager.alert('提示',result.errorMsg,'error');
+                        }
+                    }
+                });
+            }else{
+                return false;
+            }
+        }
+    }
+    function create() {
+        var version=$('#version').combobox('getValue');
+        if(version==null||version==""){
+            $.messager.show({
+                title : '提示',
+                msg : '请选择版本号！',
+                timeout:2000
+            });
+            return false;
+        }
+        var params = {};
+        $('#searchForm').find('input').each(function () {
+            var obj = $(this);
+            var name = obj.attr('name');
+            if (name) {
+                params[name] = obj.val();
+            }
+        });
+        $.messager.confirm('生成新版本','确认要按照选择版本再生成一个新版本么?',function(r){
+            if(r){
+                $.ajax({
+                    type: 'POST'
+                    ,url: '/calculateManage/createNewZDY'
+                    ,data: params
+                    ,dataType: 'json'
+                    ,success: function(result){
+                        if(result.success){
+                            $.messager.alert('提示','操作成功，请刷新页面！', 'info');
+                        }else{
+                            $.messager.alert('提示',result.errorMsg,'error');
+                        }
+                    }
+                });
+            }
+        });
+
+    }
+</script>
+</html>

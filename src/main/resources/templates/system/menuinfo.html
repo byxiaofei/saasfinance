@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('菜单管理','','')">
+
+</head>
+<body>
+    <!-- 表格显示  -->
+    <div id = "dg"></div>
+
+    <!-- 新增、编辑弹框 -->
+    <div id="dlg" class="easyui-dialog" style="width:400px;padding:10px 20px;"
+         closed="true" buttons="#dlg-buttons" align="center">
+        <form id="fm" method="post">
+            <table cellpadding="5" class="tt">
+                <tr>
+                    <td class="ttd ltd" style="text-align: right;"><label>父菜单</label></td>
+                    <td class="ttd rtd">
+                        <input  id="cc" class="easyui-combotree" data-options="prompt:'父菜单'"/>
+                        <input type="hidden" id="superMenu" name="superMenu">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="ttd ltd" style="text-align: right;"><label>菜单ID</label></td>
+                    <td class="ttd rtd">
+                        <input class="easyui-textbox easyui-validatebox" name="id" id="id" type="text" data-options="prompt:'菜单ID',required:true,missingMessage:'请填写菜单ID'"><span class="primary-tooltip"></span>
+                        &nbsp;
+                        <font color="red">*</font>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="ttd ltd" style="text-align: right;"><label>菜单名称</label></td>
+                    <td class="ttd rtd">
+                        <input class="easyui-textbox easyui-validatebox" type="text"  name="menuName" id="menuName" data-options="prompt:'菜单名称',required:true,missingMessage:'请填写菜单名称'">
+                        &nbsp;
+                        <font color="red">*</font>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="ttd ltd" style="text-align: right;"><label>菜单编码</label></td>
+                    <td class="ttd rtd">
+                        <input class="easyui-textbox easyui-validatebox"  type="text" name="menuCode" id="menuCode" data-options="prompt:'菜单编码',required:true,missingMessage:'请填写菜单编码'">
+                        &nbsp;
+                        <font color="red">*</font>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="ttd ltd" style="text-align: right;"><label>菜单排序</label></td>
+                    <td class="ttd rtd">
+                        <input class="easyui-textbox"  type="text" name="menuOrder" id="menuOrder" data-options="prompt:'菜单排序'">
+                    </td>
+                    <!--<td class="ttd ltd" style="text-align: right;"><label>菜单图片</label></td>
+                    <td class="ttd rtd">
+                                <span class="l-btn-left l-btn-icon-left ">
+                                    <span class="l-btn-text l-btn-empty">&nbsp;</span>
+                                    <span class="l-btn-icon showIcon">&nbsp;</span>
+                                </span>
+                        <input type="hidden"  name="menuIcon" id="menuIcon">
+                        <a href="#" class="easyui-linkbutton"  onclick="browseImage()">浏览图片</a>
+                    </td>-->
+                </tr>
+                <tr>
+                    <td class="ttd ltd" style="text-align: right;"><label>菜单URL</label></td>
+                    <td class="ttd rtd">
+                        <input class="easyui-textbox" style="height:40px; width: 250px;" name="script" id="script"data-options="prompt:'菜单url',multiline:true">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="ttd ltd" style="text-align: right;"><label>菜单描述</label></td>
+                    <td class="rtd"><input class="easyui-textbox" style="height:60px; width: 250px;" name="temp" id="temp" data-options="prompt: '菜单描述',multiline:true"></td>
+                </tr>
+            </table>
+            <input type="hidden" name="token" value="">
+        </form>
+    </div>
+    <div id="dlg-buttons">
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-floppy-o " onclick="saveMenu()">保存</a>
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-close" onclick="javascript:$('#dlg').dialog('close')">取消</a>
+    </div>
+
+    <!-- 浏览图片弹框 -->
+    <div id="brimg" class="easyui-dialog" style="width:300px;height:200px;padding:10px 20px;"
+         closed="true"  align="center">
+        <form id="imgfm" method="post">
+            <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-folder-open-o" plain="true" onclick="getIcon(this)"></a>
+            <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-plus" plain="true" onclick="getIcon(this)"></a>
+            <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-check" plain="true" onclick="getIcon(this)"></a>
+            <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-server" plain="true" onclick="getIcon(this)"></a>
+        </form>
+    </div>
+
+<script type="text/javascript">
+    var dialogType="";
+    $(function(){
+        $('#dg').treegrid({
+            url: '/menuinfo/listall',
+            collapsible: false,
+            animate: true,
+            idField: 'id',
+            treeField: 'menuName',
+            rownumbers: false,
+            fitColumns: true,
+            state: "closed",
+            striped: true,  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false
+            method: 'post',  //默认为 post
+            fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            singleSelect: true, //设置为 true，则只允许选中一行。 默认false
+            nowrap: true, //如果为true，则在同一行中显示数据。设置为true可以提高加载性能
+            columns: [
+                [
+                    {field:'menuName',title:'菜单名称',width:'17%',align:'left'},
+                    {field:'id',title:'菜单ID',width:'8%',align:'center'},
+                    {field:'menuCode',title:'菜单编码',width:'8%',align:'center'},
+                    {field:'script',title:'菜单URL',width:'26%',align:'left'},
+                    {field:'temp',title:'菜单描述',width:'26%',align:'left'},
+                    {field:'menuOrder',title:'菜单排序',width:'8%',align:'center'},
+                    {field:'operate',title:'操作',width:'8%',align:'center',  formatter: function(value,row,index){
+                        if(row.endFlag=='1'){
+                            //有子菜单时，不允许删除
+                            return '<button class="sino-btn sino sino-btn-xs" onclick="editMenu('+value+');">编辑</button>&nbsp;&nbsp;<button class="sino-btn sino-btn-disabled sino-btn-xs" disabled="value">删除</button>';
+                        }else{
+                            return '<button class="sino-btn sino-btn-xs" onclick="editMenu('+value+');">编辑</button>'+'&nbsp;&nbsp;'+'<button style="background-color: #ff0000" class="sino-btn sino sino-btn-xs" onclick="destroyMenu('+value+');">删除</button>';
+                        }
+                    }}
+                ]
+            ],
+            /*toolbar: '#tbar'*/    //通过id选择器引用
+            toolbar: [{
+                text: '新增'
+                ,iconCls: 'e-icon fa fa-plus'
+                ,plain: true
+                ,handler: function(){
+                    dialogType="new";
+                    $('#dlg').dialog({
+                        onClose:function(){
+                            $('#id').textbox({
+                                onChange:$
+                            });
+                            $('.primary-tooltip').tooltip('hide');
+                        }
+                    });
+                    $('#fm').form('clear');
+                    /*$(".showIcon").attr('class','l-btn-icon showIcon ');*/
+                    $('#dlg').dialog('open').dialog('setTitle','新增菜单');
+                    //获取token，防止表单重复提交
+                    jsutil.tool.refreshToken('',$('#fm').find('input[name="token"]'));
+                    var row = $('#dg').treegrid('getSelected');
+                    url='/menuinfo/add';
+                    $.ajax({
+                        url:'/menuinfo/list',
+                        type:'get',
+                        success:function(result){
+                            $('#cc').combotree('loadData',result);
+                        }
+                    });
+                    if(row&&flag){
+                        $('#cc').combotree('setValue', row.id);
+                    }
+
+                    $('#id').textbox('enable');
+                    $('#id').textbox({
+                        onChange:primaryValidata
+                    });
+                }
+            }],
+            loadMsg:'加载中...',  //当从远程站点加载数据时，显示的提示消息。
+        });
+    });
+
+    <!-- 浏览图片 -->
+    function browseImage(){
+        $('#brimg').dialog('open').dialog('setTitle','浏览图片');
+    }
+
+    <!-- 更改菜单选项图标 -->
+    function getIcon(e){
+        //获取所选图标的类型
+        var iconStr=$(e).attr('iconCls');
+        //更新显示图标
+        $(".showIcon").attr('class','l-btn-icon showIcon ');
+        $(".showIcon").addClass(iconStr);
+        //关闭浏览图片窗口
+        $('#brimg').dialog('close');
+        //去除 "-menu" 字符
+        //由于菜单图标和普通图标有命名冲突，所以选择在编辑菜单图标的时候一普通图标的形式展示
+        //这就需要解决命名问题，于是所浏览菜单图标一律使用"icon-menu-"前缀，普通图标是"icon-"前缀。
+        //存到数据库的时候需要去掉"-menu"字符，因为菜单展示的时候是按"icon-"前缀的
+        $("#menuIcon").val(iconStr.replace("-menu",""));
+    }
+
+    //主键校验提示框内容
+    function primaryValidata(){
+        var flag;
+        var id=$('#id').textbox('getText');
+        var params={}
+        params.id="id";
+        var url='/menuinfo/find';
+        flag=jsutil.primaryValidata(url, params)
+        return flag;
+    }
+
+    //编辑菜单
+    function editMenu(id){
+        dialogType="edit";
+        /*$(".showIcon").attr('class','l-btn-icon showIcon ');*/
+        /*var row = $('#dg').treegrid('getSelected');*/
+        var row = $('#dg').treegrid('find',id); //查找指定节点并返回节点数据
+        $('#fm').form('clear');
+        if (row){
+            $.ajax({
+                url:'/menuinfo/list',
+                type:'post',
+                success:function(result){
+                    $('#cc').combotree('loadData',result);
+                }
+            });
+
+            if(row._parentId == "undefined" || row._parentId == null){
+                $('#cc').combotree('setValue', "undefined");
+            }else{
+                $('#cc').combotree('setValue', row._parentId);
+            }
+
+            $('#dlg').dialog('open').dialog('setTitle','编辑菜单');
+            //获取token，防止表单重复提交
+            jsutil.tool.refreshToken('',$('#fm').find('input[name="token"]'));
+            $('#fm').form('load',row);
+            $('#id').textbox('disable', true);
+           /* //数据库中的字段
+            var iconStr=$("#menuIcon").val();
+            //截取字段-后的字符
+            if(iconStr!=null&&iconStr!=""){
+                var icon=iconStr.split("-");
+                //需要展现的icon图标值
+                var iconClass=icon[0]+"-menu-"+icon[1];
+                $(".showIcon").addClass(iconClass);
+            }*/
+            url = '/menuinfo/update';
+        }
+    }
+
+    //删除菜单
+    function destroyMenu(id){
+        $.messager.confirm('删除','确认删除该菜单信息吗?',function(r){
+            if (r){
+                $.post('/menuinfo/delete',{id:id},function(result){
+                    if (result.success){
+                        $('#dg').treegrid('reload');// reload the user data
+                        $.messager.alert('提示','操作成功', 'info');
+                    } else {
+                        $.messager.alert('提示',result.errorMsg,'error');
+                    }
+                },'json');
+            }
+        });
+    }
+
+    //保存菜单 新增/编辑
+    function saveMenu(){
+        $('#id').textbox({disabled:false});
+        if(dialogType=="new"){
+            if(!primaryValidata()){
+                return false;
+            }
+        }
+        var t = $('#cc').combotree('tree');	// get the tree object
+        var n = t.tree('getSelected');		// get selected node
+        if(n) $('#superMenu').val(n.id);
+        $.ajax({
+            url:url,
+            data:$('#fm').serialize(),
+            type:'post',
+            beforeSend: function(){
+                var flag=$('#fm').form('validate');
+                if(!flag){
+                    $.messager.alert('提示','请填写带*信息栏', 'info');
+                }
+                return flag;
+            },
+            success: function(result){
+                if (result.success){
+                    $('#dg').treegrid('reload');	// reload the user data
+                    $('#dlg').dialog('close');		// close the dialog
+                    $.messager.alert('提示','操作成功', 'info');
+                }else if (result.errorMsg){
+                    $.messager.alert('提示',result.errorMsg,'error');
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>

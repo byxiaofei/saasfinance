@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('系统操作日志','','')">
+
+</head>
+<body>
+    <div class="easyui-panel" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+        <!-- 筛选条件 -->
+        <form id="searchForm" method="post" style="margin-bottom: 0">
+            <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+                <tr>
+                    <!--<td style="width:10%;text-align: right;" >
+                        <label>用户编码:</label>
+                    </td>
+                    <td style="width:13%;">
+                        <input style="width:100%;" id="userCodeF" name="userCode" class="easyui-textbox" data-options="prompt: '用户编码'">
+                    </td>-->
+                    <td style="width:10%;text-align: right;" >
+                        <label>用户名称:</label>
+                    </td>
+                    <td style="width:13%;">
+                        <input style="width:100%;" id="userNameF" name="userName" class="easyui-textbox" data-options="prompt: '用户名称'">
+                    </td>
+                    <td style="width:10%;text-align: right;" >
+                        <label>操作描述:</label>
+                    </td>
+                    <td style="width:13%;">
+                        <input style="width:100%;" id="operationF"  name="operation" class="easyui-textbox" data-options="prompt: '操作描述'">
+                    </td>
+                    <td style="width:10%;text-align: right;" >
+                        <label>起始时间:</label>
+                    </td>
+                    <td style="width:13%;">
+                        <input style="width:100%;" id="createDateStartF"  name="createDateStart" class="easyui-datebox" data-options="prompt: '起始时间'">
+                    </td>
+                    <td style="width:10%;text-align: right;" >
+                        <label>结束时间:</label>
+                    </td>
+                    <td style="width:13%;">
+                        <input style="width:100%;" id="createDateEndF"  name="createDateEnd" class="easyui-datebox" data-options="prompt: '结束时间'">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="8" style="text-align: right; padding-right: 20px" >
+                        <a href="javascript:void(0)" class="easyui-linkbutton" onclick="searchF()"  data-options="iconCls:'e-icon fa fa-search'" style="width:8%;">查询</a>
+                        <a href="javascript:void(0)" class="easyui-linkbutton" onclick="resetF()" data-options="iconCls:'e-icon fa fa-refresh'" style="width:8%;">重置</a>
+                    </td>
+                </tr>
+            </table>
+        </form>
+
+        <!--  数据列表 -->
+        <table id = "dg" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"></table>
+    </div>
+
+    <!--  查看请求参数/调用方法-->
+    <div id="dlg" class="easyui-dialog" style="width: 640px; height: 380px;"
+         data-options="modal:true,closed:true" onUnload="myClose()" >
+        <textarea id='paramsOrMethod' name = 'paramsOrMethod' style="width:99%;height:97%;font-size:14px;overflow: hidden;" disabled="disabled"></textarea>
+    </div>
+</body>
+<script>
+    $(function(){
+        $('#dg').datagrid({
+            url: '/sysoperationlog/list'
+            ,striped: true  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false
+            ,method: 'post'  //默认为 post
+            ,pagination: true //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。默认false
+            ,rownumbers: true //设置为 true，则显示带有行号的列。默认false
+            ,fitColumns: true //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            //,autoRowHeight: true //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能。
+            ,singleSelect: true //设置为 true，则只允许选中一行。 默认false
+            ,checkOnSelect: true //如果设置为 true，当用户点击某一行时，则会选中/取消选中复选框。
+            ,pagePosition: 'bottom' //定义分页栏的位置。可用的值有：'top'、'bottom'、'both'。 默认 bottom
+            ,pageList: [10,20,30,40,50] //当设置了 pagination 属性时，初始化页面尺寸的选择列表。
+            ,nowrap: true
+            /**
+             * field: 列的字段名
+             * width: 列的宽度。如果未定义，则宽度会自动扩展以适应它的内容。没有定义宽度将会降低性能。
+             * align： 指示如何对齐该列的数据，可以用 'left'、'right'、'center'。 默认undefined
+             * halign：指示如何对齐该列的头部，可能的值：'left'、'right'、'center'。如果没有分配值，则头部对齐方式将与通过 'align' 属性定义的数据对齐方式一致。该属性自版本 1.3.2 起可用。
+             * sortable： 设置为 true，则允许该列被排序。
+             * order：默认的排序顺序，只能用 'asc' 或 'desc'。该属性自版本 1.3.2 起可用。
+             * resizable：设置为 true，则允许该列可调整尺寸。
+             * fixed: 设置为 true，则当 'fitColumns' 设置为 true 时放置调整宽度。
+             * hidden: 设置为 true，则隐藏该列。
+             * checkbox: 设置为 true，则显示复选框。复选框有固定宽度。
+             * formatter: 单元格的格式化函数，需要三个参数：value：字段的值。rowData：行的记录数据。rowIndex：行的索引。
+             */
+            ,columns: [
+                [
+                    {field:'userCode',title:'用户编码',width:'15%',align:'center'},
+                    {field:'userName',title:'用户名称',width:'20%',align:'center'},
+                    {field:'operation',title:'操作描述',width:'21%',align:'left'},
+                    {field:'ip',title:'主机IP',width:'12%',align:'center'},
+                    {field:'method',title:'调用方法',width:'8%',align:'center',formatter: function(value,row,index){
+                        return '<button style="background-color: #698cba" class="sino-btn sino sino-btn-xs" onclick="lookInfo('+index+',\'method\');">查看</button>';
+                    }},
+                    {field:'params',title:'请求参数',width:'8%',align:'center',formatter: function(value,row,index){
+                        return '<button style="background-color: #698cba" class="sino-btn sino sino-btn-xs" onclick="lookInfo('+index+',\'params\');">查看</button>';
+                    }},
+                    {field:'createDate',title:'操作时间',width:'15%',align:'center'}
+                ]
+            ]
+            ,loadMsg:'加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        });
+    });
+
+    //搜索
+    function searchF(){
+        var params = {};
+        $('#searchForm').find('input').each(function(){
+            var obj = $(this);
+            var name = obj.attr('name');
+            if(name){
+                params[name] = obj.val();
+            }
+        });
+        $("#dg").datagrid('load', params);
+        /*$("#dg").datagrid({
+            queryParams: params,    //查询条件
+            onLoadSuccess: function(data){
+                if(data.total<=0) {
+                    $.messager.show({
+                        title: '提示'
+                        ,msg:'未查询到相关数据'
+                        ,showType:'slide'
+                    });
+                }
+            }
+        });*/
+    }
+
+
+
+    //查看信息
+    function lookInfo(index,flag) {
+        /*$('#dg').datagrid('selectRow',index);
+        var row = $('#dg').datagrid('getSelected');*/
+        var row = $('#dg').datagrid('getData').rows[index];
+
+        $('#paramsOrMethod').val('');
+        if (flag == 'params') {
+            $('#dlg').dialog('open').dialog('setTitle', '请求参数');
+            $('#paramsOrMethod').val(row.params);
+        } else if (flag == 'method') {
+            $('#dlg').dialog('open').dialog('setTitle', '调用方法');
+            $('#paramsOrMethod').val(row.method);
+        }
+    }
+    
+    //重置
+    function resetF() {
+        $('#searchForm').form('clear');
+    }
+    //关闭新增、编辑、查看弹框
+    function cancel(){
+        $('#dlg').dialog('close');
+    }
+</script>
+</html>

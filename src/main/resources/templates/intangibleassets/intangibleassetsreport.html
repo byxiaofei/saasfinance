@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('无形资产报表查询','/css/Standard.css','')">
+</head>
+<body>
+<!--搜索模块-->
+<div class="easyui-panel"
+     style="height: auto; width:100%;padding: 8px 0px 0px 0px;overflow: hidden;">
+    <form id="serachFrom" method="post" style="margin-bottom:0;">
+        <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="width:10%;text-align: right;" ><label>会计期间:</label></td>
+                <td style="width:10%;">
+                    <input style="width:100%;" id="yearMonthDate" name="yearMonthDate" class="easyui-combobox" data-options="valueField:'value',textField:'text',prompt: '会计期间'">
+                </td>
+
+                <td style="width:10%;text-align: right;" ><label>起始层级:</label></td>
+                <td style="width:10%;">
+                    <input style="width:100%;" id="startLevel" name="startLevel" class="easyui-combobox" data-options="valueField:'value',textField:'text',prompt: '起始层级',onSelect:compareLevel">
+                </td>
+
+                <td style="width:10%;text-align: right;" ><label>终止层级:</label></td>
+                <td style="width:10%;">
+                    <input style="width:100%;" id="endLevel" name="endLevel" class="easyui-combobox" data-options="valueField:'value',textField:'text',prompt: '终止层级',onSelect:compareLevel">
+                </td>
+                <td style="width:10%;text-align: right;" ></td>
+                <td style="width:10%;"></td>
+            </tr>
+            <tr>
+                <td colspan="8" style="text-align: right; padding-right: 20px;">
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-search'" style="width: 8%;" onclick="searchF()" >查询</a>
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-refresh'" style="width: 8%;" onclick="reset()">重置</a>
+                </td>
+            </tr>
+        </table>
+
+        <table style="width: 98%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td colspan="3" style="text-align: center;font-size: 15px;font-weight: bolder;" th:text="${session.currentUser.currentManageBranchName}"></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="text-align: center;font-size: 15px;font-weight: bolder;">无形资产摊销明细</td>
+            </tr>
+            <tr>
+                <td id = "hs" style="width: 33%; text-align: left;" >核算单位：</td>
+                <td id = "rq" style="width: 33%; text-align: center;">日期：000000</td>
+                <td id = "dw" style="width: 33%; text-align: right;">单位：人民币元</td>
+            </tr>
+        </table>
+    </form>
+
+    <!-- 展示搜索结果 -->
+    <table id = "dg" data-show-footer="true" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"></table>
+    <table style="width: 98%; overflow: hidden;table-layout: fixed;" border="0">
+        <tr>
+            <td id = "zg" style="width: 33%; text-align: left;">财务主管：</td>
+            <td id = "czy" style="width: 33%; text-align: center;" th:text="'操作员：'+ ${session.currentUser.userName}"></td>
+            <td id = "dyrq" style="width: 33%; text-align: right;">打印日期：当前日期</td>
+        </tr>
+        <tr>
+            <td style="width: 33%; text-align: left;">
+                <a href="#" class="easyui-linkbutton" style="width: 30%;" onclick="test()" >打印</a>
+            </td>
+            <td style="width: 33%; text-align: center;">
+                <a href="#" class="easyui-linkbutton" style="width: 30%;" onclick="searchF()" >导出Excel</a>
+            </td>
+            <td style="width: 33%; text-align: right;">
+                <a href="#" class="easyui-linkbutton" style="width: 30%;" onclick="searchF()" >返回</a>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div id="waitMenu" class="easyui-dialog" style="width: 300px; height: 100px; padding: 10px 20px;" closed="true" align="center" data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+    <div id="msg"></div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        $('#dg').datagrid({
+            // title: '核算单位：1000000000    日期：201808   单位：人民币',
+            striped: false,  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false,
+            method: 'post', //默认为 post
+            rownumbers: false,
+            fitColumns: true,//设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            nowrap: false,
+            columns: [
+                [
+                    {field: 'strNo', title: '序号', width: '6%', align: 'center', halign: 'center'},
+                    {field: 'level1', title: '', width: '10%', align: 'center', halign: 'center'},
+                    {field: 'level2', title: '', width: '10%', align: 'center', halign: 'center'},
+                    {field: 'level3', title: '类别名称', width: '8%', align: 'center', halign: 'center'},
+                    {field: 'nr', title: '内容', width: '15%', align: 'center', halign: 'center'},
+                    {field: 'useStartDate', title: '开始使用日期', width: '8%', align: 'center', halign: 'center'},
+                    {field: 'depYears', title: '摊销年限(月)', width: '8%', align: 'center', halign: 'center'},
+                    {field: 'assetOriginValue', title: '原值', width: '10%', align: 'right', halign: 'center',formatter: function(value,row,index){return formate(value);}},
+                    {field: 'monthDepreMoney', title: '月摊销金额', width: '10%', align: 'right', halign: 'center',formatter: function(value,row,index){return formate(value);}},
+                    {field: 'endDepreAmount', title: '累计摊销月份', width: '10%', align: 'right', halign: 'center',formatter: function(value,row) {
+                            if(row.endDepreAmount!=null){return parseInt(row.endDepreAmount);}
+                    }},
+                    {field: 'endDepreMoney', title: '累计摊销金额', width: '10%', align: 'right', halign: 'center',formatter: function(value,row,index){return formate(value);}},
+                    {field: 'assetNetValue', title: '无形资产净值', width: '10%', align: 'right', halign: 'center',formatter: function(value,row,index){return formate(value);}},
+                    {field: 'temp', title: '备注', width: '8%', align: 'right', halign: 'center'}
+
+                ]
+            ],
+            onClickRow: function (rowIndex, rowData) {
+                $(this).datagrid('unselectRow', rowIndex);
+            },
+            loadMsg: '加载中...' , //当从远程站点加载数据时，显示的提示消息。
+        });
+
+        //会计期间
+        $('#yearMonthDate').combobox({
+            valueField:'value',
+            textField:'text',
+            url: '/intangibleassetsreport/yearMonthDate',
+            onLoadSuccess:function (data) {
+                $('#yearMonthDate').combobox('setValue', data[0].value);
+                // searchF();//数据加载
+            }
+        });
+
+        //起始层级
+        $('#startLevel').combobox({
+            valueField:'value',
+            textField:'text',
+            url: '/intangibleassetsreport/startLevel',
+            onLoadSuccess:function (data) {
+                $('#startLevel').combobox('setValue', data[0].value);
+            }
+        });
+
+        //终止层级
+        $('#endLevel').combobox({
+            valueField:'value',
+            textField:'text',
+            url: '/intangibleassetsreport/startLevel',
+            onLoadSuccess:function (data) {
+                $('#endLevel').combobox('setValue', data[data.length-1].value);
+                searchF();//数据加载
+            }
+        });
+    });
+    //层级校验
+    function compareLevel() {
+        var start=$('#startLevel').combobox('getValue');
+        var end=$('#endLevel').combobox('getValue');
+        if(start>end&&end!=null&&end!=""){
+            $.messager.alert("提示","起始层级不能大于终止层级！","info");
+            //$('#startLevel').combobox('setValue','');
+            $('#endLevel').combobox('setValue','');
+        }
+    }
+
+    //查询
+    function searchF() {
+        if($('#yearMonthDate').combobox('getValue') == "" || $('#yearMonthDate').combobox('getValue') == null){
+            $('#rq').html("日期：000000");//默认值
+        }else{
+            $('#rq').html("日期："+ $('#yearMonthDate').combobox('getValue'));
+        }
+         $('#hs').html("核算单位：");//核算 默认值
+        $('#dw').html("单位：人民币元");//单位 默认值
+        $('#dyrq').html("打印日期："+getNowFormatDate());//打印日期 默认为系统当前日期
+
+        var params = {};
+        $('#serachFrom').find('input').each(function(){
+            var obj = $(this);
+            var name = obj.attr('name');
+            if(name){
+                params[name] = obj.val();
+            }
+        });
+        $('#dg').datagrid({
+            url:'/intangibleassetsreport/list',
+            queryParams:params,
+            onLoadSuccess:function (data) {
+                 $('#hs').html("核算单位："+data.rows[0].centerCode);//核算
+                // if(data.rows[0].currency == "CNY"){
+                //     $('#dw').html("单位：人民币元");//单位
+                // }else{
+                //     $('#dw').html("单位："+data.rows[0].currency);//单位
+                // }
+
+                for(var i=0; i<data.rows.length; i++){
+                    var rowNum = 1;
+                    var colNum = 1;
+                    for(var j=i+1; j<data.rows.length; j++){
+                        if(data.rows[i].strNo==data.rows[j].strNo) {
+                            rowNum++;
+                        }else{
+                            $('#dg').datagrid('mergeCells', {
+                                index: i,
+                                field: 'strNo',
+                                rowspan: rowNum
+                            });
+                            $('#dg').datagrid('mergeCells', {
+                                index: i,
+                                field: 'level1',
+                                rowspan: rowNum
+                            });
+                            i=j-1;
+                            break;
+                        }
+                    }
+                }
+                for(var i=0; i<data.rows.length; i++){
+                    var rowNum = 1;
+                    var colNum = 1;
+                    for(var j=i+1; j<data.rows.length; j++){
+                        if(data.rows[i].level2==data.rows[j].level2) {
+                            rowNum++;
+                        }else{
+                            $('#dg').datagrid('mergeCells', {
+                                index: i,
+                                field: 'level2',
+                                rowspan: rowNum
+                            });
+                            i=j-1;
+                            break;
+                        }
+                    }
+                }
+                for(var i=0; i<data.rows.length; i++){
+                    if(data.rows[i].level3.indexOf("小计") != -1 || data.rows[i].level3.indexOf("合计") != -1){
+                        $('#dg').datagrid('mergeCells', {
+                            index: i,
+                            field: 'level3',
+                            colspan: 4
+                        });
+                    }
+                }
+                //最后三行合并
+                $('#dg').datagrid('mergeCells', {
+                    index: data.rows.length-3,
+                    field: 'strNo',
+                    rowspan: 3
+                });
+                $('#dg').datagrid('mergeCells', {
+                    index: data.rows.length-3,
+                    field: 'level1',
+                    rowspan: 3
+                });
+                $('#dg').datagrid('mergeCells', {
+                    index: data.rows.length-3,
+                    field: 'level2',
+                    rowspan: 3
+                });
+            }
+        });
+    }
+
+    //重置
+    function reset() {
+        $('#serachFrom').form('clear');
+        $('#year').combobox('setValue', getCurrentYear());
+    }
+
+    function closeWaitMenu() {
+        $('#waitMenu').dialog('close');//关闭等待窗口
+    }
+
+    //等待
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+    var ii = 2;
+    function showalert() {
+        var text = "";
+        var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+    function onClose() {
+        clearInterval(loading);
+    }
+    function formate(data) {
+        if (data || (data+'')=='0') {
+            return formatNumber(data*1, 2, 1);
+        }
+        return data;
+    }
+    function getNowFormatDate() {
+        var date = new Date();
+        var seperator1 = "-";
+        var year = date.getFullYear();
+        var month = date.getMonth() + 1;
+        var strDate = date.getDate();
+        if (month >= 1 && month <= 9) {
+            month = "0" + month;
+        }
+        if (strDate >= 0 && strDate <= 9) {
+            strDate = "0" + strDate;
+        }
+        var currentdate = year + seperator1 + month + seperator1 + strDate;
+        return currentdate;
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('固定资产卡片凭证管理打印','/css/datagridcell_text-overflow_ellipsis.css','')">
+</head>
+<body>
+<div align="center">
+    <div class="easyui-panel" style="height: auto; width:100%; text-align: center; padding: 0px 0px 0px 0px;overflow: hidden;">
+        <!-- 从controller传来的参数 -->
+        <span id="accAssetInfoDTO" style="display:none" th:text="${map.accAssetInfoDTO}"></span>
+
+        <div id="originalDiv" hidden>
+            <!-- 表头 -->
+            <table id="dg1" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+                <tr>
+                    <td style="width:100%;text-align: center;" ><label>固定资产卡片凭证查询结果</label></td>
+                </tr>
+            </table>
+            <!--  数据列表 -->
+            <table id = "dg" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+
+            </table>
+                <!-- 表尾 -->
+            <table id = "dg2" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+                <tr>
+                    <td style="width:100%;text-align: center;" >
+                        <label>共条数据：</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: center;">
+                        <a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()"  data-options="iconCls:'e-icon fa fa-print'" style="width:15%;">打印</a>
+                        <!--<a href="javascript:void(0)" class="easyui-linkbutton" onclick="closeF()"  data-options="iconCls:'e-icon fa fa-close'" style="width:10%;">关闭</a>-->
+                    </td>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <!-- 用于打印的 --><!-- 多加一层，防止局部渲染导致区域之外的数据失效 -->
+        <div>
+            <div id="printDiv"></div>
+        </div>
+        <table id="TableFooter" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+            <tr>
+                <td colspan="6" style="text-align: center;">
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()" data-options="iconCls:'e-icon fa fa-print'" style="width:10%;">打印</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    </div>
+</div>
+    <!-- 等待提示框 -->
+    <div id="waitMenu" class="easyui-dialog" style="width: 300px; height: 100px; padding: 10px 20px;" closed="true" align="center" data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+        <div id="msg"></div>
+    </div>
+</body>
+<script th:src="@{/js/updataEasyUIDataGridTableStyle.js}"></script>
+<script>
+    $(function () {
+       searchF();
+    });
+
+    //搜索数据
+    function searchF() {
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        var url = '/fixedassetscard/listPrint';
+        $.post(url, JSON.parse($('#accAssetInfoDTO').text()), function (result) {
+            $('#waitMenu').dialog('close');//关闭等待窗口
+            if (result.length>0) {
+                creatPrintContent(result);
+            } else {
+                //无打印的凭证数据
+                $.messager.alert('提示','无凭证打印数据','info');
+            }
+
+            $('#TableFooter').hide();
+        });
+
+    }
+
+    //等待
+    var loading;
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+    var ii = 2;
+    function showalert() {
+        var text = "";
+        var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+    function onClose() {
+        clearInterval(loading);
+    }
+    function creatPrintContent(result) {
+        //获得DIV
+        var parentDiv = $('#printDiv');
+        //获得dg数据
+        var rows = result;
+        //每页数据量
+        var pageRowNum = 15 ;
+        //得到分页数
+        var pages = Math.ceil(rows.length/pageRowNum);
+        var rowNow = 0;
+        for(var i=0;i<pages;i++){
+            //追加分页标志，供打印机识别
+            if (i!=0){
+                parentDiv.append('<div style="page-break-after:always">');
+            }
+            parentDiv.append(printTableHeader(i+1,pages));
+            parentDiv.append('<table id = "print_dg_' + i + '" cellspacing="0" cellpadding="0"  style="height: auto;border-collapse: collapse; width:100%; "></table>');//overflow: hidden;
+            //获取当前表格
+            var table = document.getElementById ("print_dg_"+i);
+            table.border = '1px solid #0094ff';
+            //添加表头行信息
+            addTableHeaderRowInfo(table.insertRow(0));
+            for(var k=0;k<pageRowNum;k++){
+                if(!rows[rowNow]){
+                    continue;
+                }
+                var row = table.insertRow(k+1);
+                addTableDataRowInfo(row,rows[rowNow]);
+                rowNow++;
+            }
+
+            if (i!=0){
+                parentDiv.append('</div>');
+            }
+        }
+       // parentDiv.append(printTableFooter(result));
+
+    }
+    function addTableHeaderRowInfo(row) {
+        row.style.height = '30px';
+        row.style.textAlign = 'center';
+        for (var i=0;i<17;i++) {
+            var cell = row.insertCell(i);
+            cellStylePadding(cell);
+            if (i==0) {
+                cellStyleWidth(cell, 1);
+                cell.innerHTML= "<td>卡片编码</td>";
+            } else if (i==1) {
+                cellStyleWidth(cell, 2);
+                cell.innerHTML= "<td>凭证号</td>";
+            } else if (i==2) {
+                cellStyleWidth(cell, 3);
+                cell.innerHTML= "<td>固定资产编码</td>";
+            } else if(i==3) {
+                cellStyleWidth(cell, 4);
+                cell.innerHTML= "<td>固定资产类别</td>";
+            }else if(i==4) {
+                cellStyleWidth(cell, 5);
+                cell.innerHTML= "<td>固定资产名称</td>";
+            }else if(i==5) {
+                cellStyleWidth(cell, 6);
+                cell.innerHTML= "<td>规格</td>";
+            }else if(i==6) {
+                cellStyleWidth(cell, 7);
+                cell.innerHTML= "<td>原值</td>";
+            }else if(i==7) {
+                cellStyleWidth(cell, 8);
+                cell.innerHTML= "<td>净值</td>";
+            }else if(i==8) {
+                cellStyleWidth(cell, 9);
+                cell.innerHTML= "<td>本月折旧金额</td>";
+            }else if(i==9) {
+                cellStyleWidth(cell, 10);
+                cell.innerHTML= "<td>累计折旧金额</td>";
+            }else if(i==10) {
+                cellStyleWidth(cell, 11);
+                cell.innerHTML= "<td>使用年限月(月)</td>";
+            }else if(i==11) {
+                cellStyleWidth(cell, 12);
+                cell.innerHTML= "<td>期末累计折旧量</td>";
+            }else if(i==12) {
+                cellStyleWidth(cell, 13);
+                cell.innerHTML= "<td>预计残值</td>";
+            }else if(i==13) {
+                cellStyleWidth(cell, 14);
+                cell.innerHTML= "<td>预计残值率</td>";
+            }else if(i==14) {
+                cellStyleWidth(cell, 15);
+                cell.innerHTML= "<td>启用日期</td>";
+            }else if(i==15) {
+                cellStyleWidth(cell, 16);
+                cell.innerHTML= "<td>使用部门</td>";
+            }else if(i==16) {
+                cellStyleWidth(cell, 17);
+                cell.innerHTML= "<td>状态</td>";
+            }
+        }
+    }
+    function addTableDataRowInfo(row, data) {
+        row.style.height = '32px';
+        for (var i=0;i<17;i++) {
+            var cell = row.insertCell(i);
+            cellStylePadding(cell);
+            if (i==0) {//卡片编码
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 1);
+                var cardCode=data.cardCode;
+                cell.innerHTML = "<td>"+cardCode==''||cardCode==null?'':cardCode+"</td>";
+            } else if (i==1) {//凭证号
+                cellTextAlignLeft(cell);
+                cellStyleWidth(cell, 2);
+                cell.innerHTML = "<td>"+data.voucherNo==''||data.voucherNo==null?'':data.voucherNo+"</td>";
+            } else if (i==2) {//固定资产编码
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 3);
+                var assetCode=data.assetCode==""||data.assetCode==null?"":data.assetCode;
+                cell.innerHTML= "<td>"+assetCode+"</td>";
+            }else if(i==3) {//固定资产类别
+                cellTextAlignLeft(cell);
+                cellStyleWidth(cell, 4);
+                var assetTypeName=data.assetTypeName==""||data.assetTypeName==null?'':data.assetTypeName;
+                cell.innerHTML= "<td>"+assetTypeName+"</td>";
+            }else if(i==4) {//固定资产名称
+                cellTextAlignLeft(cell);
+                cellStyleWidth(cell, 5);
+                cell.innerHTML= "<td>"+data.assetName==''||data.assetName==null?'':data.assetName+"</td>";
+            }else if(i==5) {//规格
+                cellTextAlignLeft(cell);
+                cellStyleWidth(cell, 6);
+                cell.innerHTML= "<td>"+data.specification==''||data.specification==null?'':data.specification+"</td>";
+            }else if(i==6) {//原值
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 7);
+                cell.innerHTML= "<td>"+data.assetOriginValue==''||data.assetOriginValue==null?'0.00':formate(data.assetOriginValue)+"</td>";
+            }else if(i==7) {//净值
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 8);
+                cell.innerHTML= "<td>"+data.assetNetValue==''||data.assetNetValue==null?'0.00':formate(data.assetNetValue)+"</td>";
+            }else if(i==8) {//本月折旧金额
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 9);
+                cell.innerHTML= "<td>"+data.monthDepreMoney==''||data.monthDepreMoney==null?'0.00':formate(data.monthDepreMoney)+"</td>";
+            }else if(i==9) {//累计折旧金额
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 10);
+                cell.innerHTML= "<td>"+data.endDepreMoney==''||data.endDepreMoney==null?'0.00':formate(data.endDepreMoney)+"</td>";
+            }else if(i==10) {//使用年限(月)
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 11);
+                cell.innerHTML= "<td>"+data.depYears==''||data.depYears==null?'':data.depYears+"</td>";
+            }else if(i==11) {//期末累计折旧量
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell,12);
+                cell.innerHTML= "<td>"+data.endDepreAmount==''||data.endDepreAmount==null?'':data.endDepreAmount+"</td>";
+            }else if(i==12) {//预计残值
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 13);
+                cell.innerHTML= "<td>"+data.remainsValue==''||data.remainsValue==null?'0.00':formate(data.remainsValue)+"</td>";
+            }else if(i==13) {//预计残值率
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 14);
+                cell.innerHTML= "<td>"+data.remainsRate==''||data.remainsRate==null?'0.0000':formatNumber(data.remainsRate*1,4,0)+"</td>";
+            }else if(i==14) {//启用日期
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 15);
+                cell.innerHTML= "<td>"+data.useStartDate==''||data.useStartDate==null?'':data.useStartDate+"</td>";
+            }else if(i==15) {//使用部门
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 16);
+                cell.innerHTML= "<td>"+data.specialName==''||data.specialName==null?'':data.specialName+"</td>";
+            }else if(i==16) {//状态
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 17);
+                var useflag=""
+                if (row.useFlag == '0') {
+                    useflag= "停用";
+                } else {
+                    useflag= "使用";
+                }
+                cell.innerHTML= "<td>"+useflag==''||useflag==null?'':useflag+"</td>";
+            }
+        }
+    }
+    function cellStylePadding(cell) {
+        cell.style.padding = '2px';
+    }
+    function cellTextAlignRight(cell) {
+        cell.style.textAlign = 'right';
+    }
+    function cellTextAlignLeft(cell) {
+        cell.style.textAlign = 'left';
+    }
+    function cellTextAlignCenter(cell) {
+        cell.style.textAlign = 'center';
+    }
+    function cellStyleWidth(cell, type) {
+        //8,7,15,17,18,10,10,3,12
+        if (type==1) {
+            cell.style.width = '4%';//卡片编码
+        } else if (type==2) {
+            cell.style.width = '6%';//凭证号7
+        } else if (type==3 ) {
+            cell.style.width = '7%';//固定资产编码
+        }else if (type==4 ) {
+            cell.style.width = '6%';//固定资产类别
+        } else if (type==5) {
+            cell.style.width = '7%';//固定资产名称
+           // console.log("7");
+        } else if (type==6) {
+            cell.style.width = '5%';//规格5
+        }else if (type==7) {
+            cell.style.width = '6%';//原值
+        }else if (type==8) {
+            cell.style.width = '6%';//净值
+        }else if (type==9) {
+            cell.style.width = '6%';//本月折旧金额
+        }else if (type==10) {
+            cell.style.width = '6%';//累计折旧金额
+        }else if (type==11) {
+            cell.style.width = '6%';//使用年限月(月)
+        }else if (type==12) {
+            cell.style.width = '6%';//期末累计折旧量
+        }else if (type==13) {
+            cell.style.width = '6%';//预计残值
+        }else if (type==14) {
+            cell.style.width = '6%';//预计残值率
+        }else if (type==15) {
+            cell.style.width = '7%';//启用日期
+        }else if (type==16) {
+            cell.style.width = '6%';//使用部门
+        }else if (type==17) {
+            cell.style.width = '4%';//状态
+        }
+    }
+    function printTableHeader(pageNum,pages) {
+        var headerHtml = '<table style="height: auto; width:100%; padding: 0px 0px 0px 0px;overflow: hidden;background-color: #1e9fff"><div align="center"><span align="center" style="font-size:18px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bolder;">固定资产卡片凭证查询结果</span><span style="float: right">'+JSON.stringify(pageNum)+'/'+JSON.stringify(pages)+'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br/></div>';
+        return headerHtml;
+    }
+
+    // function printTableFooter(result) {
+    //     var num = result.length;
+    //     /*
+    //             var footer = '<table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"><tr><td style="width:10%;text-align: right;" ><label>财务主管：</label></td><td style="width:13%;"><span name="leaderPrint">'+$("#leader").text()+'</span></td><td style="width:10%;text-align: right;" ><label>操作员：</label></td><td style="width:13%;"><span name="operationUserPrint">'+$("#operationUser").text()+'</span></td><td style="width:10%;text-align: right;" ><label>打印日期：</label></td><td style="width:13%;"><span name="printDatePrint">'+$("#printDate").text()+'</span></td></tr></table>';
+    //     */
+    //     var footer = '<div id="TableFooter"> <table style="height: auto; width:100%; padding: 0px 0px 0px 0px;overflow: hidden;"> <tr>  <td style="width:100%;text-align: center;" ><label>共'+JSON.stringify(num)+'条数据：</label></td></tr> <tr><td style="text-align: center;"><a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()"  data-options="iconCls:\'e-icon fa fa-print\'" style="width:10%;">打印</a></td></tr></table> </div>';
+    //     // var footer = ' <table id = "dg2" style="height: auto; width:100%; padding: 0px 0px 0px 0px;overflow: hidden;"> <tr>  <td style="width:100%;text-align: center;" ><label>共条数据：</label></td></tr> <tr><td style="text-align: center;"><a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()"  data-options="iconCls:\'e-icon fa fa-print\'" style="width:10%;">打印</a></td> </td></tr></table> ';
+    //     return footer;
+    // }
+
+    //打印
+    function printF() {
+        $('#TableFooter').hide();
+        window.print();
+        $('#TableFooter').show();
+    }
+    //关闭
+    function closeF() {
+        //关闭浏览器当前窗口
+        window.close();
+    }
+    function formate(data) {
+        if (data || (data+'')=='0') {
+            return formatNumber(data*1, 2, 1);
+        }
+        return data;
+    }
+</script>
+</html>

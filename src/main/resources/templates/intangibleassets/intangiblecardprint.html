@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('无形资产卡片管理打印','/css/datagridcell_text-overflow_ellipsis.css','')">
+</head>
+<body>
+<div align="center">
+    <div class="easyui-panel" style="height: auto; width:100%; text-align: center; padding: 0px 0px 0px 0px;overflow: hidden;">
+        <!-- 从controller传来的参数 -->
+        <span id="accAssetInfoDTO" style="display:none" th:text="${map.accAssetInfoDTO}"></span>
+
+        <div id="originalDiv" hidden>
+            <!-- 表头 -->
+            <table id="dg1" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+                <tr>
+                    <td style="width:100%;text-align: center;" ><label>无形资产卡片查询结果</label></td>
+                </tr>
+            </table>
+            <!--  数据列表 -->
+            <table id = "dg" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+
+            </table>
+                <!-- 表尾 -->
+            <table id = "dg2" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+                <tr>
+                    <td style="width:100%;text-align: center;" >
+                        <label>共条数据：</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: center;">
+                        <a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()"  data-options="iconCls:'e-icon fa fa-print'" style="width:15%;">打印</a>
+                        <!--<a href="javascript:void(0)" class="easyui-linkbutton" onclick="closeF()"  data-options="iconCls:'e-icon fa fa-close'" style="width:10%;">关闭</a>-->
+                    </td>
+
+                </tr>
+            </table>
+        </div>
+        <!-- 用于打印的 --><!-- 多加一层，防止局部渲染导致区域之外的数据失效 -->
+        <div align="center">
+            <div id="printDiv" align="center"></div>
+        </div>
+    </div>
+
+</div>
+    <!-- 等待提示框 -->
+    <div id="waitMenu" class="easyui-dialog" style="width: 300px; height: 100px; padding: 10px 20px;" closed="true" align="center" data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+        <div id="msg"></div>
+    </div>
+</body>
+<script th:src="@{/js/updataEasyUIDataGridTableStyle.js}"></script>
+<script>
+    $(function () {
+        $('#dg').datagrid({
+            //queryParams:$('#accAssetInfoDTO').text(),
+            striped: true  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false
+            ,method: 'post'  //默认为 post
+            ,fitColumns: true //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            ,singleSelect: true //设置为 true，则只允许选中一行。 默认false
+            ,nowrap: false
+            ,columns: [
+                [
+                    {field: 'cardCode', title: '卡片编码', width: '6%', halign: 'center', align: 'left'}
+                    , {field: 'assetCode', title: '无形资产编码', width: '7%', halign: 'center', align: 'left'}
+                    , {field: 'assetTypeName', title: '无形资产类别', width: '7%', halign: 'center', align: 'left'}
+                    , {field: 'articleCode1', title: '无形资产专项', width: '7%', halign: 'center', align: 'left'}
+                    , {field: 'assetName', title: '无形资产名称', width: '5%', halign: 'center', align: 'left'}
+                    , {field: 'assetOriginValue', title: '原值', width: '5%', halign: 'center', align: 'right',formatter: function(value,row) {
+                        if(row.assetOriginValue!=null) return formate(value);}}
+                    , {field: 'assetNetValue', title: '净值', width: '5%', halign: 'center', align: 'right',formatter: function(value,row) {
+                        if(row.assetNetValue!=null) return formate(value);}}
+                    , {field: 'monthDepreMoney', title: '本月摊销金额', width: '8%', halign: 'center', align: 'right',formatter: function(value,row) {
+                        if(row.monthDepreMoney!=null) return formate(value);}}
+                    , {field: 'endDepreMoney', title: '累计摊销额', width: '8%', halign: 'center', align: 'right',formatter: function(value,row) {
+                        if(row.endDepreMoney!=null) return formate(value);}}
+                    , {field: 'depYears', title: '预计使用总量', width: '7%', halign: 'center', align: 'right'}
+                    , {field: 'endDepreAmount', title: '已摊销月份', width: '8%', halign: 'center', align: 'right'}
+                    , {field: 'remainsValue', title: '预计残值', width: '5%', halign: 'center', align: 'right',formatter: function(value,row) {
+                        if(row.remainsValue!=null) return formate(value);}}
+                    , {field: 'remainsRate', title: '预计残值率', width: '8%', halign: 'center', align: 'right',formatter: function(value,row) {
+                        if(row.remainsRate!=null) return value.toFixed(4);}}
+                    , {field: 'useStartDate', title: '启用日期', width: '6%', halign: 'center', align: 'center'}
+                    , {field: 'useFlag', title: '状态', width: '4%', halign: 'center', align: 'center',formatter: function(value,row) {
+                        if (row.useFlag == '0') {
+                            return "停用";
+                        } else {
+                            return "使用";
+                        }
+                    }}
+                    , {field: 'temp', title: '备注', width: '4%', halign: 'center', align: 'left'}
+                ]
+            ],
+            onClickRow: function (rowIndex, rowData) {
+                $(this).datagrid('unselectRow', rowIndex);
+            },
+            loadMsg:'加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        });
+       searchF();
+    });
+
+    //搜索数据
+    function searchF() {
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        // $.post(url, $('#accAssetInfoDTO').text(), function (result) {
+        //     //隐藏原数据区域
+        //     $('#orginalDiv').hide();
+        //     // var panel = $("#dg").datagrid('getPanel');
+        //     // updata_easyUI_dataGrid_table_style(panel);
+        //     //修改样式
+        //     creatPrintContent(result);
+        // });
+        $('#dg').datagrid({
+            url:'/intangiblecard/listPrint',
+            queryParams:JSON.parse($('#accAssetInfoDTO').text()),
+            onLoadSuccess:function (data) {
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                //隐藏原数据区域
+                $('#orginalDiv').hide();
+                var panel = $(this).datagrid('getPanel');
+                updata_easyUI_dataGrid_table_style(panel);
+                //修改样式
+                creatPrintContent();
+
+                $('#TableFooter').hide();
+            }
+        });
+
+    }
+
+    //等待
+    var loading;
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+    var ii = 2;
+    function showalert() {
+        var text = "";
+        var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+    function onClose() {
+        clearInterval(loading);
+    }
+    function creatPrintContent() {
+        //获得DIV
+        var parentDiv = $('#printDiv');
+        //获得dg数据
+        var rows = $('#dg').datagrid('getRows');
+        //每页数据量
+        var pageRowNum = 15 ;
+        //得到分页数
+        var pages = Math.ceil(rows.length/pageRowNum);
+        //每行的开始行
+        var rownum = 0;
+        for(var i=0;i<pages;i++){
+            //追加分页标志，供打印机识别
+            if (i!=0){
+                parentDiv.appendChild('<div style="page-break-after:always">');
+            }
+            parentDiv.append(printTableHeader(i+1,pages));
+            parentDiv.append('<table id = "print_dg_'+i+'" style="height:auto; width:100%; padding: 8px 0px 0px 0px;"></table>');//overflow:hidden;
+
+            if (i!=0){
+                parentDiv.append('</div>');
+            }
+        }
+        parentDiv.append(printTableFooter());
+        //局部渲染
+        $.parser.parse($('#printDiv').parent());
+        //打印区域赋值
+        setPrintContentValue(pageRowNum,pages);
+    }
+
+    function setPrintContentValue(pageRowNum,pages) {
+        var rowNum = 0;
+        var rows = $('#dg').datagrid('getRows');
+        for (var i=0;i<pages;i++){
+            //设置中心表格区域
+            $('#print_dg_'+i).datagrid({
+                striped:true ,
+                method:'post',
+                fitColumns:true,
+                singleSelect:true,
+                nowrap:false,
+                columns:[
+                    [
+                        {field: 'cardCode', title: '卡片编码', width: '4%', halign: 'center', align: 'left'}
+                        , {field: 'assetCode', title: '无形资产编码', width: '7%', halign: 'center', align: 'left',formatter: function (value,row,index) {
+                            if(value){return '<div style="word-break:break-all; word-wrap:break-word;white-space:pre-wrap;">'+value+'</div>';
+                            }else{return value;}
+                        }}
+                        , {field: 'assetTypeName', title: '无形资产类别', width: '7%', halign: 'center', align: 'left',formatter: function (value,row,index) {
+                            if(value){return '<div style="word-break:break-all; word-wrap:break-word;white-space:pre-wrap;">'+value+'</div>';
+                            }else{return value;}
+                        }}
+                        , {field: 'articleCode1', title: '无形资产专项', width: '7%', halign: 'center', align: 'left',formatter: function (value,row,index) {
+                            if(value){return '<div style="word-break:break-all; word-wrap:break-word;white-space:pre-wrap;">'+value+'</div>';
+                            }else{return value;}
+                        }}
+                        , {field: 'assetName', title: '无形资产名称', width: '8%', halign: 'center', align: 'left',formatter: function (value,row,index) {
+                            if(value){return '<div style="word-break:break-all; word-wrap:break-word;white-space:pre-wrap;">'+value+'</div>';
+                            }else{return value;}
+                        }}
+                        , {field: 'assetOriginValue', title: '原值', width: '7%', halign: 'center', align: 'right',formatter: function (value,row,index) {
+                            if(value){return '<div style="word-break:break-all; word-wrap:break-word;white-space:pre-wrap;">'+formate(value)+'</div>';
+                            }else{return '0.00';}
+                        }}
+                        , {field: 'assetNetValue', title: '净值', width: '7%', halign: 'center', align: 'right',formatter: function (value,row,index) {
+                            if(value){return '<div style="word-break:break-all; word-wrap:break-word;white-space:pre-wrap;">'+formate(value)+'</div>';
+                            }else{return '0.00';}
+                        }}
+                        , {field: 'monthDepreMoney', title: '本月摊销金额', width: '7%', halign: 'center', align: 'right',formatter: function (value,row,index) {
+                            if(value){return '<div style="word-break:break-all; word-wrap:break-word;white-space:pre-wrap;">'+formate(value)+'</div>';
+                            }else{return '0.00';}
+                        }}
+                        , {field: 'endDepreMoney', title: '累计摊销额', width: '7%', halign: 'center', align: 'right',formatter: function (value,row,index) {
+                            if(value){return '<div style="word-break:break-all; word-wrap:break-word;white-space:pre-wrap;">'+formate(value)+'</div>';
+                            }else{return '0.00';}
+                        }}
+                        , {field: 'depYears', title: '预计使用总量', width: '7%', halign: 'center', align: 'right'}
+                        , {field: 'endDepreAmount', title: '已摊销月份', width: '6%', halign: 'center', align: 'right'}
+                        , {field: 'remainsValue', title: '预计残值', width: '7%', halign: 'center', align: 'right',formatter: function (value,row,index) {
+                            if(value){return '<div style="word-break:break-all; word-wrap:break-word;white-space:pre-wrap;">'+formate(value)+'</div>';
+                            }else{return '0.00';}
+                        }}
+                        , {field: 'remainsRate', title: '预计残值率', width: '5%', halign: 'center', align: 'right',formatter: function (value,row,index) {
+                            if(value){return '<div style="word-break:break-all; word-wrap:break-word;white-space:pre-wrap;">'+formatNumber(value*1, 4, 0)+'</div>';
+                            }else{return '0.0000';}
+                        }}
+                        , {field: 'useStartDate', title: '启用日期', width: '6%', halign: 'center', align: 'center',formatter: function (value,row,index) {
+                            if(value){return '<div style="word-break:break-all; word-wrap:break-word;white-space:pre-wrap;">'+value+'</div>';
+                            }else{return value;}
+                        }}
+                        , {field: 'useFlag', title: '状态', width: '4%', halign: 'center', align: 'center',formatter: function(value,row) {
+                            if (row.useFlag == '0') {
+                                return "停用";
+                            } else {
+                                return "使用";
+                            }
+                        }}
+                        , {field: 'temp', title: '备注', width: '5%', halign: 'center', align: 'left',formatter: function (value,row,index) {
+                            if(value){return '<div style="word-break:break-all; word-wrap:break-word;white-space:pre-wrap;">'+value+'</div>';
+                            }else{return value;}
+                        }}
+                    ]
+                ],
+                onClickRow: function (rowIndex, rowData) {
+                    $(this).datagrid('unselectRow', rowIndex);
+                },
+            });
+            for (var j=0;j<pageRowNum;j++){
+                if (rowNum<rows.length){
+                    $('#print_dg_'+i).datagrid('appendRow',rows[rowNum]);
+                    rowNum++;
+                } else {
+                    break;
+                }
+            }
+            //修改样式
+            var panel = $('#print_dg_'+i).datagrid('getPanel');
+            updata_easyUI_dataGrid_table_style(panel);
+        }
+    }
+
+    function printTableHeader(pageNum,pages) {
+        var headerHtml = '<table style="height: auto; width:100%; padding: 0px 0px 0px 0px;overflow: hidden;background-color: #1e9fff"><div align="center"><span align="center" style="font-size:18px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bolder;">无形资产卡片查询结果</span><span style="float: right">'+JSON.stringify(pageNum)+'/'+JSON.stringify(pages)+'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br/></div>';
+        return headerHtml;
+    }
+
+    function printTableFooter() {
+        //获得dg数据
+        var rows = $('#dg').datagrid('getRows');
+        var num = rows.length;
+        /*
+                var footer = '<table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"><tr><td style="width:10%;text-align: right;" ><label>财务主管：</label></td><td style="width:13%;"><span name="leaderPrint">'+$("#leader").text()+'</span></td><td style="width:10%;text-align: right;" ><label>操作员：</label></td><td style="width:13%;"><span name="operationUserPrint">'+$("#operationUser").text()+'</span></td><td style="width:10%;text-align: right;" ><label>打印日期：</label></td><td style="width:13%;"><span name="printDatePrint">'+$("#printDate").text()+'</span></td></tr></table>';
+        */
+        //var footer = '<div id="TableFooter"> <table style="height: auto; width:100%; padding: 0px 0px 0px 0px;overflow: hidden;"> <tr>  <td style="width:100%;text-align: center;" ><label>共'+JSON.stringify(num)+'条数据：</label></td></tr> <tr><td style="text-align: center;"><a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()"  data-options="iconCls:\'e-icon fa fa-print\'" style="width:10%;">打印</a></td></tr></table> </div>';
+        var footer = '<div id="TableFooter"> <table style="height: auto; width:100%; padding: 0px 0px 0px 0px;overflow: hidden;">  <tr><td style="text-align: center;"><a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()"  data-options="iconCls:\'e-icon fa fa-print\'" style="width:10%;">打印</a></td></tr></table> </div>';
+
+        // var footer = ' <table id = "dg2" style="height: auto; width:100%; padding: 0px 0px 0px 0px;overflow: hidden;"> <tr>  <td style="width:100%;text-align: center;" ><label>共条数据：</label></td></tr> <tr><td style="text-align: center;"><a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()"  data-options="iconCls:\'e-icon fa fa-print\'" style="width:10%;">打印</a></td> </td></tr></table> ';
+        return footer;
+    }
+
+    //打印
+    function printF() {
+        $('#TableFooter').hide();
+        window.print();
+        $('#TableFooter').show();
+    }
+    //关闭
+    function closeF() {
+        //关闭浏览器当前窗口
+        window.close();
+    }
+    function formate(data) {
+        if (data || (data+'')=='0') {
+            return formatNumber(data*1, 2, 1);
+        }
+        return data;
+    }
+</script>
+</html>

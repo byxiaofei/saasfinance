@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('系统专项管理','','')">
+    <meta charset="UTF-8">
+    <title>系统专项管理</title>
+    <link href="./font-awesome/css/font-awesome.css" rel="stylesheet" type="text/css"/>
+
+</head>
+
+<body>
+
+<!-- 搜索模块 -->
+<div class="easyui-panel"
+     style="height: auto; width:100%;padding: 8px 0px 0px 0px;overflow: hidden;">
+
+    <form id="serachFrom" method="post" style="margin-bottom:0;">
+        <table  cellspacing="5" style="width: 100%;table-layout: fixed;" border="0">
+            <tr>
+                <td style="width: 8%;text-align: right;padding-right: 10px;"><label>专项代码<span style="color: white">*</span>:</label></td>
+                <td style="width: 15%">
+                    <input style="width: 100%" id="specialCode" name="specialCode" class="easyui-textbox" data-options="prompt: '专项代码'"/>
+                    <input style="width: 100%" id="specialCodeHiden" name="specialCode" class="easyui-textbox" hidden="hidden" data-options="editable:false"/>
+                </td>
+                <td style="width: 8%;text-align: right;padding-right: 10px;"><label>专项简称:</label></td>
+                <td style="width: 15%">
+                    <input style="width: 100%" id="specialName" name="specialName" class="easyui-textbox" data-options="editable:true,prompt: '专项简称'"/>
+                </td>
+                <td style="width: 8%; text-align: right;padding-right: 10px;"><label>专项全称:</label></td>
+                <td style="width: 20%">
+                    <input style="width: 100% " id="specialNameP" name="specialNameP" class="easyui-textbox" data-options="editable:true,prompt:'专项全称'" />
+                </td>
+
+                <td style="width: 8%; text-align: right;padding-right: 10px;"><label>末级标志:</label></td>
+                <td style="width: 15%">
+                    <input style="width: 100% " id="endflag" name="endflag" class="easyui-combobox" data-options="editable:false,prompt:'末级标志'" />
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 8%; text-align: right;padding-right: 10px;"><label>使用状态:</label></td>
+                <td style="width: 15%">
+                    <input id="useflag" name="useflag" class="easyui-combobox" style="width:100%;" data-options="prompt: '使用状态',editable:false" >
+                </td>
+                <td colspan="8" style="text-align: right; padding-right: 20px;">
+                    <a href="#" class="easyui-linkbutton"  data-options="iconCls:'e-icon fa fa-search'" style="width: 8%;" onclick="serach()" >查询</a>
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-refresh'" style="width: 8%;" onclick="reset()">重置</a>
+                    <!--<a href="#" class="easyui-linkbutton" id="upLoadExcel" data-options="iconCls:'e-icon fa fa-upload'" style="width: 8%;" onclick="EXCELexport()">上传</a>-->
+                    <a href="javascript:void(0)" class="easyui-linkbutton"  data-options="iconCls:'e-icon fa fa-download'" style="width: 8%;" onclick="export_('系统专项管理信息表')">导出</a>
+                    <!--<a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-print'" style="width: 8%;" onclick="print_()">打印</a>-->
+                </td>
+            </tr>
+        </table>
+        <input type="hidden" id="serachFlag" name="flag" value="">
+    </form>
+    <!-- 展示搜索结果 -->
+    <table id = "sg"></table>
+
+</div>
+<!-- 模板下载与EXCEL上传弹框 -->
+<div id="model"  class="easyui-dialog" style="width: 500px; padding: 10px 20px" align="center"
+     data-options="modal:true,closed:true,resizable:true,maximizable:true"  buttons="#model-buttons">
+    <form id="model_fm" method="post" enctype="multipart/form-data">
+        <table cellpadding="4" >
+            <tr>
+                <td style="width:15%;text-align: right;"><label>账套类型:</label></td>
+                <td>
+                    <input class="easyui-combobox" type="text"  id ="account" name="account" style="width:140px;" data-options="editable:false">
+
+                </td>
+            </tr>
+            <tr>
+                <td style="width:10%;text-align: right;"><label>文件地址:</label></td>
+                <td >
+                    <input  class="easyui-filebox" style="width: 80%; align-content: center" id="filePath" name="file">
+                </td>
+
+            </tr>
+        </table>
+        <input type='Hidden' name="springmvc.token" value="">
+    </form>
+
+    <div id="model-buttons">
+        <a href="#" id="upLoad" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-upload'" onclick="upLoadExcel()">上传</a>
+        <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-remove'" onclick="cancel()">取消</a>
+    </div>
+</div>
+<!--  新增和编辑弹框界面-->
+<div id="dlg"  class="easyui-dialog" style="width: 600px; padding: 10px 20px" align="center"
+     data-options="modal:true,closed:true,resizable:true,maximizable:true"  buttons="#dlg-buttons">
+    <form id="fm" method="post">
+        <table cellpadding="4" class="tt">
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>专项代码</label></td>
+                <td class="ttd rtd">
+                    <span id="specialCodeFather1"></span>
+                    <input style="width: 80%" class="easyui-textbox" id="specialCodeChild" name="specialCodeChild" data-options="prompt:'专项代码',editable:true" required="required">
+                    <input type='Hidden' id="specialCodeFather" name="specialCodeFather" value="">
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>专项简称</label>
+                </td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="specialName1" name="specialName" data-options="prompt:'专项简称'" required="required">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>专项全称</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="specialNameP1" name="specialNameP"  data-options="prompt:'专项全称'" required="required">
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>末级标志</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-combobox" id ="endflag1" name="endflag"   data-options="prompt:'末级标志',editable:false" required="required">
+
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>上级专项代码</label></td>
+                <td class="ttd rtd">
+                    <!--<input  class="easyui-textbox" id="superSpecialName1" name="superSpecialName"data-options="prompt:'上级专项代码',editable:false">-->
+                    <!--<input  class="easyui-textbox" id="superSpecial1" name="superSpecial" type="hidden"></input>-->
+                    <input  class="easyui-combobox" id="superSpecial1" name="superSpecial"data-options="prompt:'上级专项代码',disabled: true,editable:false">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>备注</label></td>
+                <td class="ttd rtd" colspan="3">
+                    <input class="easyui-textbox" id="temp1" name="temp" style="width: 100%;height: 100px" multiline="true" data-options="prompt:'备注'" />
+                </td>
+            </tr>
+        </table>
+        <!--<input name="id" type="hidden" >-->
+        <input type='Hidden' name="springmvc.token" value="">
+
+    </form>
+
+    <div id="dlg-buttons">
+        <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-check'" onclick="saveSpecial()">保存</a>
+        <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-remove'" onclick="cancel()">取消</a>
+    </div>
+</div>
+
+<!-- 详细信息弹框界面 -->
+<div id="dlg_des" class="easyui-dialog" style="width: 600px; padding: 10px 20px" align="center"
+     data-options="modal:true,closed:true,resizable:true,maximizable:true"  buttons="#dlg-des-buttons">
+    <form id="fm_des" method="post">
+        <table cellpadding="4" class="tt">
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>专项代码</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="specialCode2" name="specialCode" data-options="prompt:'专项代码',editable:false">
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>专项简称</label>
+                </td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="specialName2" name="specialName" data-options="prompt:'专项简称',editable:false">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>专项全称</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="specialNameP2" name="specialNameP"  data-options="prompt:'专项全称',editable:false">
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>末级标志</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id ="endflag2" name="endflag"   data-options="prompt:'末级标志',editable:false">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>上级专项代码</label></td>
+                <td class="ttd rtd">
+                    <input  class="easyui-textbox" id="superSpecial2" name="superSpecial"data-options="prompt:'上级专项代码',editable:false">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>备注</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="temp2" name="temp" data-options="prompt:'备注',editable:false" />
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>录入人</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id ="createoper2" name="createoper"   data-options="prompt:'录入人',editable:false" >
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>录入时间</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id ="createtime2" name="createtime"   data-options="prompt:'录入时间',editable:false" >
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>修改人</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="updateoper2" name="updateoper" data-options="prompt:'修改人',editable:false" />
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>修改时间</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="updatetime2" name="updatetime" data-options="prompt:'修改时间',editable:false" />
+                </td>
+            </tr>
+
+        </table>
+        <input name="id" type="hidden" >
+        <input type='Hidden' name="springmvc.token" value="">
+
+    </form>
+
+    <div id="dlg-des-buttons">
+        <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-remove'" onclick="close1()">关闭</a>
+    </div>
+</div>
+<!--加载树状专项代码-->
+<div id="specialGrid" class="easyui-dialog" style="width: 450px; top: 25%;padding:10px 10px 10px 10px;" data-options="modal:true,closed:true,resizable:false,collapsible:false,minimizable:false,maximizable:true" buttons="#special-buttons">
+    <div class="easyui-panel" style="width: 100%;height: 350px;">
+        <ul id="specialTree" class="easyui-tree"  data-options="method:'get',animate:true,checkbox:true,cascadeCheck:false"></ul>
+    </div>
+    <div id="special-buttons">
+        <a href="#" class="easyui-linkbutton" iconCls="icon-ok icon-large" onclick="getSpecialCode()">保存</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove icon-large" onclick="javascript:$('#specialGrid').dialog('close')">取消</a>
+
+    </div>
+</div>
+
+<div id="waitMenu" class="easyui-dialog"
+     style="width: 300px; height: 100px; padding: 10px 20px;" closed="true"
+     align="center"
+     data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+    <div id="msg"></div>
+</div>
+
+<script th:src="@{/js/specialmanageExport.js}"></script>
+<script type="text/javascript">
+    var count;
+
+    $(function () {
+        $('#serachFlag').val('0');
+        $('#specialCodeHiden').next().hide();
+
+        $('#sg').datagrid({
+            url: '/specialinfo/Searchlist?flag='+$('#serachFlag').val(),
+            striped: true,  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false,
+            method: 'get' , //默认为 post
+            pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。默认false
+            //,rownumbers: true //设置为 true，则显示带有行号的列。默认false
+            fitColumns: true ,//设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            //,autoRowHeight: true //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能。
+            singleSelect: true ,//设置为 true，则只允许选中一行。 默认false
+
+            checkOnSelect: true, //如果设置为 true，当用户点击某一行时，则会选中/取消选中复选框。
+            pagePosition: 'bottom', //定义分页栏的位置。可用的值有：'top'、'bottom'、'both'。 默认 bottom
+            pageSize: 100, //在设置分页属性的时候初始化页面大小。默认10
+            pageList: [100,150,200,250,300], //当设置了 pagination 属性时，初始化页面尺寸的选择列表。
+            nowrap: true,
+            columns: [
+                [
+                    {field:'ck',checkbox: true ,align:'center'}
+                    ,{field:'specialCode',title:'专项代码',width:'10%',align:'left',halign:'center',formatter:function(value,row){
+                        return "<span onclick='desSpecial_("+JSON.stringify(row)+")' style='cursor:pointer;color:blue;' class='hov'>"+row.specialCode+"</span>";
+                    }}
+                    ,{field:'specialName',title:'专项简称',width:'18%',halign:'center',align:'left'}
+                    ,{field:'specialNameP',title:'专项全称',width:'35%',halign:'center',align:'left'}
+                    ,{field:'endflagName',title:'末级标志',width:'6%',align:'center'}
+                    ,{field:'superSpecialName',title:'上级专项代码',width:'15%',align:'center',halign:'center'}
+                    ,{field:'id',title:'操作',width:'15%',align:'center',formatter: function(value,row,index){
+
+                        //  var look = "<button class='sino-btn sino sino-btn-xs' onclick='desSpecial_("+JSON.stringify(row)+")'>查看</button>";
+                        var btn = '';
+                        if(row.endflag == 0){
+                            btn = '<button class="sino-btn sino-btn-danger sino-btn-xs" onclick="deleteSpecial_('+value+')">删除</button>';
+                        }else{
+                            btn = '<button class="sino-btn sino-btn-disabled sino-btn-xs" disabled="value">删除</button>';
+                        }
+                        var newAddNext='';
+                        if(row.endflag == 0){
+                            newAddNext='<button class="sino-btn sino-btn-disabled sino-btn-xs" >新增下级</button>';
+                        }else{
+                            newAddNext="<button class='sino-btn sino sino-btn-xs' onclick='newAddSpecial_("+ JSON.stringify(row) +")'>新增下级</button>";
+                        }
+                        if (row.endflag != 0) {
+                            countNum(row.id);
+                            //格式：单引号必须在外，单双引号保持一致。不然脚本执行异常
+                            var changeResult="";
+                            if(count<1){
+                                changeResult =  newAddNext + "&nbsp;&nbsp;<button class='sino-btn sino sino-btn-xs' onclick='editSpecial_("+ JSON.stringify(row) +")'>编辑</button>&nbsp;&nbsp;" + btn;
+                            }else{
+                                changeResult =  newAddNext + "&nbsp;&nbsp;<button class='sino-btn sino-btn-disabled sino-btn-xs' >编辑</button>&nbsp;&nbsp;" + btn;
+                            }
+                        } else {
+                            changeResult =  newAddNext + "&nbsp;&nbsp;<button class='sino-btn sino sino-btn-xs' onclick='editSpecial_("+ JSON.stringify(row) +")'>编辑</button>&nbsp;&nbsp;" + btn;
+                        }
+                        return changeResult;
+                    }}
+                ]
+            ],
+            /*,toolbar: '#tbar'*/    //通过id选择器引用
+            toolbar: [{
+                text: '新增',
+                iconCls: 'e-icon fa fa-plus',
+                plain: true,
+                handler: newSpecial
+            }],
+            loadMsg:'加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        });
+
+        $("input",$("#specialCode").next("span")).dblclick(function () {
+            //  $('#specialGrid').dialog('clear');
+            var value = $('#specialCode').textbox('getText');
+            $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+            $('#specialTree').tree({
+                url:'/specialinfo/codelist?value='+value,
+                cascadeCheck:true,
+                onSelect:function (node) {
+                    var cknodes = $('#specialTree').tree("getChecked");
+
+                    if(node.checked){
+                        $('#specialTree').tree('uncheck',node.target);
+                    }else {
+                        $('#specialTree').tree('check',node.target);
+                    }
+                },
+                onLoadSuccess:function (node,data) {
+                    $('#waitMenu').dialog('close');//关闭等待窗口
+                    $('#specialGrid').dialog('open').dialog('setTitle','专项代码');
+                    $(this).find('span.tree-checkbox').unbind().click(function () {
+                        $('#specialTree').tree('select',$(this).parent());
+                        return false;
+                    });
+                }
+            });
+        });
+
+        //末级标志
+        $('#endflag').combobox({
+            valueField:'value',
+            textField:'text',
+            url:'/codeSelect/unlimited?type=endflag',
+            method:'GET',
+            panelHeight:'80'
+        });
+        //末级标志1
+        $('#endflag1').combobox({
+            valueField:'value',
+            textField:'text',
+            url:'/codeSelect?type=endflag',
+            method:'GET',
+            panelHeight:'60'
+        });
+
+        $('#superSpecial1').combobox({
+            valueField:'value',
+            textField:'text',
+            url: '/specialinfo/superspeciallist',
+            method:'GET'
+        });
+        $('#useflag').combobox({
+            url:'/codeSelect/unlimited?type=useFlag',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+    });
+
+    //重置
+    function reset(){
+        $('#serachFrom').form('clear');
+        $('#serachFlag').val('0');
+    };
+    //按条件查询
+    function serach(){
+        if ($('#serachFrom').form('validate')) {
+            var params = {};
+            $('#serachFrom').find('input').each(function(){
+                var obj = $(this);
+                var id =obj.attr('name');
+                if(id){
+                    if(obj.val()!=""){
+                        params[id]=obj.val();
+                    }
+                }
+            });
+            //使用参数执行一次查询
+            $("#sg").datagrid({
+                url: '/specialinfo/Searchlist',
+                queryParams: params,
+                onLoadSuccess: function(data){
+                    if(data.total<=0)
+                        $.messager.alert("提示","未查询到相关数据","info");
+                }
+            });
+        }
+    }
+    //导出系统专项管理列表
+    function export_(xlsName){
+        //准备参数
+        var result = prepareParam(xlsName);
+        if (result == "false") {
+            return false;
+        }
+        console.log(result);
+        //使用参数执行一次查询，且将查询数据导出
+        jsutil.core.download(
+            'specialdownload',
+            result);
+    }
+
+    //准备参数
+    function prepareParam(xlsName) {
+        var param = {
+            name : xlsName,
+            queryConditions : {},
+            cols : specialExportXls
+        };
+        var grid = $("#sg");
+        var datas = grid.datagrid("getRows");
+        if (datas.length > 0) {
+            //查询之前验证
+            $('#serachFrom').find('input').each(
+                function() {
+                    var obj = $(this);
+                    var name = obj.attr('name');
+                    if (name) {
+                        param.queryConditions[name] = obj.val();
+                    }
+                });
+            return param;
+        } else {
+            $.messager.alert("提示", "请先查询或者没有要导出的数据", "warning");
+            return "false";
+        }
+    }
+
+    //打印
+    function print_() {
+
+    }
+    //获取树状下拉框中选中的专项代码
+    function getSpecialCode() {
+
+        var nodes = $('#specialTree').tree('getChecked');//获取选中
+   //     console.log("code:"+nodes[0].code);
+
+        if (nodes != null || nodes != undefined){
+            var nodeList=new Array();
+            var textList=new Array();
+            for(var i=0;i<nodes.length;i++){
+                nodeList[i]=nodes[i].code;
+                textList[i]=nodes[i].text;
+            }
+            $('#serachFlag').val('1');
+            $('#specialCode').textbox('setValue',nodeList);
+            $('#specialCodeHiden').textbox('setValue',nodeList);
+        } else {
+            $('#serachFlag').val('0');
+            $('#specialCode').textbox('setValue','');
+            $('#specialCodeHiden').textbox('setValue','');
+        }
+
+        $('#specialGrid').dialog('close');
+    }
+
+    //查看详情（有参数）
+    function desSpecial_(row){
+
+        console.log(row);
+        $('#dlg_des').dialog('open').dialog('setTitle','查看系统专项信息');
+        $('#dlg_des').window('center');//使Dialog居中显示
+        $('#specialCode2').textbox('setValue',row.specialCode);
+        $('#specialName2').textbox('setValue',row.specialName);
+        $('#specialNameP2').textbox('setValue',row.specialNameP);
+        $('#endflag2').textbox('setValue',row.endflagName);
+        $('#superSpecial2').textbox('setValue',row.superSpecialName);
+        $('#temp2').textbox('setValue',row.temp);
+        $('#createoper2').textbox('setValue',row.createoperName);
+        $('#createtime2').textbox('setValue',row.createtime);
+        $('#updateoper2').textbox('setValue',row.updateoperName);
+        $('#updatetime2').textbox('setValue',row.updatetime);
+
+    }
+
+    //新增
+    function newSpecial() {
+        $('#fm').form('clear');
+        $('#specialCodeChild').textbox({readonly:false});
+        $('#endflag1').textbox({readonly:false});
+
+        $('#specialCodeFather1').html("");
+
+        url='/specialinfo/save';
+        //}
+        $('#dlg').dialog('open').dialog('setTitle','新增系统专项信息');
+        $('#dlg').window('center');//使Dialog居中显示
+    }
+
+    function countNum(id) {
+        $.ajax({
+            url:'/specialinfo/countnum?id='+id,
+            method:'POST',
+            async:false, //是否异步
+            success :function (data) {
+                count = data;
+                //console.log("count:"+count);
+            }
+        })
+    }
+    //新增下级
+    function newAddSpecial_(row){
+        $('#fm').form('clear');
+        $('#specialCodeChild').textbox({readonly:false});
+        $('#endflag1').textbox({readonly:false});
+        $('#specialCodeFather1').html(row.specialCode);
+        $('#specialCodeFather').val(row.specialCode);
+        $('#superSpecial1').textbox('setValue',row.specialCode);
+        url='/specialinfo/saveChild?id='+row.id;
+        jsutil.tool.refreshToken('',$('#fm').find('input[name="token"]'));
+        $('#dlg').dialog('open').dialog('setTitle','新增系统专项信息');
+        $('#dlg').window('center');//使Dialog居中显示
+    }
+    //编辑
+    function editSpecial_(row) {
+        countNum(row.id);
+        //判断该专项有无子专项，若无，则末级标志可编辑，若有，则末级标志不可编辑。
+        if(parseInt( count ) > parseInt(0)){
+            $('#endflag1').combobox({readonly:true});
+        }
+        if(row.endflag == '1'&&parseInt( count ) > parseInt(0)){
+            $('#specialCodeChild').textbox({readonly:true});
+        }
+        $('#dlg').dialog('open').dialog('setTitle','编辑系统专项信息');
+        $('#dlg').window('center');//使Dialog居中显示
+        console.log(row);
+        //获取token，防止表单重复提交
+        jsutil.tool.refreshToken('',$('#fm').find('input[name="token"]'));
+        //span标签
+        $('#specialCodeFather1').html(row.superSpecialName);
+        //隐藏的specialCodeFather,用于往后台传参数
+        $('#specialCodeFather').val(row.superSpecialName);
+        $('#specialCodeChild').textbox('setValue',row.specialCodeChild);
+        //原数据的specialCode
+        $('#specialName1').textbox('setValue',row.specialName);
+        $('#specialNameP1').textbox('setValue',row.specialNameP);
+        $('#endflag1').combobox('setValue',row.endflag);
+        $('#superSpecial1').textbox('setValue',row.superSpecialName);
+        $('#temp1').textbox('setValue',row.temp);
+        url='/specialinfo/update?id='+row.id;
+    }
+
+    //保存
+    function saveSpecial() {
+
+        var f = $('#fm').form('validate');
+        if(!f){
+            $.messager.alert('提示','请填写带*的信息栏','warning');
+            return f;
+        }
+        //表单数据序列化  jquery的方法
+        var data = $('#fm').serialize();
+        $.post(url, data, function(result){
+            if(result.success){
+                $.messager.alert('提示','操作成功！', 'info');
+                $('#dlg').dialog('close');
+                $('#sg').datagrid('reload');
+            } else{
+                $.messager.alert('提示',result.errorMsg,'error');
+            }
+        });
+    }
+
+    //删除
+    function deleteSpecial_(value) {
+        $.ajax({
+            url : '/specialinfo/delete?id='+value,//这里写上你的action路径
+            type : 'POST',  //提交方式
+
+            async:false, //是否异步
+            success : function(data) {//这是个回调函数  data表示从action中传过来的json数据
+                //弹出从action层传过来的json格式的数据(用来显示是否更新成功)
+                $('#sg').datagrid('reload');
+                if(data.success){
+                    $.messager.show({
+                        showType:'fade',
+                        style: { left: 500, top: 150 },
+                        title: '消息',
+                        width: 200,
+                        height: 100,
+                        timeout: 2000,
+                        msg:'删除成功！'
+                    });
+                }else{
+                    $.messager.show({
+                        showType:'fade',
+                        style: { left: 500, top: 150 },
+                        title: '消息',
+                        width: 200,
+                        height: 100,
+                        timeout: 2000,
+                        msg:data.errorMsg
+                    });
+                }
+                //刷新结果
+
+            }
+        });
+
+    }
+    //EXCEL导入
+    function EXCELexport() {
+        $('#model').dialog('open').dialog('setTitle','数据上传');
+        $('#filePath').filebox('setValue','');
+        $('#account').combobox({
+            url:'/subject/getaccount',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+    }
+    //上传文件
+    function upLoadExcel() {
+        //获取文件
+        //var obj = document.getElementById('filebox_file_id_2').files[0];
+        var account = $('#account').combobox('getValue');
+        if (account == ""){
+            $.messager.alert("提示", "请选择账套类型", "warning");
+            return "false";
+        }
+        var filepath = $('#filePath') .filebox('getValue');
+        if (filepath == "") {
+            $.messager.alert("提示", "请选择文件地址", "warning");
+            return "false";
+        }
+        var formData = new FormData(document.getElementById("model_fm"));
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        $('#model_fm').form('submit',{
+            url:'/specialinfo/upload',
+            success:function (result) {
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                var data = eval("(" + result + ")");
+                if(data.success){
+                    $('#model').dialog('close');
+                    $.messager.alert("提示","上传成功！",'info')
+                    $('#sg').datagrid('reload');
+                }else{
+                    $.messager.alert('提示',data.errorMsg,'error');
+                }
+            }
+        });
+    }
+    //返回
+    function cancel() {
+        $('#dlg').dialog('close');
+        $('#model').dialog('close');
+    }
+    //关闭
+    function close1() {
+        $('#dlg_des').dialog('close');
+    }
+
+    //等待
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+    var ii = 2;
+    function showalert() {
+        var text = "";
+        var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+    function onClose() {
+        clearInterval(loading);
+    }
+</script>
+</body>
+
+</html>

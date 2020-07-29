@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('明细账打印','/css/datagridcell_text-overflow_ellipsis.css','')">
+</head>
+<body>
+<div id="panelDiv" align="center">
+<div class="easyui-panel" align="center" style="height: auto; width:90%; padding: 8px 0px 0px 0px;overflow: hidden;">
+    <!--id 不允许更改-->
+    <span id="searchspan">
+    <span id="yearMonth" style="display:none" th:text="${map.yearMonth}"></span>
+    <span id="yearMonthDate" style="display:none" th:text="${map.yearMonthDate}"></span>
+    <span id="itemCode1" style="display:none" th:text="${map.itemCode1}"></span>
+    <span id="itemCode2" style="display:none" th:text="${map.itemCode2}"></span>
+
+    <span id="level" style="display:none" th:text="${map.level}"></span>
+    <span id="levelEnd" style="display:none" th:text="${map.levelEnd}"></span>
+    <span id="moneyStart" style="display:none" th:text="${map.moneyStart}"></span>
+    <span id="moneyEnd" style="display:none" th:text="${map.moneyEnd}"></span>
+    <span id="voucherNoStart" style="display:none" th:text="${map.voucherNoStart}"></span>
+    <span id="voucherNoEnd" style="display:none" th:text="${map.voucherNoEnd}"></span>
+    <span id="voucherGene" style="display:none" th:text="${map.voucherGene}"></span>
+    <span id="subjectCode" style="display:none" th:text="${map.subjectCode}"></span>
+    <span id="voucherDateStart" style="display:none" th:text="${map.voucherDateStart}"></span>
+    <span id="voucherDateEnd" style="display:none" th:text="${map.voucherDateEnd}"></span>
+    <span id="specialNameP" style="display:none" th:text="${map.specialNameP}"></span>
+    <span id="specialName" style="display:none" th:text="${map.specialName}"></span>
+    <span id="remarkName" style="display:none" th:text="${map.remarkName}"></span>
+
+    <span id="subjectNameP" style="display:none" th:text="${map.subjectNameP}"></span>
+    <span id="orderingRule" style="display:none" th:text="${map.orderingRule}"></span>
+    <span id="synthDetailAccount" style="display:none" th:text="${synthDetailAccount}"></span>
+    <span id="centerCodes" style="display:none" th:text="${centerCode}"></span>
+    <span id="currentManageBranchName" style="display:none" th:text="${session.currentUser.currentManageBranchName}"></span>
+    </span>
+    <!-- 用于展示的 -->
+    <div id="searchDiv" hidden>
+        <table id = "dg1" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+            <div align="center">
+                <span align="center" style="font-size:18px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bolder" th:text="${session.currentUser.currentManageBranchName}"></span>
+                <br/>
+                <span align="center" style="font-size:20px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bold">明细账</span>
+            </div>
+        </table>
+        <table cellpadding="2" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="text-align: left; padding-left: 10px"><label>核算单位：<span id="centerCode"></span></label></td>
+                <td style="text-align: center;"><label>期间：自&nbsp;<span id="yearMonth1"></span>&nbsp;至&nbsp;<span id="yearMonthDate1"></span></label></td>
+                <td style="text-align: right; padding-right: 10px"><label>单位：<span>人民币元</span></label></td>
+            </tr>
+        </table>
+        <!-- 筛选条件 --><!-- 已隐藏，不可删 -->
+        <form id="serachFrom" method="post" style="margin-bottom:0;" hidden>
+            <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+                <tr>
+                    <td style="width:10%;text-align: right;" ><label>会计期间:</label></td>
+                    <td style="width:21%;">
+                        <input style="width:40%;" id="yearMonths" name="yearMonth" class="easyui-combobox" data-options="prompt: '会计期间',editable:false">&nbsp;--&nbsp;
+                        <input style="width:40%;" id="yearMonthDates" name="yearMonthDate" class="easyui-combobox" data-options="prompt: '会计期间',editable:false">
+                    </td>
+                </tr>
+            </table>
+        </form>
+
+        <!--<table cellpadding="2" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">-->
+            <!--<tr>-->
+                <!--<td style="text-align: left; padding-left: 10px"><label>科目：<span id="itemName"></span><span>(</span><span id="directionIdx"></span><span>)</span></label></td>-->
+                <!--<td style="text-align: right; padding-right: 20px"><label>日期:<span id="dateText"></span></label></td>-->
+            <!--</tr>-->
+        <!--</table>-->
+
+        <!--  数据列表 -->
+        <div><table id = "dgs" cellspacing="0" cellpadding="0"  style="height: auto;border-collapse: collapse; width:100%; overflow: hidden;"></table></div>
+
+        <table id = "dg2" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+            <tr>
+                <td style="width:10%;text-align: right;" ><label>财务主管：</label></td>
+                <td style="width:13%;"><span id="leader"></span></td>
+                <td style="width:10%;text-align: right;" ><label>操作员：</label></td>
+                <td style="width:13%;"><span id="operationUser" th:text="${session.currentUser.userName}"></span></td>
+                <td style="width:10%;text-align: right;" ><label>打印日期：</label></td>
+                <td style="width:13%;"><span id="printDate"></span></td>
+            </tr>
+
+            <tr>
+                <td colspan="6" style="text-align: center;">
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()" data-options="iconCls:'e-icon fa fa-print'" style="width:10%;">打印</a>
+                </td>
+            </tr>
+        </table>
+        </div>
+    <!-- 用于打印的 --><!-- 多加一层，防止局部渲染导致区域之外的数据失效 -->
+    <div><div id="printDiv"></div></div>
+    <table id="printxf" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+        <tr>
+            <td colspan="6" style="text-align: center;" hidden>
+                <a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()" data-options="iconCls:'e-icon fa fa-print'" style="width:10%;">打印</a>
+            </td>
+        </tr>
+    </table>
+</div>
+</div>
+
+<!-- 等待提示框 -->
+<div id="waitMenu" class="easyui-dialog" style="width: 300px; height: 100px; padding: 10px 20px;" closed="true" align="center" data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+    <div id="msg"></div>
+</div>
+</body>
+<script th:src="@{/js/updataEasyUIDataGridTableStyle.js}"></script>
+<script>
+    $(function(){
+        searchF();
+        initData();
+        /*$('#dg').datagrid({
+            striped: true  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false
+            ,method: 'post'
+            ,fitColumns: true //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            ,singleSelect: true //设置为 true，则只允许选中一行。 默认false
+            ,nowrap: true
+            ,columns: [
+                [
+                    {field:'voucherDate',title:'凭证日期',width:'8%',halign:'center',align:'center',formatter: function(value,row,index){
+                            if (value && value.length==6 && value.indexOf("JS")!=-1) {
+                                //当凭证日期为会计期间时并且为JS月，则应显示为当年12月
+                                return value.substring(0,4)+'12';
+                            }
+                            return value
+                        }},
+                    {field:'voucherNo',title:'凭证号',width:'7%',halign:'center',align:'center',formatter: function(value,row,index){
+                            if (value) {
+                                return "<span style='color: blue; cursor: pointer;' onclick='lookVoucher("+JSON.stringify(row)+")'>" + value + "</span>";
+                            }
+                            return value;
+                        }},
+                    {field:'directionIdx',title:'科目代码',width:'15%',halign:'center',align:'left'},
+                    {field:'directionIdxName',title:'科目名称',width:'17%',halign:'center',align:'left'},
+                    {field:'remarkName',title:'凭证摘要',width:'18%',halign:'center',align:'left'},
+                    {field:'debitDest',title:'借方金额',width:'10%',halign:'center',align:'right',formatter: function(value,row,index){if (value) {return formatNumber(value*1,2,1);} else {return value;}}},
+                    {field:'creditDest',title:'贷方金额',width:'10%',halign:'center',align:'right',formatter: function(value,row,index){if (value) {return formatNumber(value*1,2,1);} else {return value;}}},
+                    {field:'balanceFX',title:'方向',width:'3%',halign:'center',align:'center'},
+                    {field:'balanceDest',title:'余额',width:'12%',halign:'center',align:'right',formatter: function(value,row,index){if (value) {return formatNumber(value*1,2,1);} else {return value;}}},
+
+                ]
+            ],
+            onClickRow: function (rowIndex, rowData) {
+                $(this).datagrid('unselectRow', rowIndex);
+            },
+
+            loadMsg:'加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        });*/
+
+    });
+
+    //初始化页面数据
+    function initData() {
+        //财务主管
+        $("#leader").html('');
+        //打印日期
+        var curr_time = new Date();
+        $("#printDate").html(myformatter(curr_time));
+        $("#yearMonth1").html($('#yearMonth').text());
+        $("#yearMonthDate1").html($('#yearMonthDate').text());
+        $("#centerCode").html($('#centerCodes').text());
+    }
+
+    //搜索
+    function searchF(){
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        var url='/detailaccount/list';
+        var params = {};
+        $('#searchspan').find('span').each(function(){
+            var obj = $(this);
+            var name = obj.attr('id');
+            if(name){
+                params[name] = obj.text();
+            }
+        });
+        $.post(url, params, function (result) {
+            if (result.length>0) {
+                //console.log(result);
+                //getData(result);
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                creatPrintContent(result);
+                //隐藏打印区域
+               //$('#printDiv').hide();
+            } else {
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                //无打印的凭证数据
+                $.messager.alert('提示','未查询到相关数据','info');
+            }
+        });
+        /*$("#dg").datagrid({
+            url:'/detailaccount/list',
+            queryParams: params,    //查询条件
+            onLoadSuccess: function(data){
+                if(data.total<=0) {
+                    $.messager.show({
+                        title: '提示'
+                        ,msg:'未查询到相关数据'
+                        ,showType:'slide'
+                    });
+                }else{
+                    var panel = $(this).datagrid('getPanel');
+                    //修改样式
+                    updata_easyUI_dataGrid_table_style(panel);
+                    //处理打印的Div区域
+                    creatPrintContent();
+                    //隐藏打印区域
+                    $('#printDiv').hide();
+                }
+            }
+        });*/
+    }
+    function getData(result){
+        //获取当前表格
+        var table = document.getElementById ("dgs");
+        table.border = '1px solid #0094ff';
+        //添加表头行信息
+        addTableHeaderRowInfo(table.insertRow(0));
+
+        for(var k=0;k<result.length;k++){
+            var row = table.insertRow(k+1);
+            addTableDataRowInfo(row, result[k]);
+        }
+    }
+    function addTableHeaderRowInfo(row) {
+        row.style.height = '30px';
+        row.style.textAlign = 'center';
+        for (var i=0;i<9;i++) {
+            var cell = row.insertCell(i);
+            cellStylePadding(cell);
+            if (i==0) {
+                cellStyleWidth(cell, 1);
+                cell.innerHTML= "<td>凭证日期</td>";
+            } else if (i==1) {
+                cellStyleWidth(cell, 2);
+                cell.innerHTML= "<td>凭证号</td>";
+            } else if (i==2) {
+                cellStyleWidth(cell, 3);
+                cell.innerHTML= "<td>科目代码</td>";
+            } else if(i==3) {
+                cellStyleWidth(cell, 4);
+                cell.innerHTML= "<td>科目名称</td>";
+            }else if(i==4) {
+                cellStyleWidth(cell, 5);
+                cell.innerHTML= "<td>凭证摘要</td>";
+            }else if(i==5) {
+                cellStyleWidth(cell, 6);
+                cell.innerHTML= "<td>借方金额</td>";
+            }else if(i==6) {
+                cellStyleWidth(cell, 7);
+                cell.innerHTML= "<td>贷方金额</td>";
+            }else if(i==7) {
+                cellStyleWidth(cell, 8);
+                cell.innerHTML= "<td>方向</td>";
+            }else if(i==8) {
+                cellStyleWidth(cell, 9);
+                cell.innerHTML= "<td>余额</td>";
+            }
+        }
+    }
+    function addTableDataRowInfo(row, data) {
+        row.style.height = '35px';
+        for (var i=0;i<9;i++) {
+            var cell = row.insertCell(i);
+            cellStylePadding(cell);
+            if (i==0) {
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 1);
+                var voucherDate=data.voucherDate;
+                if (data.voucherDate && data.voucherDate.length==6 && data.voucherDate.indexOf("JS")!=-1) {
+                    //当凭证日期为会计期间时并且为JS月，则应显示为当年12月
+                    voucherDate= data.voucherDate.substring(0,4)+'12';
+                }
+                cell.innerHTML = "<td>"+voucherDate==''||voucherDate==null?'':voucherDate+"</td>";
+            } else if (i==1) {
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 2);
+                cell.innerHTML = "<td>"+data.voucherNo==''||data.voucherNo==null?'':data.voucherNo+"</td>";
+            } else if (i==2) {
+                cellTextAlignLeft(cell);
+                cellStyleWidth(cell, 3);
+                cell.innerHTML= "<td>"+data.directionIdx==''||data.directionIdx==null?'':data.directionIdx+"</td>";
+            }else if(i==3) {
+                cellTextAlignLeft(cell);
+                cellStyleWidth(cell, 4);
+                cell.innerHTML= "<td>"+data.directionIdxName==''||data.directionIdxName==null?'':data.directionIdxName+"</td>";
+            }else if(i==4) {
+                cellTextAlignLeft(cell);
+                cellStyleWidth(cell, 5);
+                cell.innerHTML= "<td>"+data.remarkName==''||data.remarkName==null?'':data.remarkName+"</td>";
+            }else if(i==5) {
+                cellTextAlignRight(cell);
+                cellStyleWidth(cell, 6);
+                cell.innerHTML= "<td>"+data.debitDest==''||data.debitDest==null?'':formate(data.debitDest)+"</td>";
+            }else if(i==6) {
+                cellTextAlignRight(cell);
+                cellStyleWidth(cell, 7);
+                cell.innerHTML= "<td>"+data.creditDest==''||data.creditDest==null?'':formate(data.creditDest)+"</td>";
+            }else if(i==7) {
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 8);
+                cell.innerHTML= "<td>"+data.balanceFX==''||data.balanceFX==null?'':data.balanceFX+"</td>";
+            }else if(i==8) {
+                cellTextAlignRight(cell);
+                cellStyleWidth(cell, 9);
+                cell.innerHTML= "<td>"+data.balanceDest==''||data.balanceDest==null?'':formate(data.balanceDest)+"</td>";
+            }
+        }
+    }
+
+
+    //打印
+    function printF() {
+      /*  $('#searchDiv').hide();
+        $('#printDiv').show();*/
+        $('#printxf').hide();
+        window.print();
+        /*$('#printDiv').hide();
+        $('#searchDiv').show();*/
+        $('#printxf').show();
+        /*$('.easyui-linkbutton').css({'display':'none'});
+        //打印当前网页
+        window.print();
+        //无论是打印还是取消打印，均自动关闭当前网页
+        window.close();*/
+    }
+    function cellStylePadding(cell) {
+        cell.style.padding = '2px';
+    }
+    function cellTextAlignRight(cell) {
+        cell.style.textAlign = 'right';
+    }
+    function cellTextAlignLeft(cell) {
+        cell.style.textAlign = 'left';
+    }
+    function cellTextAlignCenter(cell) {
+        cell.style.textAlign = 'center';
+    }
+    function cellStyleWidth(cell, type) {
+        //8,7,15,17,18,10,10,3,12
+        if (type==1) {
+            cell.style.width = '8%';
+        } else if (type==2) {
+            cell.style.width = '7%';
+        } else if (type==3 ) {
+            cell.style.width = '11%';
+        }else if (type==4 ) {
+            cell.style.width = '19%';
+        } else if (type==5) {
+            cell.style.width = '20%';
+        } else if (type==6) {
+            cell.style.width = '10%';
+        }else if (type==7) {
+            cell.style.width = '10%';
+        }else if (type==8) {
+            cell.style.width = '3%';
+        }else if (type==9) {
+            cell.style.width = '12%';
+        }
+    }
+    /*function creatPrintContent() {
+        //获得DIV
+        var parentDiv = $('#printDiv');
+        //获得dg数据
+        var rows = $('#dg').datagrid('getRows');
+        //每页数据量
+        var pageRowNum = 17;
+        //得到分页数
+        var pages = rows.length/pageRowNum;
+        //每页的开始行
+        var rowNum = 0;
+        for (var i=0;i<pages;i++) {
+            //追加分页标志
+            if (i!=0) {
+                parentDiv.append('<div style="page-break-after:always">');
+            }
+            parentDiv.append(printTableHeader());
+            // for (var j=0;j<pageRowNum;j++) {
+            //     if (rowNum < rows.length) {
+            //         var row = rows[rowNum];
+                    parentDiv.append('<table id = "print_dg_'+i+'" border="1" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"></table>');
+                    rowNum += 1;
+                // } else {
+            //     break;
+            // }
+        //    }
+            parentDiv.append(printTableFooter());
+            if (i!=0) {
+                parentDiv.append('</div>');
+            }
+        }
+        //局部渲染
+        $.parser.parse($('#printDiv').parent());
+        //打印区域赋值
+        setPrintContentValue(pageRowNum,pages);
+    }*/
+    function creatPrintContent(result) {
+        //获得DIV
+        var parentDiv = $('#printDiv');
+        //每页数据量
+        var pageRowNum = 17;
+        //得到分页数
+        var pages = result.length/pageRowNum;
+        //每页的开始行
+        var rowNum = 0;
+        //当前总数据行数
+        var rowNow=0;
+        for (var i=0;i<pages;i++) {
+            //追加分页标志
+            if (i!=0) {
+                parentDiv.append('<div style="page-break-after:always">');
+            }
+            parentDiv.append(printTableHeader());
+            parentDiv.append('<table id = "print_dg_' +i+ '" cellspacing="0" cellpadding="0"  style="height: auto;border-collapse: collapse; width:100%; "></table>');//overflow: hidden;
+            //获取当前表格
+            var table = document.getElementById ("print_dg_"+i);
+            table.border = '1px solid #0094ff';
+            //添加表头行信息
+            addTableHeaderRowInfo(table.insertRow(0));
+            for(var k=0;k<pageRowNum;k++){
+                if(!result[rowNow]){
+                    continue;
+                }
+                var row = table.insertRow(k+1);
+                addTableDataRowInfo(row, result[rowNow]);
+                rowNow++;
+            }
+            parentDiv.append(printTableFooter());
+            if (i!=0) {
+                parentDiv.append('</div>');
+            }
+        }
+
+        //局部渲染
+       // $.parser.parse($('#printDiv').parent());
+        //打印区域赋值
+       // setPrintContentValue(pageRowNum,pages);
+    }
+    function printTableHeader() {
+        var headerHtml = '<table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;" ><div align="center"><span align="center" style="font-size:18px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bolder">'+$('#currentManageBranchName').text()+'</span><br/><span align="center" style="font-size:20px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bold">明细账</span></div></table>' + '<table cellpadding="2" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0"><tr>  <td style="text-align: left; padding-left: 10px"><label>核算单位：<span id="centerCode">'+$('#centerCode').text()+'</span></label></td>'+
+            '<td style="text-align: center;"><label>期间：自&nbsp;<span id="yearMonth1">'+$('#yearMonth').text()+'</span>&nbsp;至&nbsp;<span id="yearMonthDate1">'+$('#yearMonthDate').text()+'</span></label></td> <td style="text-align: right; padding-right: 20px"><label>单位：<span>人民币元</span></label></td></tr></table>';
+        //      var headerHtml = '<table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;" ><div align="center"><span align="center" style="font-size:18px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bolder">XX有限责任公司</span><br/><span align="center" style="font-size:20px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bold">水电费明细</span></div></table>' ;
+        return headerHtml;
+    }
+    function printTableFooter() {
+        var footer = '<table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"><tr><td style="width:10%;text-align: right;" ><label>财务主管：</label></td><td style="width:13%;"><span name="leaderPrint">'+$("#leader").text()+'</span></td><td style="width:10%;text-align: right;" ><label>操作员：</label></td><td style="width:13%;"><span name="operationUserPrint">'+$("#operationUser").text()+'</span></td><td style="width:10%;text-align: right;" ><label>打印日期：</label></td><td style="width:13%;"><span name="printDatePrint">'+$("#printDate").text()+'</span></td></tr></table>';
+        return footer;
+    }
+   /* function setPrintContentValue(pageRowNum, pages) {
+        var rowNum = 0;
+        var rows = $('#dg').datagrid('getRows');
+
+        for (var i=0;i<pages;i++) {
+            //设置中心表格区域
+            $('#print_dg_'+i).datagrid({
+                striped: true
+                ,method: 'post'
+                ,fitColumns: true
+                ,singleSelect: true
+                ,nowrap: true
+                ,columns: [
+                    [
+                        {field:'voucherDate',title:'凭证日期',width:'8%',halign:'center',align:'center',formatter: function(value,row,index){
+                                if (value && value.length==6 && value.indexOf("JS")!=-1) {
+                                    //当凭证日期为会计期间时并且为JS月，则应显示为当年12月
+                                    return value.substring(0,4)+'12';
+                                }
+                                return value
+                            }},
+                        {field:'voucherNo',title:'凭证号',width:'7%',halign:'center',align:'center',formatter: function(value,row,index){
+                                if (value) {
+                                    return "<span style='color: blue; cursor: pointer;' onclick='lookVoucher("+JSON.stringify(row)+")'>" + value + "</span>";
+                                }
+                                return value;
+                            }},
+                        {field:'directionIdx',title:'科目代码',width:'15%',halign:'center',align:'left'},
+                        {field:'directionIdxName',title:'科目名称',width:'17%',halign:'center',align:'left'},
+                        {field:'remarkName',title:'凭证摘要',width:'18%',halign:'center',align:'left'},
+                        {field:'debitDest',title:'借方金额',width:'10%',halign:'center',align:'right',formatter: function(value,row,index){if (value) {return formatNumber(value*1,2,1);} else {return value;}}},
+                        {field:'creditDest',title:'贷方金额',width:'10%',halign:'center',align:'right',formatter: function(value,row,index){if (value) {return formatNumber(value*1,2,1);} else {return value;}}},
+                        {field:'balanceFX',title:'方向',width:'3%',halign:'center',align:'center'},
+                        {field:'balanceDest',title:'余额',width:'12%',halign:'center',align:'right',formatter: function(value,row,index){if (value) {return formatNumber(value*1,2,1);} else {return value;}}},
+
+                    ]
+                ]
+            });
+            // for (var j=0;j<pageRowNum;j++) {
+            //     if (rowNum < rows.length) {
+            //         $('#print_dg_'+i).datagrid('appendRow', rows[rowNum]);
+            //         rowNum++;
+            //     } else {
+            //         break;
+            //     }
+            // }
+            for (var j=0;j<pageRowNum;j++) {
+                if (rowNum < rows.length) {
+                    console.log(rows[rowNum]);
+                    $('#print_dg_'+i).datagrid('appendRow', rows[rowNum]);
+                    rowNum++;
+                } else {
+                    break;
+                }
+            }
+            //修改样式
+            var panel = $('#print_dg_'+i).datagrid('getPanel');
+            updata_easyUI_dataGrid_table_style(panel);
+        }
+    }*/
+
+    function appointPrintContent(doc) {
+        //这里可以自定义样式
+        //doc.write("<LINK rel="stylesheet" type="text/css" href="css/print.css">");
+        doc.write('<div>' + el.innerHTML + '</div>');
+    }
+
+    function myformatter(date){
+        var y = date.getFullYear();
+        var m = date.getMonth()+1;
+        var d = date.getDate();
+        return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+    }
+
+    function formate(data) {
+        if (data || (data+'')=='0') {
+            return formatNumber(data*1, 2, 1);
+        }
+        return data;
+    }
+
+    //将","替换为"/"
+    function repalceValue(value) {
+        if (value) {
+            var str = '';
+            var s = value.split(",");
+            for (var i=0;i<s.length;i++) {
+                str = str + s[i] + '/'
+            }
+            value = str.substring(0,str.length-1);
+        }
+        return value;
+    }
+    //等待
+    var loading;
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+    var ii = 2;
+    function showalert() {
+        var text = "";
+        var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+    function onClose() {
+        clearInterval(loading);
+    }
+</script>
+</html>

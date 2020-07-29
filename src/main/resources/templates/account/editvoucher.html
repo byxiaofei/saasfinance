@@ -1,0 +1,2736 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('凭证编辑','/css/Standard.css','')">
+</head>
+
+<body>
+<span id="editVoucherNo" style="display:none" th:text="${map.editVoucherNo}"></span>
+<span id="editYearMonth" style="display:none" th:text="${map.editYearMonth}"></span>
+<span id="editSpecialNameP" style="display:none" th:text="${map.editSpecialNameP}"></span>
+<div class="easyui-panel" style="height: auto; width:100%; padding: 0px 0px 0px 0px;overflow: hidden;">
+    <div id="dlg" align="center" buttons="#dlg-buttons">
+        <form id="fm" method="post" style="margin-bottom: 0">
+            <table style="width:100%;" align=center class=common cellpadding="2" cellspacing="1" border="0">
+                <tr>
+                    <td class=formtitle colspan="4">凭证基本信息编辑</td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;"><label>凭证号:</label></td>
+                    <td >
+                        <input class="easyui-textbox" readonly type="text" id="voucherNo" name="voucherNo" >
+                    </td>
+                    <td style="text-align: right;"><label>会计期间:</label></td>
+                    <td>
+                        <input class="easyui-combobox" type="text"  id ="yearMonth" name="yearMonth" data-options="prompt:'会计期间',readonly:true,editable:false,missingMessage:'请选择会计期间'">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;"><label>制单日期:</label></td>
+                    <td>
+                        <input id="voucherDate" name="voucherDate" class="easyui-datebox" data-options="prompt: '制单日期',readonly:false,editable:true">
+                    </td>
+                    <td style="text-align: right;"><label>附件张数:</label></td>
+                    <td >
+                        <input class="easyui-textbox" type="text" id="auxNumber" name="auxNumber"data-options="readonly:false,editable:true" >
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;"><label>制单人:</label></td>
+                    <td >
+                        <input class="easyui-textbox" readonly type="text" id="createBy" name="createBy" >
+                    </td>
+                    <td style="text-align: right;"><label>使用已有凭证号:</label></td>
+                    <td >
+                        <input class="easyui-textbox" type="text"  id="oldVoucherNo" name="oldVoucherNo">
+                    </td>
+                </tr>
+                <tr>
+                    <td class=formtitle colspan="4">凭证分录信息编辑</td>
+                </tr>
+            </table>
+            <div class="easyui-panel" style="border: 0; width: 100%">
+                <table id="dg"
+                       class="easyui-datagrid"
+                       toolbar="#toolbar"
+                       rownumbers="true"
+                       striped="true"
+                       nowrap="false"
+                       singleSelect="true"
+                       showFooter="true"
+                       autoRowHeight="false"
+                       loadMsg="加载数据中..."
+                       method="get"
+                       style="width:100%;"
+                >
+                    <div id="toolbar">
+                        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add icon-large" plain="true" id="add" onclick="addSub()">新增</a>
+                    </div>
+                    <thead>
+                    <tr>
+                        <th field="tagCode" align="left" halign="center" width="14%" >标注</th>
+                        <th field="remarkName" align="left" halign="center" width="15%" formatter="remarkNameFRFormat">摘要</th>
+                        <th field="subjectCode" align="left" halign="center" width="19%" >科目代码</th>
+                        <th field="subjectName" align="left" halign="center" width="21%">科目名称</th>
+                        <th field="debit" align="right" halign="center" width="12%" formatter="formatNumberByValue">借方金额</th>
+                        <th field="credit" align="right" halign="center" width="12%" formatter="formatNumberByValue">贷方金额</th>
+                        <th field="..." align="center" halign="center" width="6%" formatter="deal">操作</th>
+                    </tr>
+                    </thead>
+                </table>
+                <table style="width:100%;" border="0">
+                    <tr>
+                        <td width="60%"><center>当前凭证合计:</center></td>
+                        <td width="20%" class=title align="right">
+                            借方金额:<input class="readonly" readonly type="text" value="0.00"  id="DebitAll" name="DebitAll" style="width:55%;text-align:right;">
+                        </td>
+                        <td width="20%" class=title align="right">
+                            贷方金额:<input class="readonly" readonly type="text" value="0.00"  id="CreditAll" name="CreditAll" style="width:55%;text-align:right;">
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="easyui-panel" style="border: 0; width: 100%">
+                <table id="dgS"
+                       class="easyui-datagrid"
+                       toolbar="#toolbarS"
+                       rownumbers="true"
+                       striped="true"
+                       nowrap="false"
+                       singleSelect="true"
+                       autoRowHeight="true",
+                       fitColumns="false"
+                       loadMsg="加载数据中..."
+                       method="get"
+                       style="width:100%;"
+                >
+                    <div id="toolbarS">
+                        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add icon-large" plain="true" onclick="lookS()">专项信息</a>
+                        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search icon-large" plain="true" onclick="specialNamePShow()">专项名称全级显示</a>
+                    </div>
+                    <thead>
+                    <tr>
+                        <th field="subjectCodeS" align="left" halign="center" width="12%">科目代码</th>
+                        <th field="subjectNameS" align="left" halign="center" width="16%">科目名称</th>
+                        <th field="specialCodeS" width="69%" formatter="specialdeal">专项信息</th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+            <input type='hidden' name="token" value="">
+        </form>
+        <div id="dlg-buttons">
+            <table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+                <tr>
+                    <td style="text-align: center; width: 17%">
+                        <a href="javascript:void(0)" class="easyui-linkbutton" style="display: inline-block; width: 65%" iconCls="icon-search icon-large" onclick="JointAssistDetailAccount()">联查辅助明细账</a>
+                    </td>
+                    <td style="text-align: center; width: 17%">
+                        <a href="javascript:void(0)" class="easyui-linkbutton" style="display: inline-block; width: 50%" iconCls="icon-search icon-large" onclick="JointDetailAccount()">联查明细账</a>
+                    </td>
+                    <td style="text-align: center; width: 16%">
+                        <a href="javascript:void(0)" class="easyui-linkbutton" style="display: inline-block; width: 50%" iconCls="icon-ok icon-large" onclick="saveVoucher()">保&nbsp;&nbsp;存</a>
+                        <!--<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove icon-large" onclick="deleteVoucher()">删除</a>-->
+                    </td>
+                    <td style="text-align: center; width: 17%">
+                        <a href="javascript:void(0)" id="beforeVoucher" style="display: inline-block; width: 50%" class="easyui-linkbutton" iconCls="icon-undo icon-large" onclick="beforeOrAfterVoucher('before')">上一张</a>
+                    </td>
+                    <td style="text-align: center; width: 17%">
+                        <a href="javascript:void(0)" id="afterVoucher" style="display: inline-block; width: 50%" class="easyui-linkbutton" iconCls="icon-redo icon-large" onclick="beforeOrAfterVoucher('after')">下一张</a>
+                    </td>
+                    <td style="text-align: center; width: 16%">
+                        <a href="javascript:void(0)"  style="display: inline-block; width: 50%"class="easyui-linkbutton" onclick="closeTab()"  data-options="iconCls:'e-icon fa fa-close'">关&nbsp;&nbsp;闭</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- 标注 -->
+    <div id="tagGrid" class="easyui-dialog" style="width: 45%;top: 10%;padding:10px 10px 10px 10px;" data-options="modal:true,closed:true,resizable:false,collapsible:false,minimizable:false,maximizable:true" buttons="#tag-buttons">
+        <div class="easyui-panel" style="width: 100%;height: 350px;">
+            <ul id="tagTree" class="easyui-tree"  data-options="method:'get',animate:true,checkbox:true,onlyLeafCheck:true,cascadeCheck:false"></ul>
+        </div>
+        <div id="tag-buttons">
+            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok icon-large" onclick="saveTag()">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove icon-large" onclick="javascript:$('#tagGrid').dialog('close')">取消</a>
+        </div>
+    </div>
+
+    <!-- 摘要 -->
+    <div id="remarkGrid" class="easyui-dialog" style="width: 45%;top: 10%;padding:10px 10px 10px 10px;" data-options="modal:true,closed:true,resizable:false,collapsible:false,minimizable:false,maximizable:true" buttons="#remark-buttons">
+        <div class="easyui-panel" style="width: 100%;height: 350px;">
+            <ul id="remarkTree" class="easyui-tree"  data-options="method:'get',animate:true,checkbox:true,onlyLeafCheck:true,cascadeCheck:false"></ul>
+        </div>
+        <div id="remark-buttons">
+            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok icon-large" onclick="saveRemark()">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove icon-large" onclick="javascript:$('#remarkGrid').dialog('close')">取消</a>
+
+        </div>
+    </div>
+
+    <!-- 科目 -->
+    <div id="subjectGrid" class="easyui-dialog" style="width: 45%;top: 10%;padding:10px 10px 10px 10px;" data-options="modal:true,closed:true,resizable:false,collapsible:false,minimizable:false,maximizable:true" buttons="#roleData-buttons">
+        <div class="easyui-panel" style="width: 100%;height: 350px;">
+            <ul id="subjectTree" class="easyui-tree"  data-options="method:'get',animate:true,checkbox:true,onlyLeafCheck:true,cascadeCheck:false"></ul>
+        </div>
+        <div id="roleData-buttons">
+            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok icon-large" onclick="saveSuperSubject()">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove icon-large" onclick="javascript:$('#subjectGrid').dialog('close')">取消</a>
+
+        </div>
+    </div>
+
+    <!-- 专项 -->
+    <div id="specialGrid" class="easyui-dialog" style="width: 45%;top: 10%;padding:10px 10px 10px 10px;" data-options="modal:true,closed:true,resizable:false,collapsible:false,minimizable:false,maximizable:true" buttons="#special-buttons">
+        <div class="easyui-panel" style="width: 100%;height: 350px;">
+            <ul id="specialTree" class="easyui-tree"  data-options="method:'get',animate:true,checkbox:true,onlyLeafCheck:true,cascadeCheck:false"></ul>
+        </div>
+        <div id="special-buttons">
+            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok icon-large" onclick="saveSpecialGrid()">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove icon-large" onclick="javascript:$('#specialGrid').dialog('close')">取消</a>
+        </div>
+    </div>
+
+    <div id="waitMenu" class="easyui-dialog"
+         style="width: 300px; height: 100px; padding: 10px 20px;" closed="true"
+         align="center"
+         data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+        <div id="msg"></div>
+    </div>
+</div>
+
+<!-- 赤字提醒 -->
+<div id="blgs1"
+     class="easyui-dialog" style="padding: 5px 5px; top: 15px;"
+     data-options="modal:true,closed:true,resizable:true,maximizable:true" buttons="#dlg-buttons2">
+    <form id="cz" method="post">
+        <table cellpadding="5">
+            <tr><td class=formtitle colspan="3" style="font-size:14px" >赤字提醒</td></tr>
+            <tr>
+                <td>
+                    <table id="topGrid" class="easyui-datagrid" title="" style="width: 650px; height: auto"
+                           singleSelect="true" striped="true" nowrap="false" fitColumns="false" loadMsg="加载数据中...">
+                        <thead>
+                        <th field="subjectName" width="39%" align="left" halign="center" >往来科目</th>
+                        <th field="money" width="20%" align="right" halign="center" data-options="formatter:moneycz">赤字金额</th><!--data-options="formatter:numTrans"-->
+                        <th field="direction" width="8%" align="center" halign="center" >方向</th>
+                        <th field="specialName" width="35%" align="left" halign="center" >客户</th>
+                        </thead>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </form>
+    <div id="dlg-buttons2">
+        <a href="javascript:void(0)" id="saveButton2" class="easyui-linkbutton" iconCls="e-icon fa fa-check" onclick="bysaveVoucher()">继续</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="e-icon fa fa-remove" onclick="javascript:$('#blgs1').dialog('close')">取消</a>
+    </div>
+</div>
+
+<!-- 摘要查找与替换 -->
+<div id="remarkNameFR" class="easyui-dialog" style="width: 45%;top: 10%;padding:10px 10px 10px 10px;" data-options="modal:true,closed:true,resizable:false,collapsible:false,minimizable:false,maximizable:true" buttons="#remarkNameFR-buttons">
+    <form id="serachRemarkNameFR">
+        <table cellpadding="3" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="width:10%;text-align: right;" ><label>查找值:</label></td>
+                <td style="width:85%;">
+                    <input style="width:100%;" id="findValue" name="findValue" class="easyui-textbox" data-options="prompt: '查找值'">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:10%;text-align: right;" ><label>替换值:</label></td>
+                <td style="width:85%;">
+                    <input style="width:100%;" id="replaceValue" name="replaceValue" class="easyui-textbox" data-options="prompt: '替换值'">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <label style="text-align: center"><input type="checkbox" id="caseSensitive" name="caseSensitive" value="true" />区分大小写</label>
+                </td>
+            </tr>
+        </table>
+    </form>
+    <div id="remarkNameFR-buttons" style="text-align: center">
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search icon-large" id="search_all" onclick="remarkNameFR('all')">搜索</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search icon-large" id="search_top" onclick="remarkNameFR('top')">上一个</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search icon-large" id="search_next" onclick="remarkNameFR('next')">下一个</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-reload icon-large" id="search_rep" onclick="remarkNameFR('rep')">替换</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-reload icon-large" id="search_repAll" onclick="remarkNameFR('repAll')">全部替换</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove icon-large" onclick="javascript:$('#remarkNameFR').dialog('close');">取消</a>
+    </div>
+</div>
+
+</body>
+<script th:src="@{/js/windowOpenNewPage.js}"></script>
+<script th:src="@{/js/inputVoucherConfig.js}"></script>
+<script>
+    /*var specialNameP = '';//专项是否全称显示(0:否，1:是；可为空)*/
+    var voucherMainAndSubData;
+    var clickTimer = null;
+    var indexRow = null;
+    var copyType=null;
+    var bankDeposiTypeData = [{'value':null,'text':'-'},{'value':'01','text':'现金'},{'value':'02','text':'现金支票'},{'value':'03','text':'转账支票'},{'value':'04','text':'信汇'},{'value':'05','text':'电汇'},{'value':'06','text':'委托付款'},{'value':'99','text':'其他'}];
+    var specialCodeInputId = null;//专项信息栏中当前活动input标签ID（专项代码）
+    var closeTab5st;
+    originalEditVoucherNo = null;
+    var addNumTwoDebit = false;
+    var addNumTwoCredit = false;
+    var remarkNameFRFindValue = null;// 查找值
+    var remarkNameFRFindValueFlag = false;// 查找值是否存在
+    var currentFindValueIndexFlag = null;// 当前被选中的查找内容
+    var remarkNameFRFindValueArrays = null;// 查找值位置数集（二维数组集）
+
+    if (document.addEventListener) {//所有主流浏览器，除了 IE 8 及更早IE版本，Opera 7 及更早Opera版本
+        // 添加的事件不会覆盖已存在的事件
+        document.addEventListener('keydown', function(event){
+            shieldBrowserPartShortcutKey(event);
+        }, false);
+    } else if (document.attachEvent) {// IE 8 及更早IE版本，Opera 7 及更早Opera版本
+        document.attachEvent("onkeydown", function(event){
+            shieldBrowserPartShortcutKey(event);
+        });
+    }
+
+    function shieldBrowserPartShortcutKey(event) {
+        //这是一行兼容性代码，例如IE支持window.event,对于IE这是一个全局变量， 其他浏览器不支持，并且必须通过参数传递来实现同样的功能
+        var e = event || window.event;
+        //同样是一行兼容性代码
+        var code = e.keyCode || e.which;
+
+        // metakey 在 MAC 下是 Command 键，在 windows 下是 Win 键
+        if (e && (e.ctrlKey || e.metaKey)) {
+            if (code==70) {
+                // do something
+                $('#serachRemarkNameFR').form('clear');
+                $("#remarkNameFR").dialog({ onClose: function () { closeRemarkNameFR(); } });
+                $('#remarkNameFR').dialog('open').dialog('setTitle','摘要查找与替换').window('center');
+
+                console.log('The user USES the shortcut keys: Ctrl+F');
+                e.preventDefault();
+                return false;
+            } else if (code==83) {
+                // do something
+                saveVoucher();
+                console.log('The user USES the shortcut keys: Ctrl+S');
+                e.preventDefault();
+                return false;
+            }
+        }
+    }
+
+    function remarkNameFR(sign) {
+        var findValue = $("#findValue").textbox('getText');
+        var replaceValue = $("#replaceValue").textbox('getText');
+        if (!findValue) {
+            $.messager.alert('提示','查找内容不可为空！','warning');
+            return false;
+        }
+        remarkNameFRFindValue = findValue;
+
+        if (sign == 'all') {
+            endEditAllRows();
+            currentFindValueIndexFlag = null;
+            remarkNameFRFindValueFlag = false;
+            reloadFindValue();
+        } else if (sign == 'top') {
+            if (currentFindValueIndexFlag && remarkNameFRFindValueArrays && remarkNameFRFindValueArrays.length>0) {
+                var topFlag = null;
+                var flag = false;
+                for (var i=0,len=remarkNameFRFindValueArrays.length;i<len;i++) {
+                    var tempArray = remarkNameFRFindValueArrays[i];
+                    if (tempArray && tempArray.length>0) {
+                        for (var j=0,len2=tempArray.length;j<len2;j++) {
+                            var findValueIndexFlag = tempArray[j];
+                            if (findValueIndexFlag) {
+                                if (findValueIndexFlag == currentFindValueIndexFlag) {
+                                    if (topFlag) {
+                                        currentFindValueIndexFlag = topFlag;
+                                        flag = true;
+                                        break;
+                                    }
+                                }
+                                topFlag = findValueIndexFlag;
+                            }
+                        }
+                    }
+                    if (flag) {
+                        break;
+                    }
+                }
+                if (!flag) {
+                    if (topFlag) {
+                        currentFindValueIndexFlag = topFlag;
+                        reloadFindValue();
+                    } else {
+                        $.messager.alert('提示','未查找到相关内容！','info');
+                        return false;
+                    }
+                } else {
+                    reloadFindValue();
+                }
+            }
+        } else if (sign == 'next') {
+            if (currentFindValueIndexFlag && remarkNameFRFindValueArrays && remarkNameFRFindValueArrays.length>0) {
+                var nextFlag = null;
+                var flag = false;
+                var newFlag = false;
+                var firstFindValueIndexFlag = null;
+                for (var i=0,len=remarkNameFRFindValueArrays.length;i<len;i++) {
+                    var tempArray = remarkNameFRFindValueArrays[i];
+                    if (tempArray && tempArray.length>0) {
+                        for (var j=0,len2=tempArray.length;j<len2;j++) {
+                            var findValueIndexFlag = tempArray[j];
+                            if (findValueIndexFlag) {
+                                if (!firstFindValueIndexFlag) {
+                                    firstFindValueIndexFlag = findValueIndexFlag;
+                                }
+                                if (flag) {
+                                    currentFindValueIndexFlag = findValueIndexFlag;
+                                    newFlag = true;
+                                    break;
+                                }
+                                if (findValueIndexFlag == currentFindValueIndexFlag) {
+                                    flag = true;
+                                }
+                            }
+                        }
+                    }
+                    if (newFlag) {
+                        break;
+                    }
+                }
+
+                if (!newFlag) {
+                    if (firstFindValueIndexFlag) {
+                        currentFindValueIndexFlag = firstFindValueIndexFlag;
+                        reloadFindValue();
+                    } else {
+                        $.messager.alert('提示','未查找到相关内容！','info');
+                        return false;
+                    }
+                } else {
+                    reloadFindValue();
+                }
+            }
+        } else if (sign == 'rep') {
+            if (currentFindValueIndexFlag) {
+                var tempCurrentFindValueIndexFlag = currentFindValueIndexFlag;
+                var currentFlags = currentFindValueIndexFlag.split('_');
+
+                endEditAllRows();
+                var remarkName = $('#dg').datagrid('getRows')[currentFlags[0]].remarkName;
+
+                var reg = getRegExpByFindValueAndCaseSensitive(findValue);
+
+                var tempValue = null;
+                var count = 1; //同一单元格匹配次数
+                tempValue = remarkName.replace(reg, function(str, index2, source){
+                    if(index2 >= 0){
+                        if (count == currentFlags[1]) {
+                            str = replaceValue;
+                        }
+                        count++;
+                        return str;
+                    } else {
+                        return str;
+                    }
+                });
+
+                if (tempValue && tempValue != remarkName) {
+                    var rows = $('#dg').datagrid('getRows');
+
+                    var tempFlag = false;
+                    var tempArray = remarkNameFRFindValueArrays[currentFlags[0]];
+                    if (currentFlags[0]==(rows.length-1) && tempCurrentFindValueIndexFlag==tempArray[tempArray.length-1]) {
+                        tempFlag = true;//判断修改的是否是最后一个
+                    }
+
+                    $('#dg').datagrid('updateRow', { index:currentFlags[0], row:{ remarkName : tempValue } });
+                    // 防止因修改操作调用 formatter 而更新 currentFindValueIndexFlag
+                    if (tempFlag) {
+                        currentFindValueIndexFlag = null;
+                    } else {
+                        currentFindValueIndexFlag = tempCurrentFindValueIndexFlag;
+                    }
+                }
+
+                reloadFindValue();
+            }
+        } else if (sign == 'repAll') {
+            endEditAllRows();
+            //获取最新所有行数据
+            var rows = $('#dg').datagrid('getRows');
+
+            var reg = getRegExpByFindValueAndCaseSensitive(findValue);
+
+            for (var i=0,len=rows.length;i<len;i++) {
+                var remarkName = rows[i].remarkName;
+                if (remarkName) {
+                    var tempValue = remarkName.replace(reg, replaceValue);
+                    if (tempValue && tempValue != remarkName) {
+                        $('#dg').datagrid('updateRow', { index:i, row:{ remarkName : tempValue } });
+                    }
+                }
+            }
+        }
+    }
+    function reloadFindValue() {
+        remarkNameFRFindValueFlag = false;
+        loadDataDG();
+        if (!remarkNameFRFindValueFlag) {
+            $.messager.alert('提示','未查找到相关内容！','info');
+            return false;
+        }
+    }
+    function getRegExpByFindValueAndCaseSensitive(findValue) {
+        var reg = null;
+        var caseSensitive = $("#caseSensitive").is(':checked');
+        if (!caseSensitive) {
+            reg = new RegExp(findValue, 'gi');
+        } else {
+            reg = new RegExp(findValue, 'g');
+        }
+        return reg;
+    }
+    function closeRemarkNameFR() {
+        remarkNameFRFindValue = null;
+        remarkNameFRFindValueFlag = false;
+        currentFindValueIndexFlag = null;
+        remarkNameFRFindValueArrays = null;
+        loadDataDG();
+    }
+    function loadDataDG() {
+        endEditAllRows();
+        //获取最新所有行数据
+        var rows = $('#dg').datagrid('getRows');
+        //加载本地数据
+        $('#dg').datagrid('loadData',rows);
+    }
+    function remarkNameFRFormat(value, row, index) {
+        if (!remarkNameFRFindValueArrays) {
+            remarkNameFRFindValueArrays = new Array();
+        }
+
+        var tempArray = new Array();
+
+        if (value && remarkNameFRFindValue) {
+            var reg = getRegExpByFindValueAndCaseSensitive(remarkNameFRFindValue);
+
+            var tempValue = null;
+            var count = 1; //同一单元格匹配次数
+            var newSelectCurrentFindValueIndex = false;
+            tempValue = value.replace(reg, function(str, index2, source){
+                if(index2 >= 0){
+                    // 行数_同一单元格匹配次数（index 以 0 开始）
+                    var findValueIndexFlag = index + '_' + count;
+
+                    tempArray[count-1] = findValueIndexFlag;
+
+                    count++;
+                    if (currentFindValueIndexFlag) {
+                        if (findValueIndexFlag == currentFindValueIndexFlag) {
+                            newSelectCurrentFindValueIndex = true;
+                            return "<span style='background-color: red;'>" + str + "</span>";
+                        } else {
+                            return "<span style='background-color: yellow;'>" + str + "</span>";
+                        }
+                    } else {
+                        currentFindValueIndexFlag = findValueIndexFlag;
+                        newSelectCurrentFindValueIndex = true;
+                        return "<span style='background-color: red;'>" + str + "</span>";
+                    }
+                } else {
+                    return str;
+                }
+            });
+
+            if (currentFindValueIndexFlag && !newSelectCurrentFindValueIndex) {
+                if (currentFindValueIndexFlag.split('_')[0] == index) {
+                    // 说明当前行的内容中此位置及之后已无搜索内容
+                    currentFindValueIndexFlag = null;
+                }
+            }
+            if (tempValue && tempValue != value) {
+                value = tempValue;
+                remarkNameFRFindValueFlag = true;
+            }
+            remarkNameFRFindValueArrays[index] = tempArray;
+        }
+        return value;
+    }
+
+    //默认初始化两条空数据行
+    function uploadTwoEmptyRow(){
+        for (var i=0;i<2;i++) {
+            $('#dg').datagrid('appendRow', {
+                tagCode : '',
+                remarkName : '',
+                subjectCode : '',
+                subjectName : '',
+                debit : '',
+                credit : ''
+            });
+            $('#dgS').datagrid('appendRow', {
+                subjectCodeS : '',
+                subjectNameS : '',
+                specialCodeS : '',
+                specialNameS : ''
+            });
+        }
+    }
+
+    $(function(){
+
+        initPageData();
+
+        $.extend($.fn.datagrid.methods, {
+            addEditor : function(jq, param) {
+                if (param instanceof Array) {
+                    $.each(param, function(index, item) {
+                        var e = $(jq).datagrid('getColumnOption', item.field);
+                        e.editor = item.editor;
+                    });
+                } else {
+                    var e = $(jq).datagrid('getColumnOption', param.field);
+                    e.editor = param.editor;
+                    console.log("param.editor->" + param.editor.type);
+                }
+            },
+            removeEditor : function(jq, param) {
+                if (param instanceof Array) {
+                    $.each(param, function(index, item) {
+                        var e = $(jq).datagrid('getColumnOption', item);
+                        e.editor = {};
+                    });
+                } else {
+                    var e = $(jq).datagrid('getColumnOption', param);
+                    e.editor = {};
+                }
+            }
+        });
+        $('#dg').datagrid({
+            onBeforeEdit:function(index,row){
+                add(index);	//编辑前设置单元格类型
+            },
+            onClickCell: function (rowIndex, field, value) {
+                addListenEventBeginEditRowByRowIndex(rowIndex, field, value);
+            }
+        });
+        $('#dgS').datagrid({
+            onClickCell: function (rowIndex, field, value) {
+                $('#dg').datagrid('selectRow', rowIndex);
+            }
+        });
+    });
+
+    function addListenEventBeginEditRowByRowIndex(rowIndex, field, value) {
+        if (endEditing()){
+            $('#dg').datagrid('selectRow', rowIndex)
+                .datagrid('beginEdit', rowIndex);
+            editIndex = rowIndex;
+            setspecial(rowIndex);//选择对应专项
+            var sc = $('#dg').datagrid('getEditor', {index:rowIndex,field:'subjectCode'});//获取当前的编辑器
+            //绑定双击事件
+            sc.target.bind('dblclick', function () {
+                dblclickSubjectCode(rowIndex);
+            });
+
+            //绑定按下按键之Enter回车
+            sc.target.bind('keyup', function (event) { disposeDataByKeyUpAndSign(event, 'sc', rowIndex); });
+
+            //绑定失去焦点事件
+            sc.target.bind('change', function () {
+                changeSubjectCode(rowIndex);
+            });
+
+            var rn = $('#dg').datagrid('getEditor', {index:rowIndex,field:'remarkName'});//获取当前的编辑器
+            rn.target.bind('dblclick', function () {//绑定双击事件
+                dblclickRemarkName(rowIndex);
+            });
+
+            //绑定按下按键之Enter回车
+            rn.target.bind('keyup', function (event) { disposeDataByKeyUpAndSign(event, 'rn', rowIndex); });
+
+            var tc = $('#dg').datagrid('getEditor', {index:rowIndex,field:'tagCode'});//获取当前的编辑器
+            tc.target.bind('dblclick', function () {//绑定双击事件
+                dblclickTagCode(rowIndex);
+            });
+
+            //绑定按下按键之Enter回车
+            tc.target.bind('keyup', function (event) { disposeDataByKeyUpAndSign(event, 'tc', rowIndex); });
+
+            var debit = $('#dg').datagrid('getEditor', {index:rowIndex,field:'debit'});//获取当前的编辑器
+
+            //绑定获得焦点事件
+            debit.target.bind('focus', function () {
+                focusDebitOrCredit(rowIndex, 'debit');
+            });
+            //绑定失去焦点事件
+            debit.target.bind('change', function () {
+                changeDebit(rowIndex);
+            });
+
+            //绑定按下按键之Enter回车
+            debit.target.bind('keyup', function (event) { disposeDataByKeyUpAndSign(event, 'debit', rowIndex); });
+
+            var credit = $('#dg').datagrid('getEditor', {index:rowIndex,field:'credit'});//获取当前的编辑器
+
+            //绑定获得焦点事件
+            credit.target.bind('focus', function () {
+                focusDebitOrCredit(rowIndex, 'credit');
+            });
+            //绑定失去焦点事件
+            credit.target.bind('change', function () {
+                changeCredit(rowIndex);
+            });
+
+            //绑定按下按键之Enter回车
+            credit.target.bind('keyup', function (event) { disposeDataByKeyUpAndSign(event, 'credit', rowIndex); });
+
+            // 获得焦点
+            if (field == 'tagCode') {
+                $(tc.target).focus();
+            } else if (field == 'remarkName') {
+                $(rn.target).focus();
+            } else if (field == 'subjectCode') {
+                $(sc.target).focus();
+            } else if (field == 'debit') {
+                $(debit.target).focus();
+            } else if (field == 'credit') {
+                $(credit.target).focus();
+            }
+        } else {
+            $('#dg').datagrid('selectRow', editIndex);
+        }
+    }
+
+    function initPageData() {
+        var editkVoucherNo = $('#editVoucherNo').text();
+        var editYearMonth = $('#editYearMonth').text();
+        var editSpecialNameP = $('#editSpecialNameP').text();
+        var dataSession = {'voucherNo':editkVoucherNo, 'yearMonth':editYearMonth, 'copyType':'3', 'specialNameP':editSpecialNameP};
+        //获取token,防止表单重复提交
+        jsutil.tool.refreshToken('',$('#fm').find('input[name="token"]'));
+
+        $('#auxNumber').textbox({
+            onChange:function (newValue, oldValue) {
+                if (newValue && (isNaN(Number(newValue)) || parseInt(newValue)<0)) {
+                    $.messager.alert('提示','请输入合法的附件张数！','warning');
+                }
+            }
+        });
+        $('#oldVoucherNo').textbox({
+            onChange:function (newValue, oldValue) {
+                if (newValue && isNaN(Number(newValue))) {
+                    $.messager.alert('提示','请输入合法的凭证号！','warning');
+                }
+            }
+        });
+        $('#voucherDate').datebox({
+            onChange:function (newValue, oldValue) {
+                if (oldValue && newValue && (oldValue!=newValue)) {
+                    var year1 = (newValue.toString()).substring(0,4);
+                    var year2 = ($('#yearMonth').combobox('getValue')).substring(0,4);
+                    var month1 = (newValue.toString()).substring(5,7);
+                    var month2 = ($('#yearMonth').combobox('getValue')).substring(4);
+                    var theSame = false;
+                    if (year1==year2) {
+                        if (month2=='JS' || month2=='13' || month2=='14') {
+                            if (month1!='12') {
+                                theSame = true;
+                            }
+                        } else {
+                            if (month1!=month2) {
+                                theSame = true;
+                            }
+                        }
+                    } else {
+                        theSame = true;
+                    }
+                    if (theSame) {
+                        $.messager.alert('提示','所选日期不在'+$('#yearMonth').combobox('getValue')+'会计期间内','warning');
+                        $('#voucherDate').datebox('setValue', '');
+                        $("#voucherDate").datebox("setValue",oldValue);
+                    } else {
+                        $.messager.confirm('提示','确认将制单日期由 '+oldValue+' 改为 '+newValue+' 吗？',function(r){
+                            if (!r) {
+                                $('#voucherDate').datebox('setValue', '');
+                                $('#voucherDate').datebox('setValue', oldValue);
+                            }
+                        });
+                    }
+                }
+            }
+        });
+
+        $.post('/voucher/getCopyData', dataSession ,
+            function(result){
+                voucherMainAndSubData = result;
+                $('#fm').form('load',result);
+                $('#dg').datagrid("loadData",result.data2);
+                $('#dgS').datagrid("loadData",result.data3);
+                sumData();
+                $('#blg').dialog('close')
+            }
+        );
+    }
+
+    function initPageData2(type, dataSession) {
+        //获取token,防止表单重复提交
+        jsutil.tool.refreshToken('',$('#fm').find('input[name="token"]'));
+
+        $('#auxNumber').textbox({
+            onChange:function (newValue, oldValue) {
+                if (newValue && (isNaN(Number(newValue)) || parseInt(newValue)<0)) {
+                    $.messager.alert('提示','请输入合法的附件张数！','warning');
+                }
+            }
+        });
+        $('#oldVoucherNo').textbox({
+            onChange:function (newValue, oldValue) {
+                if (newValue && isNaN(Number(newValue))) {
+                    $.messager.alert('提示','请输入合法的凭证号！','warning');
+                }
+            }
+        });
+        $('#voucherDate').datebox({
+            onChange:function (newValue, oldValue) {
+                if (oldValue && newValue && (oldValue!=newValue)) {
+                    var year1 = (newValue.toString()).substring(0,4);
+                    var year2 = ($('#yearMonth').combobox('getValue')).substring(0,4);
+                    var month1 = (newValue.toString()).substring(5,7);
+                    var month2 = ($('#yearMonth').combobox('getValue')).substring(4);
+                    var theSame = false;
+                    if (year1==year2) {
+                        if (month2=='JS' || month2=='13' || month2=='14') {
+                            if (month1!='12') {
+                                theSame = true;
+                            }
+                        } else {
+                            if (month1!=month2) {
+                                theSame = true;
+                            }
+                        }
+                    } else {
+                        theSame = true;
+                    }
+                    if (theSame) {
+                        $.messager.alert('提示','所选日期不在'+$('#yearMonth').combobox('getValue')+'会计期间内','warning');
+                        $('#voucherDate').datebox('setValue', '');
+                        $("#voucherDate").datebox("setValue",oldValue);
+                    } else {
+                        $.messager.confirm('提示','确认将制单日期由 '+oldValue+' 改为 '+newValue+' 吗？',function(r){
+                            if (!r) {
+                                $('#voucherDate').datebox('setValue', '');
+                                $('#voucherDate').datebox('setValue', oldValue);
+                            }
+                        });
+                    }
+                }
+            }
+        });
+
+        $.post('/voucher/beforeOrAfterVoucher', dataSession ,
+            function(result){
+                if (result) {
+                    if (result.voucherNo) {
+                        voucherMainAndSubData = result;
+                        $('#fm').form('load',result);
+                        $('#dg').datagrid("loadData",result.data2);
+                        $('#dgS').datagrid("loadData",result.data3);
+                        sumData();
+                        if (!originalEditVoucherNo) {
+                            originalEditVoucherNo = dataSession.voucherNo;
+                        }
+                        $("#editVoucherNo").html(result.voucherNo);
+                    } else {
+                        $.messager.alert('提示',result.temp,'info'); return false;
+                    }
+                } else {
+                    if (type == 'before') {
+                        $.messager.alert('提示','未查询到上一张凭证数据！','info'); return false;
+                    } else if (type == 'after') {
+                        $.messager.alert('提示','未查询到下一张凭证数据！','info'); return false;
+                    }
+                }
+            }
+        );
+    }
+
+    var editIndex = undefined;
+    function endEditing(){
+        console.log("------------结束-----------");
+        if (editIndex == undefined){return true;}
+        if ($('#dg').datagrid('validateRow', editIndex)){
+            $('#dg').datagrid('endEdit', editIndex);
+            editIndex = undefined;
+            return true;
+        } else {
+            return false;
+        }
+    }
+    function myformatter(date){
+        var y = date.getFullYear();
+        var m = date.getMonth()+1;
+        var d = date.getDate();
+        return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+    }
+    function add(rowIndex){
+        $('#dg').datagrid('selectRow', rowIndex);
+        var row = $('#dg').datagrid('getSelected');
+        $("#dg").datagrid('addEditor', {
+            field : 'tagCode',
+            editor : {
+                type : 'text'
+            }
+        });
+        $("#dg").datagrid('addEditor', {
+            field : 'remarkName',
+            editor : {
+                type : 'text'
+            }
+        });
+        $("#dg").datagrid('addEditor', {
+            field : 'subjectCode',
+            editor : {
+                type : 'text'
+            }
+        });
+        $("#dg").datagrid('addEditor', {
+            field : 'debit',
+            editor : {
+                type : 'text'
+            }
+        });
+        $("#dg").datagrid('addEditor', {
+            field : 'credit',
+            editor : {
+                type : 'text'
+            }
+        });
+    }
+    //设置专项表格（如果表单长度一致则选择同一行数据）
+    function setspecial(rowIndex){
+        var rowSs=$("#dgS").datagrid('getRows');
+        if(rowSs.length-1>=rowIndex){
+            $('#dgS').datagrid('selectRow', rowIndex);
+            var row = $('#dgS').datagrid('getSelected');
+        }
+    }
+    //编辑器摘要、科目编码和标注字段双击事件获取当时单元格数据
+    function getValue(rowIndex,name){
+        $('#dg').datagrid('endEdit',rowIndex);
+        var rows=$("#dg").datagrid('getRows');
+        if(name=="subjectCode"){
+            var codeValue=rows[rowIndex].subjectCode;
+        }else if(name=="remarkName"){
+            var codeValue=rows[rowIndex].remarkName;
+        }else if(name=="tagCode"){
+            var codeValue=rows[rowIndex].tagCode;
+        }else{
+            console.log("参数有误！");
+        }
+        return codeValue;
+    }
+    function addNumTwo(rowIndex,name){
+        var sum=0;
+        $('#dg').datagrid('endEdit',rowIndex);
+        var rows=$("#dg").datagrid('getRows');
+        //限制一条分录不能同时出现借贷方金额
+        var debitFlag = (rows[rowIndex].debit && rows[rowIndex].debit!='0' && rows[rowIndex].debit!='0.00')?true:false;
+        var creditFlag = (rows[rowIndex].credit && rows[rowIndex].credit!='0' && rows[rowIndex].credit!='0.00')?true:false;
+        if (name=="debit") {//借方金额
+            //当输入不是数字的时候，Number后返回的值是NaN;然后用isNaN判断。
+            if(rows[rowIndex].debit!='=' && isNaN(Number(rows[rowIndex].debit))){
+                $.messager.alert('提示','第'+(rowIndex+1)+'行科目借方金额输入的不是一个数，请重新输入！','warning');
+                $('#dg').datagrid('updateRow', { index:rowIndex, row:{ debit : '' } });
+                return 'isNaN';
+            }
+
+            if (creditFlag && debitFlag && (rows[rowIndex].debit)!='=') {
+
+                /*$.messager.alert('提示','第'+(rowIndex+1)+'行科目金额不能同时出现借贷双方！','warning');
+                $('#dg').datagrid('updateRow', { index:rowIndex, row:{ debit : '' } });
+                return 'debitAndCredit';*/
+
+                if (rows[rowIndex].debit && rows[rowIndex].credit && Number(rows[rowIndex].debit) == Number(rows[rowIndex].credit)) {
+                    $('#dg').datagrid('updateRow', { index:rowIndex, row:{ credit : '0' } });
+                    if (creditFlag) { creditFlag = false; }
+
+                    addNumTwoCredit = true;
+                } else {
+                    $('#dg').datagrid('updateRow', { index:rowIndex, row:{ credit : '0' } });
+                    if (creditFlag) { creditFlag = false; }
+
+                    addNumTwoCredit = true;
+                }
+            }
+        } else if (name=="credit") {//贷方金额
+            //当输入不是数字的时候，Number后返回的值是NaN;然后用isNaN判断。
+            if(rows[rowIndex].credit!='=' && isNaN(Number(rows[rowIndex].credit))){
+                $.messager.alert('提示','第'+(rowIndex+1)+'行科目贷方金额输入的不是一个数，请重新输入！','warning');
+                $('#dg').datagrid('updateRow', { index:rowIndex, row:{ credit : '' } });
+                return 'isNaN';
+            }
+
+            if (debitFlag && creditFlag && (rows[rowIndex].credit)!='=') {
+
+                /*$.messager.alert('提示','第'+(rowIndex+1)+'行科目金额不能同时出现借贷双方！','warning');
+                $('#dg').datagrid('updateRow', { index:rowIndex, row:{ credit : '' } });
+                return 'debitAndCredit';*/
+
+                if (rows[rowIndex].credit && rows[rowIndex].debit && Number(rows[rowIndex].credit) == Number(rows[rowIndex].debit)) {
+                    $('#dg').datagrid('updateRow', { index:rowIndex, row:{ debit : '0' } });
+                    if (debitFlag) { debitFlag = false; }
+
+                    addNumTwoDebit = true;
+                } else {
+                    $('#dg').datagrid('updateRow', { index:rowIndex, row:{ debit : '0' } });
+                    if (debitFlag) { debitFlag = false; }
+
+                    addNumTwoDebit = true;
+                }
+            }
+        }
+        if(name=="debit"){
+            var value = '';
+            for(var i=0;i<rows.length;i++){
+                if(rows[i].debit && i!=rowIndex){
+                    /*sum =sum + parseFloat(rows[i].debit);*/
+                    sum = decimalAdd(sum*1, parseFloat(rows[i].debit));
+                } else if (rows[i].debit) {
+                    if (rows[i].debit=='=') {
+                        //暂时跳过，返回之前补上差额
+                    } else {
+                        /*sum =sum + parseFloat(rows[i].debit);*/
+                        sum = decimalAdd(sum*1, parseFloat(rows[i].debit));
+                        value = rows[i].debit;
+                    }
+                }
+            }
+            var equalFlag = false;//防止0被忽略
+            if (rows[rowIndex].debit=='=') {
+                //取得贷方合计值
+                var c = document.getElementById("CreditAll").value;
+                c = removeThousand(c);//移除千分位符
+                //计算=的替换值
+                /*value = parseFloat(c) - sum;*/
+                value = decimalSub(parseFloat(c), sum*1);
+                //追加计算借方合计值
+                /*sum = sum + value;*/
+                sum = decimalAdd(sum*1, value*1);
+                equalFlag = true;
+            }
+            if (value || equalFlag) {
+                if (value && value!=0 && value!='0' && value!='0.00' && creditFlag) {
+                    $.messager.alert('提示','第'+(rowIndex+1)+'行科目金额不能同时出现借贷双方！','warning');
+                    $('#dg').datagrid('updateRow', { index:rowIndex, row:{ credit : '' } });
+                    return 'debitAndCredit';
+                }
+                $('#dg').datagrid('updateRow', {
+                    index:rowIndex,
+                    row:{
+                        debit : formatNumber(value*1, 2, 0)
+                    }
+                });
+            }
+        }else if(name=="credit"){
+            var value = '';
+            for(var i=0;i<rows.length;i++){
+                if(rows[i].credit && i!=rowIndex){
+                    /*sum =sum + parseFloat(rows[i].credit);*/
+                    sum = decimalAdd(sum*1, parseFloat(rows[i].credit));
+                } else if (rows[i].credit) {
+                    if (rows[i].credit=='=') {
+                        //暂时跳过，返回之前补上差额
+                    } else {
+                        /*sum =sum + parseFloat(rows[i].credit);*/
+                        sum = decimalAdd(sum*1, parseFloat(rows[i].credit));
+                        value = rows[i].credit;
+                    }
+                }
+            }
+            var equalFlag = false;//防止0被忽略
+            if (rows[rowIndex].credit=='=') {
+                //取得借方合计值
+                var d = document.getElementById("DebitAll").value;
+                d = removeThousand(d);//移除千分位符
+                //计算=的替换值
+                /*value = parseFloat(d) - sum;*/
+                value = decimalSub(parseFloat(d), sum*1);
+                //追加计算贷方合计值
+                /*sum = sum + value;*/
+                sum = decimalAdd(sum*1, value*1);
+                equalFlag = true;
+            }
+            if (value || equalFlag) {
+                if (value && value!=0 && value!='0' && value!='0.00' && debitFlag) {
+                    $.messager.alert('提示','第'+(rowIndex+1)+'行科目金额不能同时出现借贷双方！','warning');
+                    $('#dg').datagrid('updateRow', { index:rowIndex, row:{ credit : '' } });
+                    return 'debitAndCredit';
+                }
+                $('#dg').datagrid('updateRow', {
+                    index:rowIndex,
+                    row:{
+                        credit : formatNumber(value*1, 2, 0)
+                    }
+                });
+            }
+        }else{
+            console.log("参数有误！");
+        }
+        return formatNumber(sum*1, 2, 0);
+    }
+    function addNum(name){
+        //alert(name);
+        var sum=0;
+        var rows=$("#dg").datagrid('getRows');
+        if(name=="debit"){
+            for(var i=0;i<rows.length;i++){
+                if(rows[i].debit){
+                    /*sum =sum + parseFloat(rows[i].debit);*/
+                    sum = decimalAdd(sum*1, parseFloat(rows[i].debit));
+                }
+            }
+        }else if(name=="credit"){
+            for(var i=0;i<rows.length;i++){
+                if(rows[i].credit){
+                    /*sum =sum + parseFloat(rows[i].credit);*/
+                    sum = decimalAdd(sum*1, parseFloat(rows[i].credit));
+                }
+            }
+        }else{
+            console.log("参数有误！");
+        }
+        return formatNumber(sum*1, 2, 0);
+    }
+    function sumData() {
+        var sum1=addNum('debit');
+        document.getElementById("DebitAll").value =formatNumberByValue(sum1);
+        var sum2=addNum('credit');
+        document.getElementById("CreditAll").value =formatNumberByValue(sum2);
+    }
+    //新增科目数据
+    function addSub() {
+        var rows=$("#dg").datagrid('getRows');
+        var rowSs=$("#dgS").datagrid('getRows');
+        if(rows.length!=0){
+            $('#dg').datagrid('endEdit',rows.length-1);
+            var row =  rows[rows.length-1]
+            $('#dg').datagrid('appendRow', {
+                tagCode : '',
+                remarkName : row.remarkName,
+                subjectCode : row.subjectCode,
+                subjectName : row.subjectName,
+                debit : '',
+                credit : ''
+            });
+            var rowS =  rowSs[rowSs.length-1]
+            $('#dgS').datagrid('appendRow', {
+                subjectCodeS : rowS.subjectCodeS,
+                subjectNameS : rowS.subjectNameS,
+                specialCodeS : rowS.specialCodeS,
+                specialNameS : rowS.specialNameS
+            });
+            $('#dg').datagrid('clearSelections');
+            $('#dgS').datagrid('clearSelections');
+        }else{
+            $('#dg').datagrid('appendRow', {
+                tagCode : '',
+                remarkName : '',
+                subjectCode : '',
+                subjectName : '',
+                debit : '',
+                credit : ''
+            });
+            $('#dgS').datagrid('appendRow', {
+                subjectCodeS : '',
+                subjectNameS : '',
+                specialCodeS : '',
+                specialNameS : ''
+            });
+        }
+    }
+    function lookS() {
+
+    }
+
+    //保存树状选择信息
+    function saveTag(){
+        var nodes = $('#tagTree').tree('getChecked');//获取选中的标注信息
+        if (nodes.length>0) {
+            var rows=$("#dg").datagrid('getRows');
+            $('#dg').datagrid('endEdit',indexRow);
+            var row =  rows[indexRow];
+            var codes = '';
+            var names = '';
+            for (var i=0;i<nodes.length;i++) {
+                codes = codes + nodes[i].id + ',';
+                names = names + nodes[i].text + ',';
+            }
+            codes = codes.substring(0,codes.length-1);
+            names = names.substring(0,names.length-1);
+            $('#dg').datagrid('updateRow', {
+                index:indexRow,
+                row:{
+                    tagCode : names,
+                    tagCodeS : codes
+                }
+            });
+            $('#tagGrid').dialog('close');
+        }/* else {
+            $.messager.alert('提示','请选择标注信息','warning');
+        }*/
+    }
+
+    //保存树状选择信息
+    function saveRemark(){
+        var node = $('#remarkTree').tree('getSelected');//获取选中的摘要信息
+        var rows=$("#dg").datagrid('getRows');
+        $('#dg').datagrid('endEdit',indexRow);
+        var row =  rows[indexRow];
+        if (node) {
+            $('#dg').datagrid('updateRow', {
+                index:indexRow,
+                row:{
+                    remarkName : node.text,
+                    subjectCode:node.subjectCode,
+                    subjectName:node.subjectName
+                }
+            });
+            //获取科目关联的专项信息
+            $.get('/voucher/getSpecialDate?subjectCode='+node.subjectCode,
+                function(data){
+                    if(data.length>0){
+                        var value = '';
+                        for (var i=0;i<data.length;i++) {
+                            value = value + data[i].specialCode+';'+data[i].specialName + ','
+                        }
+                        value = value.substring(0,value.length-1);
+                        addDGS(indexRow,node.subjectCode,node.subjectName,value);
+                    } else {
+                        addDGS(indexRow,node.subjectCode,node.subjectName,"无关联专项");
+                    }
+                }
+            );
+            $('#remarkGrid').dialog('close');
+        }/* else {
+            $.messager.alert('提示','请选择摘要信息','warning');
+        }*/
+    }
+
+    //保存树状选择信息
+    function saveSuperSubject(){
+        var superCode="";
+        var superName="";
+        var nodes = $('#subjectTree').tree('getChecked');//获取选中科目信息
+        if (nodes.length>0) {
+            var parent1= $('#subjectTree').tree('getParent',nodes[0].target);
+            if(parent1==null){
+                $.messager.alert('提示','请重新选择，不允许选择科目分类','warning');
+                return false;
+                superCode = nodes[0].id+"/";
+                superName = nodes[0].text+"/";
+            }else{
+                var parent2= $('#subjectTree').tree('getParent',parent1.target);
+                if(parent2==null){
+                    superCode = parent1.id+"/"+nodes[0].id+"/";
+                    superName = parent1.text+"/"+nodes[0].text+"/";
+                }else{
+                    var parent3= $('#subjectTree').tree('getParent',parent2.target);
+                    if(parent3==null){
+                        superCode = parent2.id+"/"+parent1.id+"/"+nodes[0].id+"/";
+                        superName = parent2.text+"/"+parent1.text+"/"+nodes[0].text+"/";
+                    }else{
+                        var parent4= $('#subjectTree').tree('getParent',parent3.target);
+                        if(parent4==null){
+                            superCode = parent3.id+"/"+parent2.id+"/"+parent1.id+"/"+nodes[0].id+"/";
+                            superName = parent3.text+"/"+parent2.text+"/"+parent1.text+"/"+nodes[0].text+"/";
+                        }else{
+                            var parent5= $('#subjectTree').tree('getParent',parent4.target);
+                            if(parent5==null){
+                                superCode = parent4.id+"/"+parent3.id+"/"+parent2.id+"/"+parent1.id+"/"+nodes[0].id+"/";
+                                superName = parent4.text+"/"+parent3.text+"/"+parent2.text+"/"+parent1.text+"/"+nodes[0].text+"/";
+                            }else{
+                                var parent6= $('#subjectTree').tree('getParent',parent5.target);
+                                if(parent6==null){
+                                    superCode = parent5.id+"/"+parent4.id+"/"+parent3.id+"/"+parent2.id+"/"+parent1.id+"/"+nodes[0].id+"/";
+                                    superName = parent5.text+"/"+parent4.text+"/"+parent3.text+"/"+parent2.text+"/"+parent1.text+"/"+nodes[0].text+"/";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            //去除一级（科目分类：资产、负债、权益、损益）
+            if ((superCode.split("/")).length>2) {//最后一个是空的，因此为2
+                superCode = superCode.substring(superCode.indexOf("/")+1);
+                superName = superName.substring(superName.indexOf("/")+1);
+            }
+            var rows=$("#dg").datagrid('getRows');
+            $('#dg').datagrid('endEdit',indexRow);
+            var row =  rows[indexRow]
+            $('#dg').datagrid('updateRow', {
+                index:indexRow,
+                row:{
+                    tagCode :(row.tagCode ==undefined)?"":row.tagCode,
+                    remarkName : (row.remarkName ==undefined)?"":row.remarkName,
+                    subjectCode:superCode,
+                    subjectName:superName,
+                    debit : (row.debit ==undefined)?"":row.debit,
+                    credit : (row.credit ==undefined)?"":row.credit
+                }
+            });
+            //获取科目关联的专项信息
+            $.get('/voucher/getSpecialDate?subjectCode='+superCode,
+                function(data){
+                    if(data.length>0){
+                        var value = '';
+                        for (var i=0;i<data.length;i++) {
+                            value = value + data[i].specialCode+';'+data[i].specialName + ','
+                        }
+                        value = value.substring(0,value.length-1);
+                        addDGS(indexRow,superCode,superName,value);
+                    } else {
+                        addDGS(indexRow,superCode,superName,"无关联专项");
+                    }
+                    /*if(data!=""){
+                        if(data.specialCode==null){
+                            var value="无关联专项"
+                        }else{
+                            var value=data.specialCode+data.specialName;
+                        }
+
+                        var rowSs=$("#dgS").datagrid('getRows');
+                        if(rowSs.length-1>=indexRow){
+                            $('#dgS').datagrid('updateRow', {
+                                index:indexRow,
+                                row:{
+                                    subjectCodeS : superCode,
+                                    subjectNameS : superName,
+                                    specialCodeS : value
+                                }
+                            });
+                        }else{
+                            $('#dgS').datagrid('appendRow', {
+                                subjectCodeS : superCode,
+                                subjectNameS : superName,
+                                specialCodeS : value
+                            });
+                        }
+                    }*/
+                }
+            );
+            $('#subjectGrid').dialog('close');
+        }
+    }
+
+    //保存专项树状选择信息
+    function saveSpecialGrid(){
+        var node = $('#specialTree').tree('getChecked');//获取选中专项信息
+        if(node.length>0){
+            if (specialCodeInputId) {
+                var index = specialCodeInputId.split("_")[1];
+                $('#'+specialCodeInputId).val(node[0].id);
+                var specialNameSpanId = specialCodeInputId.replace("Code","Name");
+                $('#'+specialNameSpanId).html(node[0].text);
+
+                var ss = (($("#dgS").datagrid('getRows')[index]).specialCodeS).split(",");
+                var specialCodeS = '';
+                for (var j=0;j<ss.length;j++) {
+                    var idC = 'specialCode_'+index+'_'+j;
+                    var idN = 'specialName_'+index+'_'+j;
+                    specialCodeS = specialCodeS + $('#'+idC).val()+ ';' +$('#'+idN).text() +',';
+                }
+                if (specialCodeS) {
+                    specialCodeS = specialCodeS.substring(0, specialCodeS.length-1);
+                    $('#dgS').datagrid('updateRow',{
+                        index: index,
+                        row: {
+                            specialCodeS: specialCodeS
+                        }
+                    });
+                }
+            }
+            $('#specialGrid').dialog('close');
+        }/* else {
+            $.messager.alert('提示','请选择专项信息','warning');
+        }*/
+    }
+
+    function addDGS(indexRow,superCode,superName,value) {
+        var specialSuperCodeS = '';
+        if (value && value!='无关联专项') {
+            var str = value.split(",");
+            for (var i=0;i<str.length;i++) {
+                var str2 = str[i].split(";");
+                specialSuperCodeS = specialSuperCodeS + str2[0] + ',';
+            }
+            specialSuperCodeS = specialSuperCodeS.substring(0,specialSuperCodeS.length-1);
+        }
+        var rowSs=$("#dgS").datagrid('getRows');
+        if(rowSs.length-1>=indexRow){
+            $('#dgS').datagrid('updateRow', {
+                index:indexRow,
+                row:{
+                    subjectCodeS : superCode,
+                    subjectNameS : superName,
+                    specialCodeS : value,
+                    specialSuperCodeS : specialSuperCodeS
+                }
+            });
+        }else{
+            $('#dgS').datagrid('appendRow', {
+                subjectCodeS : superCode,
+                subjectNameS : superName,
+                specialCodeS : value,
+                specialSuperCodeS : specialSuperCodeS
+            });
+        }
+    }
+
+    //展示操作按钮
+    function deal(value,row,index) {
+        var look = "<span class='sino-btn sino-btn-xs' onclick='addSubjec("+ index +")'>+</span>";
+        var btn  = "<span class='sino-btn sino-btn-danger sino-btn-xs' onclick='deleteSubject("+index+")'>-</span>";
+        var changeResult =  look + "&nbsp;&nbsp;" + btn;
+        return changeResult;
+    }
+    function specialdeal(value,row,index){
+        //单个专项信息加载
+        //多个专项信息加载
+        //6601/10/01/-水费，或6601/10/02/-电费科目时 需要出现单价和数量两个输入字段
+        //如果科目为银行存款 需要录入结算类型，结算单号，结算日期（结算日期默认凭证制单日期，结算日期可修改，并不得晚于凭证制单日期）
+        if (value && value!='无关联专项') {
+            var inputAndSpan = '';
+            var arr = value.split(",");
+            for (var i=0;i<arr.length;i++) {
+                var arr1 = arr[i].split(";");
+                var arr2 = (row.specialSuperCodeS).split(",");
+                var specialCodeID = 'specialCode_'+index+'_'+i;
+                var specialNameID = 'specialName_'+index+'_'+i;
+
+                var tempAlt = '';
+                var tempValue0 = arr1[0];
+                var tempValue1 = arr1[1];
+                if (row.specialSuperCodeS) {
+                    tempAlt = arr2[i];
+                    if (tempAlt == 'ZJDB' && tempAlt == tempValue0) {
+                        tempValue0 = 'ZJDBN';
+                        tempValue1 = '否';
+                    } else {
+
+                    }
+                } else {
+                    tempAlt = arr1[0];
+                    if (tempAlt == 'ZJDB') {
+                        tempValue0 = 'ZJDBN';
+                        tempValue1 = '否';
+                    } else {
+
+                    }
+                }
+                input = '<input style="margin-bottom: 2px;" ondblclick="specialCodeDblClick(this.id)" onkeyup="specialCodeDblClick2(this.id, event)" oninput="specialCodeInput(this.id)" type="text" id="'+ specialCodeID +'" name="specialCodeS" alt="'+tempAlt+'" value="'+tempValue0+'"/>';
+                var span = '<span id="' + specialNameID + '">'+tempValue1+'</span>';
+                if (i!=arr.length-1) {
+                    inputAndSpan = inputAndSpan + input + '&nbsp;' + span + '&nbsp;&nbsp;';
+                } else {
+                    inputAndSpan = inputAndSpan + input + '&nbsp;'  + span;
+                }
+            }
+
+            //水电费科目
+            /*if (row.subjectCodeS=='6601/10/01/' || row.subjectCodeS=='6601/10/02/'){
+                inputAndSpan = inputAndSpan + '<br/>';
+            }*/
+
+            /*if (row.subjectCodeS=='6601/10/01/') {
+                var waterRatePrice = 'waterRate_price_' + index;
+                var waterRateUnit = 'waterRate_unit_' + index;
+                var input = '';
+                if (row.unitPrice) {
+                    input = '<input onblur="computeUtilityBills(this.id)" type="text" id="'+ waterRatePrice +'" name="unitPrice" value="'+row.unitPrice+'"/>';
+                } else {
+                    input = '<input onblur="computeUtilityBills(this.id)" type="text" id="'+ waterRatePrice +'" name="unitPrice"/>';
+                }
+                var span = '<span>单价</span>';
+                /!*inputAndSpan = inputAndSpan + '&nbsp;&nbsp;' + input + '&nbsp;' + span + '&nbsp;&nbsp;';*!/
+                inputAndSpan = inputAndSpan + input + '&nbsp;' + span + '&nbsp;&nbsp;';
+                if (row.unitNum) {
+                    input = '<input onblur="computeUtilityBills(this.id)" type="text" id="'+ waterRateUnit +'" name="unitNum" value="'+row.unitNum+'"/>';
+                } else {
+                    input = '<input onblur="computeUtilityBills(this.id)" type="text" id="'+ waterRateUnit +'" name="unitNum"/>';
+                }
+                span = '<span>数量（单位:毫升）</span>';
+                inputAndSpan = inputAndSpan + input + '&nbsp;' + span;
+            } else if (row.subjectCodeS=='6601/10/02/') {//电费科目
+                var energyChargePrice = 'energyCharge_price_' + index;
+                var energyChargeUnit = 'energyCharge_unit_' + index;
+                var input = '';
+                if (row.unitPrice) {
+                    input = '<input onblur="computeUtilityBills(this.id)" type="text" id="'+ energyChargePrice +'" name="unitPrice" value="'+row.unitPrice+'"/>';
+                } else {
+                    input = '<input onblur="computeUtilityBills(this.id)" type="text" id="'+ energyChargePrice +'" name="unitPrice"/>';
+                }
+                var span = '<span>单价</span>';
+                /!*inputAndSpan = inputAndSpan + '&nbsp;&nbsp;' + input + '&nbsp;' + span + '&nbsp;&nbsp;';*!/
+                inputAndSpan = inputAndSpan + input + '&nbsp;' + span + '&nbsp;&nbsp;';
+                if (row.unitNum) {
+                    input = '<input onblur="computeUtilityBills(this.id)" type="text" id="'+ energyChargeUnit +'" name="unitNum" value="'+row.unitNum+'"/>';
+                } else {
+                    input = '<input onblur="computeUtilityBills(this.id)" type="text" id="'+ energyChargeUnit +'" name="unitNum"/>';
+                }
+                span = '<span>数量（单位:度）</span>';
+                inputAndSpan = inputAndSpan + input + '&nbsp;' + span;
+            }*/
+
+            /*var bankDepositIds = '';
+            if (((row.subjectCodeS).split("/"))[0]=='1002') {//银行存款类一级科目，以1002开头的
+                inputAndSpan = inputAndSpan + '<br/>';
+
+                var bankDepositType = 'bankDeposit_type_'+index;
+                var bankDepositNum = 'bankDeposit_no_'+index;
+                var bankDepositDate = 'bankDeposit_date_'+index;
+                bankDepositIds = bankDepositType+','+bankDepositNum+','+bankDepositDate;
+                var span = '<span>结算类型:</span>';
+                var input = '';
+                if (row.settlementType) {
+                    input = '<input id="'+bankDepositType+'" name="settlementType" class="easyui-combobox" data-options="valueField:\'value\',textField:\'text\',data:bankDeposiTypeData,editable:false" value="'+row.settlementType+'"></input>';
+                } else {
+                    input = '<input id="'+bankDepositType+'" name="settlementType" class="easyui-combobox" data-options="valueField:\'value\',textField:\'text\',data:bankDeposiTypeData,editable:false"></input>';
+                }
+                /!*inputAndSpan = inputAndSpan + '&nbsp;&nbsp;&nbsp;&nbsp;' + span + '&nbsp;' + input + '&nbsp;&nbsp;';*!/
+                inputAndSpan = inputAndSpan + span + '&nbsp;' + input + '&nbsp;&nbsp;';
+                span = '<span>结算单号:</span>';
+                if (row.settlementNo) {
+                    input = '<input id="'+bankDepositNum+'" name="settlementNo" class="easyui-textbox" value="'+row.settlementNo+'"></input>';
+                } else {
+                    input = '<input id="'+bankDepositNum+'" name="settlementNo" class="easyui-textbox"></input>';
+                }
+                inputAndSpan = inputAndSpan + span + '&nbsp;' + input + '&nbsp;&nbsp;';
+                span = '<span>结算日期:</span>';
+                if (row.settlementDate) {
+                    input = '<input id="'+bankDepositDate+'" name="settlementDate" class="easyui-datebox" value="'+row.settlementDate+'"></input>';
+                } else {
+                    var date = $("#voucherDate").datebox("getValue");
+                    if (date) {
+                        input = '<input id="'+bankDepositDate+'" name="settlementDate" class="easyui-datebox" value="'+date+'"></input>';
+                    } else {
+                        input = '<input id="'+bankDepositDate+'" name="settlementDate" class="easyui-datebox"></input>';
+                    }
+                }
+                inputAndSpan = inputAndSpan + span + '&nbsp;' + input;
+            }
+            if (bankDepositIds){
+                window.setTimeout(function () {
+                    var ids = bankDepositIds.split(",");
+                    for (var i=0;i<ids.length;i++) {
+                        $.parser.parse($('#'+ids[i]).parent());
+                    }
+                    var row = null;
+                    var rows = $('#dgS').datagrid('getRows');
+                    if (rows.length>0){row = rows[index];}
+                    if (row) {
+                        if (row.settlementType) {
+                            $('#bankDeposit_type_'+index).combobox('setValue', row.settlementType);
+                        }
+                        if (row.settlementNo) {
+                            $('#bankDeposit_no_'+index).textbox('setValue', row.settlementNo);
+                        }
+                        if (row.settlementDate) {
+                            $('#bankDeposit_date_'+index).datebox('setValue', row.settlementDate);
+                        } else {
+                            $('#bankDeposit_date_'+index).datebox('setValue', $("#voucherDate").datebox("getValue"));
+                        }
+                    }
+
+                    //结算日期默认凭证录入制单日期，结算日期可修改，并不得晚于凭证制单日期
+                    $("#bankDeposit_date_"+index).datebox({
+                        onSelect:function (date) {
+                            if (date) {
+                                var month = date.getMonth()+1;
+                                var dates1=date.getDate();
+                                var newDate = date.getFullYear()+"-"+(month<10?'0'+month:month)+"-"+(dates1<10?'0'+dates1:dates1);
+                                var vDate = $("#voucherDate").datebox("getValue");
+                                if (vDate && (vDate<newDate)) {
+                                    $.messager.alert('提示','结算日期不得晚于凭证制单日期','warning');
+                                    $('#bankDeposit_date_'+index).datebox('setValue', vDate);
+                                } else {
+                                    var rowIndex = parseInt(($(this)[0].id.split("_"))[2]);
+                                    window.setTimeout(function () {
+                                        $('#dgS').datagrid('updateRow',{ index: rowIndex, row: { settlementDate: newDate } });
+                                    },20);
+                                }
+                            }
+                        }
+                    });
+                    $("#bankDeposit_type_"+index).combobox({
+                        onSelect:function (record) {
+                            if (record.value) {
+                                var rowIndex = parseInt(($(this)[0].id.split("_"))[2]);
+                                window.setTimeout(function () {
+                                    $('#dgS').datagrid('updateRow',{ index: rowIndex, row: { settlementType: record.value } });
+                                },20);
+                            }
+                        }
+                    });
+                    $("#bankDeposit_no_"+index).textbox({
+                        onChange:function (newValue, oldValue) {
+                            var newValueStr = newValue+'';//初始加载时会自动处理一次值为null，原因未知
+                            if (newValueStr == 'null') {
+
+                            } else {
+                                var rowIndex = parseInt(($(this)[0].id.split("_"))[2]);
+                                if (newValueStr) {
+                                    if (newValueStr!=oldValue) {
+                                        window.setTimeout(function () {
+                                            $('#dgS').datagrid('updateRow',{ index: rowIndex, row: { settlementNo: newValueStr } });
+                                        },20);
+                                    }
+                                } else {//修改为空串
+                                    window.setTimeout(function () {
+                                        $('#dgS').datagrid('updateRow',{ index: rowIndex, row: { settlementNo: '' } });
+                                    },20);
+                                }
+                            }
+                        }
+                    });
+                },20);
+            }*/
+
+            inputAndSpan = needInvoiceNoSubjectDispose(value, row, index, inputAndSpan);
+
+            return inputAndSpan;
+        } else if (value && value=='无关联专项') {
+            var inputAndSpan = '';
+
+            inputAndSpan = needInvoiceNoSubjectDispose(value, row, index, inputAndSpan);
+
+            if (inputAndSpan) {
+                return value + '&nbsp;&nbsp;&nbsp;&nbsp;' + inputAndSpan;
+            } else {
+                return value;
+            }
+        } else {
+            return value;
+        }
+    }
+
+    function needInvoiceNoSubjectDispose(value, row, index, inputAndSpan) {
+        if (needInvoiceNoSubject.length != 0) {
+            for (var i=0,len=needInvoiceNoSubject.length;i<len;i++) {
+                var needCode = needInvoiceNoSubject[i];
+                var needCodeLength = needCode.length;
+                var inputCode = row.subjectCodeS;
+                //应交增值税-销项税科目
+                if (inputCode.length>=needCodeLength && inputCode.substring(0,needCodeLength)==needCode) {
+
+                    if (inputAndSpan) {
+                        inputAndSpan = inputAndSpan + '<br/>';
+                    }
+
+                    var invoiceNo = 'invoiceNo_' + index;
+                    var span = '<span>发票号:</span>';
+                    var input = '';
+                    if (row.invoiceNo) {
+                        input = '<input onblur="setInvoiceNo(this.id)" type="text" id="'+ invoiceNo +'" name="invoiceNo" value="'+row.invoiceNo+'"/>';
+                    } else {
+                        input = '<input onblur="setInvoiceNo(this.id)" type="text" id="'+ invoiceNo +'" name="invoiceNo"/>';
+                    }
+
+                    inputAndSpan = inputAndSpan + span + '&nbsp;' + input;
+
+                    break;
+                }
+            }
+        }
+
+        return inputAndSpan;
+    }
+
+    function specialCodeDblClick(id) {
+        specialCodeInputId = id;
+        var originalValue = $('#'+id).attr("alt");//原值（一级专项代码）
+        var inputValue = $('#'+id).val();
+        /*if (inputValue) {*/
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        $('#specialTree').tree({
+            // url:'/voucher/specialTree?originalValue='+originalValue+'&inputValue='+encodeURI(inputValue),
+            url:'/voucher/specialTreeUseFlogOne?originalValue='+originalValue+'&inputValue='+encodeURI(inputValue),
+            onSelect: function (node) {
+                var cknodes = $('#specialTree').tree("getChecked");
+                for (var i = 0; i < cknodes.length; i++) {
+                    if (cknodes[i].id != node.id) {
+                        $('#specialTree').tree("uncheck", cknodes[i].target);
+                    }
+                }
+                if (node.checked) {
+                    $('#specialTree').tree('uncheck', node.target);
+                } else {
+                    $('#specialTree').tree('check', node.target);
+                }
+            },
+            onDblClick: function (node) {
+                saveSpecialGrid();
+            },
+            onLoadSuccess: function (node, data) {
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                $('#specialGrid').dialog('open').dialog('setTitle','专项信息');
+                $('#specialGrid').window('center');//使Dialog居中显示
+                $(this).find('span.tree-checkbox').unbind().click(function () {
+                    $('#specialTree').tree('select', $(this).parent());
+                    return false;
+                });
+            }
+        });
+        /*} else {
+            $.messager.alert('提示','请输入文字内容','warning');
+        }*/
+    }
+
+    function specialCodeDblClick2(id, event) {
+        //这是一行兼容性代码，例如IE支持window.event,对于IE这是一个全局变量， 其他浏览器不支持，并且必须通过参数传递来实现同样的功能
+        var e = event || window.event;
+        //同样是一行兼容性代码
+        var code = e.keyCode || e.which;
+
+        if (code == 13) { // 回车键的键值为13
+            // do something
+            specialCodeDblClick(id);
+        }
+    }
+
+    function specialCodeInput(id) {
+        var value = $('#'+id).val();//手动输入内容
+        var index = parseInt((id.split("_"))[1]);
+        if (value) {
+            $.get('/voucher/getSpecialDateBySpecialCode?specialCode='+encodeURI(value),
+                function(data){
+                    if(data!=""){
+                        var specialNameSpanId = id.replace("Code","Name");
+                        if(data.specialCode==null){
+                            $('#'+specialNameSpanId).html("");
+                        }else{
+                            $('#'+specialNameSpanId).html(data.specialName);
+
+                            if (data.endFlag=='0') {
+                                var ss = (($("#dgS").datagrid('getRows')[index]).specialCodeS).split(",");
+                                var specialCodeS = '';
+                                for (var j=0;j<ss.length;j++) {
+                                    var idC = 'specialCode_'+index+'_'+j;
+                                    var idN = 'specialName_'+index+'_'+j;
+                                    specialCodeS = specialCodeS + $('#'+idC).val()+ ';' +$('#'+idN).text() +',';
+                                }
+                                if (specialCodeS) {
+                                    specialCodeS = specialCodeS.substring(0,specialCodeS.length-1);
+                                    $('#dgS').datagrid('updateRow',{
+                                        index: index,
+                                        row: {
+                                            specialCodeS: specialCodeS
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            );
+        }
+    }
+
+    function computeUtilityBills(id) {
+        var ids = id.split("_");
+        var type1 = ids[0];// waterRate:水费，energyCharge:电费
+        var type2 = ids[1];// price:单价，unit:数量
+        var type3 = ids[2];// 对应专项信息数据表格的行号
+        //强制结束编辑模式
+        $('#dg').datagrid('endEdit', parseInt(type3));
+        $('#dgS').datagrid('endEdit', parseInt(type3));
+        //获取主数据表格（dg下的）对应行号的数据
+        var dgRowIndex = $("#dg").datagrid('getRows')[parseInt(type3)];
+        var money = null;//借方金额或贷方金额
+        var inputData = $('#'+id).val();//当前输入数据
+        if (!inputData) {
+            return false;
+        }
+        var computeResult = null;
+        var reverseId = '';//同行数据中单价或数量的反向的Id
+        if (dgRowIndex.debit) {
+            money = dgRowIndex.debit;
+        } else if (dgRowIndex.credit) {
+            money = dgRowIndex.credit;
+        } else {
+            //借方货贷方金额未填写，或当前行对应位置处于编辑状态
+            return false;
+        }
+        if (type1=='waterRate') {// waterRate:水费
+            if (type2=='price') {
+                //计算数量，同时修改单价和数量的有效位数：单价5位小数,数量2位小数
+                computeResult = formatNumber(decimalDiv(money*1, inputData*1), 2, 0);
+                inputData = formatNumber(inputData*1, 5, 0);
+                reverseId = 'waterRate_unit_'+type3;
+            } else if (type2=='unit') {
+                //计算单价，同时修改单价和数量的有效位数：单价5位小数,数量2位小数
+                computeResult = formatNumber(decimalDiv(money*1, inputData*1), 5, 0);
+                inputData = formatNumber(inputData*1, 2, 0);
+                reverseId = 'waterRate_price_'+type3;
+            }
+        } else if (type1=='energyCharge') {// energyCharge:电费
+            if (type2=='price') {
+                //计算数量，同时修改单价和数量的有效位数：单价2位小数,数量2位小数
+                computeResult = formatNumber(decimalDiv(money*1, inputData*1), 2, 0);
+                inputData = formatNumber(inputData*1, 2, 0);
+                reverseId = 'energyCharge_unit_'+type3;
+            } else if (type2=='unit') {
+                //计算单价，同时修改单价和数量的有效位数：单价2位小数,数量2位小数
+                computeResult = formatNumber(decimalDiv(money*1, inputData*1), 2, 0);
+                inputData = formatNumber(inputData*1, 2, 0);
+                reverseId = 'energyCharge_price_'+type3;
+            }
+        }
+        $('#'+id).val(inputData);
+        $('#'+reverseId).val(computeResult);
+
+        var row = $('#dgS').datagrid('getRows')[parseInt(type3)];
+        if (type2=='price') {
+            $('#dgS').datagrid('updateRow',{
+                index: parseInt(type3),
+                row: {
+                    unitPrice: inputData,
+                    unitNum: computeResult
+                }
+            });
+        } else if (type2=='unit') {
+            $('#dgS').datagrid('updateRow',{
+                index: parseInt(type3),
+                row: {
+                    unitPrice: computeResult,
+                    unitNum: inputData
+                }
+            });
+        }
+    }
+
+    function setInvoiceNo(id) {
+        var ids = id.split("_");
+        var lineNumber = ids[1];// 对应专项信息数据表格的行号
+        //强制结束编辑模式
+        $('#dg').datagrid('endEdit', parseInt(lineNumber));
+        $('#dgS').datagrid('endEdit', parseInt(lineNumber));
+
+        var inputData = $('#'+id).val();//当前输入数据
+
+        var row = $('#dgS').datagrid('getRows')[parseInt(lineNumber)];
+        $('#dgS').datagrid('updateRow',{
+            index: parseInt(lineNumber),
+            row: {
+                invoiceNo: inputData,
+            }
+        });
+    }
+
+    function setInvoiceNo2(id, event) {
+        //这是一行兼容性代码，例如IE支持window.event,对于IE这是一个全局变量， 其他浏览器不支持，并且必须通过参数传递来实现同样的功能
+        var e = event || window.event;
+        //同样是一行兼容性代码
+        var code = e.keyCode || e.which;
+
+        if (code == 13) { // 回车键的键值为13
+            // do something
+            setInvoiceNo(id);
+        }
+    }
+
+    function addSubjec(index){
+        //保存父行数据，用于新增数据。
+        $('#dg').datagrid('endEdit', index);
+        $('#dg').datagrid('updateRow',{index: index,row:{}});
+
+        //获取最新所有行数据
+        var rowOld = $('#dg').datagrid('getRows');
+        var rowSOld = $('#dgS').datagrid('getRows');
+
+        //获取父行数据，进行新增操作。
+        var newIndex = index+1;
+        $('#dg').datagrid('selectRow',index);
+        var rowParent = $('#dg').datagrid('getSelected');
+        var newRow = jQuery.extend(true, {}, rowParent);
+        $('#dg').datagrid('insertRow',{
+            index:newIndex,
+            row:{
+                tagCode : '',
+                remarkName : newRow.remarkName,
+                subjectCode : newRow.subjectCode,
+                subjectName : newRow.subjectName,
+                debit : '',
+                credit : ''
+            }
+        });
+        sumData();
+        //保存父行数据，用于新增数据。
+        $('#dgS').datagrid('endEdit', index);
+        $('#dgS').datagrid('updateRow',{index: index,row:{}});
+        //获取父行数据，进行新增操作。
+        $('#dgS').datagrid('selectRow',index);
+        var rowParentS = $('#dgS').datagrid('getSelected');
+        var newRowS = jQuery.extend(true, {}, rowParentS);
+        $('#dgS').datagrid('insertRow',{
+            index:newIndex,
+            row:newRowS
+        });
+
+        //加载本地数据，旧的行将被移除
+        $('#dg').datagrid('loadData',rowOld);
+        $('#dgS').datagrid('loadData',rowSOld);
+
+    }
+    function deleteSubject(index){
+        $('#dg').datagrid('deleteRow',index);
+        $('#dgS').datagrid('deleteRow',index);
+
+        //获取最新所有行数据
+        var rowOld = $('#dg').datagrid('getRows');
+        var rowSOld = $('#dgS').datagrid('getRows');
+        //加载本地数据，旧的行将被移除
+        $('#dg').datagrid('loadData',rowOld);
+        $('#dgS').datagrid('loadData',rowSOld);
+
+        //修改凭证合计得分
+        sumData();
+    }
+
+    function dblclickSubjectCode(rowIndex) {
+        var codeValue=getValue(rowIndex,'subjectCode');
+        if(codeValue==undefined){
+            codeValue="";
+        }
+        indexRow=rowIndex;
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        $('#subjectTree').tree({
+            url:'/voucher/subjectList?value='+encodeURI(codeValue),
+            onSelect: function (node) {
+                var cknodes = $('#subjectTree').tree("getChecked");
+                for (var i = 0; i < cknodes.length; i++) {
+                    if (cknodes[i].id != node.id) {
+                        $('#subjectTree').tree("uncheck", cknodes[i].target);
+                    }
+                }
+                if (node.checked) {
+                    $('#subjectTree').tree('uncheck', node.target);
+                } else {
+                    $('#subjectTree').tree('check', node.target);
+                }
+            },
+            onDblClick: function (node) {
+                saveSuperSubject();
+            },
+            onLoadSuccess: function (node, data) {
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                $('#subjectGrid').dialog('open').dialog('setTitle','科目信息');
+                $('#subjectGrid').window('center');//使Dialog居中显示
+                $(this).find('span.tree-checkbox').unbind().click(function () {
+                    $('#subjectTree').tree('select', $(this).parent());
+                    return false;
+                });
+            }
+        });
+    }
+
+    function changeSubjectCode(rowIndex) {
+        var codeValue=getValue(rowIndex,'subjectCode');
+        if(codeValue==undefined || codeValue==''){
+            $('#dg').datagrid('updateRow',{
+                index: rowIndex,
+                row: {
+                    subjectCode:'',
+                    subjectName: ''
+                }
+            });
+            addDGS(rowIndex,'','','');
+
+        }else {
+            var reg=/^[0-9,\/]*$/;
+            if(codeValue && reg.exec(codeValue)){
+                if (codeValue.indexOf('/')==-1) {
+                    $.ajax({
+                        type: 'post',
+                        url: '/subject/getSubjectCodeByNumCode',
+                        data: {'slashFlag': true, 'numberCode': codeValue},
+                        async: false,
+                        success: function(result){
+                            if(result){
+                                codeValue = result;
+                            }
+                        }
+                    });
+                } else if (codeValue.substring(codeValue.length-1)!='/') {
+                    codeValue = codeValue + '/';
+                }
+                //有值才去查询，如果匹配查询成功（末级），则需带出科目名称和专项信息
+                var data = {'subjectCode':codeValue};
+                $.post('/voucher/subjectNameAllBySubjectCode', data, function (data1) {
+                    if (data1) {
+                        $('#dg').datagrid('updateRow',{
+                            index: rowIndex,
+                            row: {
+                                subjectCode:codeValue,
+                                subjectName: data1
+                            }
+                        });
+                        //获取科目关联的专项信息
+                        $.post('/voucher/getSpecialDate', data, function(data2){
+                            //获取专项信息表格数据，如果对应
+                            if(data2.length>0){
+                                var value = '';
+                                for (var i=0;i<data2.length;i++) {
+                                    value = value + data2[i].specialCode+';'+data2[i].specialName + ',';
+                                }
+                                value = value.substring(0,value.length-1);
+                                addDGS(rowIndex,codeValue,data1,value);
+                            } else {
+                                addDGS(rowIndex,codeValue,data1,"无关联专项");
+                            }
+                        });
+                    }
+                });
+            }
+        }
+    }
+
+    function dblclickRemarkName(rowIndex) {
+        var codeValue=getValue(rowIndex,'remarkName');
+        if(codeValue==undefined){
+            codeValue="";
+        }
+        indexRow=rowIndex;
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        $('#remarkTree').tree({
+            url:'/voucher/remarkList?value='+encodeURI(codeValue),
+            onSelect: function (node) {
+                var cknodes = $('#remarkTree').tree("getChecked");
+                for (var i = 0; i < cknodes.length; i++) {
+                    if (cknodes[i].id != node.id) {
+                        $('#remarkTree').tree("uncheck", cknodes[i].target);
+                    }
+                }
+                if (node.checked) {
+                    $('#remarkTree').tree('uncheck', node.target);
+                } else {
+                    $('#remarkTree').tree('check', node.target);
+                }
+            },
+            onDblClick: function (node) {
+                saveRemark();
+            },
+            onLoadSuccess: function (node, data) {
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                $('#remarkGrid').dialog('open').dialog('setTitle','摘要信息');
+                $('#remarkGrid').window('center');//使Dialog居中显示
+                $(this).find('span.tree-checkbox').unbind().click(function () {
+                    $('#remarkTree').tree('select', $(this).parent());
+                    return false;
+                });
+            }
+        });
+    }
+
+    function dblclickTagCode(rowIndex) {
+        var codeValue=getValue(rowIndex,'tagCode');
+        if(codeValue==undefined){
+            codeValue="";
+        }
+        indexRow=rowIndex;
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        $('#tagTree').tree({
+            url:'/voucher/tagList?value='+encodeURI(codeValue),
+            onSelect: function (node) {
+                //允许多选
+                /*var cknodes = $('#tagTree').tree("getChecked");
+                for (var i = 0; i < cknodes.length; i++) {
+                    if (cknodes[i].id != node.id) {
+                        $('#tagTree').tree("uncheck", cknodes[i].target);
+                    }
+                }*/
+                if (node.checked) {
+                    $('#tagTree').tree('uncheck', node.target);
+                } else {
+                    $('#tagTree').tree('check', node.target);
+                }
+            },
+            onDblClick: function (node) {
+                saveTag();
+            },
+            onLoadSuccess: function (node, data) {
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                $('#tagGrid').dialog('open').dialog('setTitle','标注信息');
+                $('#tagGrid').window('center');//使Dialog居中显示
+                $(this).find('span.tree-checkbox').unbind().click(function () {
+                    $('#tagTree').tree('select', $(this).parent());
+                    return false;
+                });
+            }
+        });
+    }
+
+    function changeDebit(rowIndex) {
+        var sum=addNumTwo(rowIndex,'debit');
+        if (sum!='debitAndCredit' && sum!='isNaN') {
+            document.getElementById("DebitAll").value =formatNumberByValue(sum);
+        }
+        if (addNumTwoCredit) {
+            addNumTwoCredit = false;
+            var sum=addNumTwo(rowIndex,'credit');
+            if (sum!='debitAndCredit' && sum!='isNaN') {
+                document.getElementById("CreditAll").value =formatNumberByValue(sum);
+            }
+        }
+    }
+
+    function changeCredit(rowIndex) {
+        var sum=addNumTwo(rowIndex,'credit');
+        if (sum!='debitAndCredit' && sum!='isNaN') {
+            document.getElementById("CreditAll").value =formatNumberByValue(sum);
+        }
+        if (addNumTwoDebit) {
+            addNumTwoDebit = false;
+            var sum=addNumTwo(rowIndex,'debit');
+            if (sum!='debitAndCredit' && sum!='isNaN') {
+                document.getElementById("DebitAll").value =formatNumberByValue(sum);
+            }
+        }
+    }
+
+    function focusDebitOrCredit(rowIndex, sign) {
+        //限制一条分录不能同时出现借贷方金额
+        var row = ($("#dg").datagrid('getRows'))[rowIndex];
+        var data = null;
+        var flag = false;
+        if (sign == 'debit') {
+            var creditFlag = (row.credit && row.credit!='0' && row.credit!='0.00')?true:false;
+            if (creditFlag) {
+                data = row.credit;
+                $('#dg').datagrid('updateRow', { index:rowIndex, row:{ debit : data, credit : '0' } });
+                flag = true;
+                changeCredit(rowIndex);
+                changeDebit(rowIndex);
+            }
+        } else if (sign == 'credit') {
+            var debitFlag = (row.debit && row.debit!='0' && row.debit!='0.00')?true:false;
+            if (debitFlag) {
+                data = row.debit;
+                $('#dg').datagrid('updateRow', { index:rowIndex, row:{ debit : '0', credit : data } });
+                flag = true;
+                changeDebit(rowIndex);
+                changeCredit(rowIndex);
+            }
+        } else {
+            console.log('借贷方金额类型错误：'+sign);
+            console.log('rowIndex：'+rowIndex+' ——> '+'sign：'+sign);
+        }
+
+        if (flag) {
+            addListenEventBeginEditRowByRowIndex(rowIndex, sign, data);
+        }
+    }
+
+    function disposeDataByKeyUpAndSign(event, sign, rowIndex) {
+        //这是一行兼容性代码，例如IE支持window.event,对于IE这是一个全局变量， 其他浏览器不支持，并且必须通过参数传递来实现同样的功能
+        var e = event || window.event;
+        //同样是一行兼容性代码
+        var code = e.keyCode || e.which;
+
+        if (code == 13) { // 回车键的键值为13
+            // do something
+            if (sign == 'sc') {
+                dblclickSubjectCode(rowIndex);
+            } else if (sign == 'rn') {
+                dblclickRemarkName(rowIndex);
+            } else if (sign == 'tc') {
+                dblclickTagCode(rowIndex);
+            } else if (sign == 'debit') {
+                changeDebit(rowIndex);
+            } else if (sign == 'credit') {
+                changeCredit(rowIndex);
+            } else {
+                // 结束所有编辑状态
+                endEditAllRows();
+                // 使所有input失去焦点
+                $('input').blur();
+            }
+        }
+    }
+
+    function endEditAllRows() {
+        var rows  = $('#dg').datagrid("getRows");
+        var rowSs  = $('#dgS').datagrid("getRows");
+        if (rows.length == rowSs.length) {
+            for (var i=0;i<rows.length;i++) {
+                $('#dg').datagrid('endEdit', i);
+                $('#dgS').datagrid('endEdit', i);
+            }
+        } else {
+            for (var i=0;i<rows.length;i++) {
+                $('#dg').datagrid('endEdit', i);
+            }
+            for (var i=0;i<rowSs.length;i++) {
+                $('#dg').datagrid('endEdit', i);
+                $('#dgS').datagrid('endEdit', i);
+            }
+        }
+    }
+    function saveVoucher(){
+        endEditAllRows();
+        var rows  = $('#dg').datagrid("getRows");
+        var rowSs  = $('#dgS').datagrid("getRows");
+        if(rows.length == undefined || rows.length <= 0){
+            $.messager.alert('提示',"请录入分录信息！");
+            return;
+        }else{
+            for(var i =0;i<rows.length;i++){
+                if(rows[i].tagCode != "" && rows[i].tagCode != null){
+                    if (rows[i].tagCodeS == "" || rows[i].tagCodeS == null) {
+                        $.messager.alert('提示',"请双击选择标注信息，或清空第"+(i+1)+"行标注数据！");
+                        return;
+                    }
+                }
+                if(rows[i].subjectCode == "" || rows[i].subjectCode == null){
+                    $.messager.alert('提示',"科目代码不可为空！");
+                    return;
+                }
+                //标注为空校验和摘要为空校验
+                if(rows[i].remarkName == "" || rows[i].remarkName == null){
+                    $.messager.alert('提示',"摘要不可为空！");
+                    return;
+                }
+                var rowDebitData = rows[i].debit;
+                var rowCreditData = rows[i].credit;
+                if((!rowDebitData || rowDebitData=='0.00' ) && (!rowCreditData || rowCreditData=='0.00' )){
+                    $.messager.alert('提示',"第"+(i+1)+"行科目借贷方不可同时为0！");
+                    return;
+                }
+            }
+        }
+        if(document.getElementById("DebitAll").value != document.getElementById("CreditAll").value ){
+            $.messager.alert('提示',"借、贷不平，请校验！");
+            return;
+        }
+        //科目余额赤字提醒校验 此处如果已经赤字则需要提醒并且提示是否继续
+        //专项校验  "请输入相应的专项代码";
+        //专项校验  "专项不存在或已停用";
+        var voucherNo= $('#voucherNo').textbox('getValue');
+        if(voucherNo==""){ $.messager.alert('提示',"凭证号不能为空！");return;}
+        var yearMonth= $('#yearMonth').combobox('getValue');
+        if(yearMonth==""){ $.messager.alert('提示',"会计期间不能为空！");return;}
+        var voucherDate= $('#voucherDate').datebox('getValue');
+        if(voucherDate==""){ $.messager.alert('提示',"制单日期不能为空！");return;}
+        var createBy= $('#createBy').textbox('getValue');
+        if(createBy==""){ $.messager.alert('提示',"制单人不能为空！");return;}
+
+        var oldVoucherNo= $('#oldVoucherNo').textbox('getValue');
+        var auxNumber= $('#auxNumber').textbox('getValue');
+        //会计期间校验 会计期间已结转，不能录入凭证!
+        var data3 = '';
+        if (rowSs) {
+            for (var i=0;i<rowSs.length;i++) {
+                var specialCodeS = '';
+                var specialSuperCodeS = '';
+                var unitPrice = '';
+                var unitNum = '';
+                var settlementType = '';
+                var settlementNo = '';
+                var settlementDate = '';
+                var invoiceNo = ''; // 发票号
+                if (rowSs[i].specialCodeS && rowSs[i].specialCodeS!='无关联专项') {
+                    var ss = rowSs[i].specialCodeS.split(",");
+                    for (var j=0;j<ss.length;j++) {
+                        var id = 'specialCode_'+i+'_'+j;
+                        specialCodeS = specialCodeS + $('#'+id).val()+',';
+                        specialSuperCodeS = specialSuperCodeS + $('#'+id).attr("alt")+',';//原值（一级专项代码）
+                    }
+                    specialCodeS = specialCodeS.substring(0,specialCodeS.length-1);
+                    specialSuperCodeS = specialSuperCodeS.substring(0,specialSuperCodeS.length-1);
+
+                    /*if (rowSs[i].subjectCodeS=='6601/10/01/') {//水费
+                        unitPrice = $('#waterRate_price_'+i).val();
+                        unitNum = $('#waterRate_unit_'+i).val();
+                        /!*if(!unitPrice || !unitNum){ $.messager.alert('提示',"请输入水费科目单价或数量！");return;}*!/
+                    }
+                    if (rowSs[i].subjectCodeS=='6601/10/02/') {//电费
+                        unitPrice = $('#energyCharge_price_'+i).val();
+                        unitNum = $('#energyCharge_unit_'+i).val();
+                        /!*if(!unitPrice || !unitNum){ $.messager.alert('提示',"请输入电费科目单价或数量！");return;}*!/
+                    }*/
+                    /*if (((rowSs[i].subjectCodeS).split("/"))[0]=='1002') {//银行存款类
+                        settlementType = $('#bankDeposit_type_'+i).combobox('getValue');
+                        settlementNo = $('#bankDeposit_no_'+i).textbox('getValue');
+                        settlementDate = $('#bankDeposit_date_'+i).datebox('getValue');
+                        /!*if(!settlementType){ $.messager.alert('提示',"请选择银行存款类科目结算类型！");return;}
+                        if(!settlementNo){ $.messager.alert('提示',"请输入银行存款类科目结算单号！");return;}
+                        if(!settlementDate){ $.messager.alert('提示',"请选择银行存款类科目结算日期！");return;}*!/
+                    }*/
+                }
+
+                if (needInvoiceNoSubject.length != 0) {
+                    for (var k=0,len=needInvoiceNoSubject.length;k<len;k++) {
+                        var needCode = needInvoiceNoSubject[k];
+                        var needCodeLength = needCode.length;
+                        var inputCode = rowSs[i].subjectCodeS;
+                        if (inputCode.length>=needCodeLength && inputCode.substring(0,needCodeLength)==needCode) {
+                            invoiceNo = $('#invoiceNo_'+i).val();
+                            break;
+                        }
+                    }
+                }
+
+                var str = {'subjectCodeS':rowSs[i].subjectCodeS,'subjectNameS':rowSs[i].subjectNameS,'specialCodeS':specialCodeS,'specialSuperCodeS':specialSuperCodeS,'unitPrice':unitPrice,'unitNum':unitNum,'settlementType':settlementType,'settlementNo':settlementNo,'settlementDate':settlementDate,'invoiceNo':invoiceNo};
+                data3 = data3 + JSON.stringify(str) + ',';
+            }
+            data3 = '[' + data3.substring(0, data3.length-1) + ']';
+        }
+        $.ajax({
+            url:'/voucher/deficitRemind?',
+            type:'post',
+            data:{
+                voucherNo:voucherNo,
+                yearMonth:yearMonth,
+                voucherDate:voucherDate,
+                auxNumber:auxNumber,
+                createBy:createBy,
+                oldVoucherNo:oldVoucherNo,
+                data2:JSON.stringify(rows),
+                data3:data3
+            },
+            dataType:'json',
+            success:function(result){
+                if(result.success){
+                    $.ajax({
+                        url:'/voucher/updateVoucher?',
+                        type:'post',
+                        data:{
+                            voucherNo:voucherNo,
+                            yearMonth:yearMonth,
+                            voucherDate:voucherDate,
+                            auxNumber:auxNumber,
+                            createBy:createBy,
+                            oldVoucherNo:oldVoucherNo,
+                            data2:JSON.stringify(rows),
+                            data3:data3
+                        },
+                        dataType:'json',
+                        success:function(result){
+                            if(result.success){
+                                $.messager.alert('提示','保存成功！','info',function () {
+                                    /*window.location.reload();*/
+                                    initPageData()
+                                });
+                                //获取token,防止表单重复提交
+                                jsutil.tool.refreshToken('',$('#fm').find('input[name="token"]'));
+
+                            }else{
+                                $.messager.alert('提示',result.errorMsg);
+                            }
+                        }
+                    });
+                }else if(result.errorMsg.indexOf("往来科目")==0){
+                    //console.log(result);
+                    $('#topGrid').datagrid({
+                        onClickRow: function (rowIndex, rowData) {
+                            $(this).datagrid('unselectRow', rowIndex);
+                        }
+                    });
+                    $('#topGrid').datagrid('loadData', result.data);
+                    $('#blgs1').dialog('open').dialog('setTitle','赤字提醒');
+                    $('#blgs1').window('center');//使Dialog居中显示
+                    czvoucherNo=voucherNo;
+                    czyearMonth=yearMonth;
+                    czvoucherDate=voucherDate;
+                    czauxNumber=auxNumber;
+                    czcreateBy=createBy;
+                    czoldVoucherNo=oldVoucherNo;
+                    czdata2=JSON.stringify(rows);
+                    czdata3=data3;
+                    /*$.messager.confirm('赤字提醒',result.errorMsg,function(r){
+                        if (r){
+                            $.ajax({
+                                url:'/voucher/updateVoucher?',
+                                type:'post',
+                                data:{
+                                    voucherNo:voucherNo,
+                                    yearMonth:yearMonth,
+                                    voucherDate:voucherDate,
+                                    auxNumber:auxNumber,
+                                    createBy:createBy,
+                                    oldVoucherNo:oldVoucherNo,
+                                    data2:JSON.stringify(rows),
+                                    data3:data3
+                                },
+                                dataType:'json',
+                                success:function(result){
+                                    if(result.success){
+                                        $.messager.alert('提示','保存成功！','info',function () {
+                                            /!*window.location.reload();*!/
+                                            initPageData()
+                                        });
+                                        //获取token,防止表单重复提交
+                                        jsutil.tool.refreshToken('',$('#fm').find('input[name="token"]'));
+
+                                    }else{
+                                        $.messager.alert('提示',result.errorMsg);
+                                    }
+                                }
+                            });
+                        }
+                    });*/
+                }else{
+                    $.messager.alert('提示',result.errorMsg);
+                }
+            }
+        });
+    }
+    function moneycz(value){
+        if(value!=null){
+            return formatNumber(value*1,2,1);
+        }
+    }
+    //赤字提醒后点击继续保存录入凭证
+    var czvoucherNo='';
+    var czyearMonth='';
+    var czvoucherDate='';
+    var czauxNumber='';
+    var  czcreateBy='';
+    var czoldVoucherNo='';
+    var czdata2='';
+    var czdata3='';
+    function  bysaveVoucher(){
+        $.ajax({
+            url:'/voucher/updateVoucher?',
+            type:'post',
+            data:{
+                voucherNo:czvoucherNo,
+                yearMonth:czyearMonth,
+                voucherDate:czvoucherDate,
+                auxNumber:czauxNumber,
+                createBy:czcreateBy,
+                oldVoucherNo:czoldVoucherNo,
+                data2:czdata2,
+                data3:czdata3
+            },
+            dataType:'json',
+            success:function(result){
+                $('#blgs1').dialog('close');
+                if(result.success){
+                    $.messager.alert('提示','保存成功！','info',function () {
+                        /!*window.location.reload();*!/
+                        initPageData()
+                    });
+                    //获取token,防止表单重复提交
+                    jsutil.tool.refreshToken('',$('#fm').find('input[name="token"]'));
+
+                }else{
+                    $.messager.alert('提示',result.errorMsg);
+                }
+            }
+        });
+    }
+    function deleteVoucher() {
+        if(voucherMainAndSubData) {
+            if(voucherMainAndSubData.voucherFlag == '未复核'){
+                var value = '';
+                if(voucherMainAndSubData.generateWay == 1 ){
+                    if(voucherMainAndSubData.voucherType == 5 || voucherMainAndSubData.voucherType == 6){
+                        value = '此凭证为<span style="color: red;">系统对接</span>凭证。';
+                    }else if(voucherMainAndSubData.voucherType == 3){
+                        value = '此凭证为<span style="color: red;">固定资产自动生成</span>凭证。';
+                    }else if(voucherMainAndSubData.voucherType == 4){
+                        value = '此凭证为<span style="color: red;">无形资产自动生成</span>凭证。';
+                    }else if(voucherMainAndSubData.voucherType == 1){
+                        value = '此凭证为<span style="color: red;">决算自动生成</span>凭证。';
+                    }
+                }
+                if (value) {
+                    $.messager.alert('提示',value+'不可删除！','warning'); return false;
+                    /*$.messager.confirm('提示','确认删除编号为:'+voucherMainAndSubData.voucherNo+'的凭证？<br/>'+value,function(r){
+                        if (r) {
+                            deleteVoucherExecute(voucherMainAndSubData);
+                        }
+                    });*/
+                } else {
+                    $.messager.confirm('提示','确认删除编号为:'+voucherMainAndSubData.voucherNo+'的凭证？',function(r){
+                        if (r) {
+                            deleteVoucherExecute(voucherMainAndSubData);
+                        }
+                    }).panel('move',{ top:250});
+                }
+            }else if (voucherMainAndSubData.voucherFlag == '已复核') {
+                $.messager.alert('提示','该凭证已复核，不可删除！','warning'); return false;
+            }else{
+                $.messager.alert('提示','该凭证已记账，不可删除！','warning'); return false;
+            }
+        }else{
+            $.messager.alert('提示','无可删除凭证！','warning'); return false;
+        }
+    }
+
+    function deleteVoucherExecute(row) {
+        $.ajax({
+            url:'/vouchermanage/delete?',
+            type:'post',
+            data:{
+                voucherNo:row.voucherNo,
+                yearMonth:row.yearMonth
+            },
+            dataType:'json',
+            success:function(result){
+                if(result.success){
+                    $.messager.alert('提示','已删除编号为:'+row.voucherNo+'的凭证。5秒回将自动关闭该编辑窗口！');
+                    //定时执行，5秒后执行
+                    var closeTab5st = window.setTimeout(closeTab5s, 1000 * 5);
+                } else {
+                    $.messager.alert('提示',result.errorMsg);
+                }
+            }
+        });
+    }
+
+    //联查辅助明细账
+    function JointAssistDetailAccount() {
+        var row = $('#dg').datagrid('getSelected');
+        var rowS = $('#dgS').datagrid('getSelected');
+        if (row && rowS) {
+            if (rowS.specialCodeS) {
+                if (rowS.specialCodeS!=''&&rowS.specialCodeS!='无关联专项') {
+                    var url = '/querydetailaccount/assist';
+                    //附带参数待定
+                    var params = '';
+                    //科目方向段(300/201/207/)、科目名称、专项编码、专项名称当前会计期间(开始时间)、制单日期(截止日期)
+                    var directionIdx = row.subjectCode;
+                    var itemName = row.subjectName;
+                    var specialCode = '';
+                    var specialSuperCodeS = '';
+                    var specialName = '';
+                    if (rowS.specialCodeS) {
+                        var s = rowS.specialCodeS.split(",");
+                        for (var i=0;i<s.length;i++) {
+                            var ss = s[i].split(";");
+                            var ss2 = rowS.specialSuperCodeS.split(",");
+                            if (ss[0]==ss2[i]) {
+                                $.messager.alert('警告','请先请选择专项！','warning'); return false;
+                            }
+                            specialCode = specialCode + ss[0] + ',';
+                            specialName = specialName + ss[1] + ',';
+                        }
+                        specialCode = specialCode.substring(0,specialCode.length-1);
+                        specialName = specialName.substring(0,specialName.length-1);
+                    }
+                    specialSuperCodeS = rowS.specialSuperCodeS;
+                    var yearMonth = $('#yearMonth').combobox('getValue');
+                    var endDate = $('#voucherDate').datebox('getValue');
+
+                    var params = '';
+                    if (directionIdx && itemName && specialCode && specialName && yearMonth && endDate) {
+                        /*params = 'directionIdx='+directionIdx+'&itemName='+itemName+'&specialCode='+specialCode+'&specialSuperCodeS='+specialSuperCodeS+'&specialName='+specialName+'&yearMonth='+yearMonth+'&endDate='+endDate;*/
+                        params = {'directionIdx':directionIdx, 'itemName':itemName, 'specialCode':specialCode, 'specialSuperCodeS':specialSuperCodeS, 'specialName':specialName, 'yearMonth':yearMonth, 'endDate':endDate, 'specialNameP':$('#editSpecialNameP').text()};
+                    }
+                    /*if (params){
+                        url = url + '?' +params
+                    }*/
+                    windowOpenNewPage(url, params);
+                    /*window.open(url);*/
+                    /*addTab('联查辅助明细账', url);*/
+                } else {
+                    $.messager.alert('警告','该科目无关联专项信息或专项信息为空！','warning'); return false;
+                }
+            } else {
+                $.messager.alert('警告','无科目分录信息！','warning'); return false;
+            }
+        } else {
+            if (row) {
+                $.messager.alert('警告','请先请选择专项！','warning'); return false;
+            } else {
+                $.messager.alert('警告','请先选中分录信息！','warning'); return false;
+            }
+        }
+    }
+    //联查明细账
+    function JointDetailAccount() {
+        var row = $('#dg').datagrid('getSelected');
+        if (row) {
+            if (row.subjectCode) {
+                var url = '/querydetailaccount/detai';
+                //附带参数待定
+                //科目方向段(300/201/207/)、当前会计期间(开始时间)、制单日期(截止日期)
+                var directionIdx = row.subjectCode;
+                var itemName = row.subjectName;
+                var yearMonth = $('#yearMonth').combobox('getValue');
+                var endDate = $('#voucherDate').datebox('getValue');
+
+                var params = '';
+                if (directionIdx && itemName && yearMonth && endDate) {
+                    /*params = 'directionIdx='+directionIdx+'&itemName='+itemName+'&yearMonth='+yearMonth+'&endDate='+endDate;*/
+                    params = {'directionIdx':directionIdx, 'itemName':itemName, 'yearMonth':yearMonth, 'endDate':endDate, 'specialNameP':$('#editSpecialNameP').text()};
+                }
+                /*if (params){
+                    url = url + '?' +params
+                }*/
+                windowOpenNewPage(url, params);
+                /*window.open(url);*/
+                //addTab('联查明细账', url);
+            } else {
+                $.messager.alert('警告','无科目分录信息！','warning'); return false;
+            }
+        } else {
+            $.messager.alert('警告','请先选中分录信息！','warning'); return false;
+        }
+    }
+
+    function addTab(subtitle, url) {
+        if (!parent.$('#tabs').tabs('exists', subtitle)) {
+            parent.$('#tabs').tabs(
+                'add',
+                {
+                    title: subtitle,
+                    content: createFrame(url),
+                    closable: true,
+                    width: parent.$('#mainPanle').width() - 10,
+                    height: parent.$('#mainPanle').height() - 26
+                });
+        } else {
+            parent.$('#tabs').tabs('select', subtitle);
+        }
+    }
+
+    function createFrame(url) {
+        var s = '<iframe name="mainFrame" fit="true" scrolling="auto" frameborder="0"  overflow-y:"hidden" src="'
+            + url + '" style="width:100%;height:100%;"></iframe>';
+        return s;
+    }
+
+    //专项名称全级显示
+    function specialNamePShow() {
+        var rowS = $('#dgS').datagrid('getRows');
+        if (rowS.length>0) {
+            if ($('#editSpecialNameP').text()) {//名称显示简称
+                $('#editSpecialNameP').html('');
+            } else {//名称显示全称
+                $('#editSpecialNameP').html('1');
+            }
+            var codeS = '';
+            for (var i=0;i<rowS.length;i++) {
+                if (rowS[i].specialCodeS!=''&&rowS[i].specialCodeS!='无关联专项') {
+                    var s = rowS[i].specialCodeS.split(",");//多个专项
+                    for (var j=0;j<s.length;j++) {
+                        var ss = s[j].split(";");//专项代码+专项名称
+                        if (j!=s.length-1) {
+                            codeS = codeS + ss[0] + ';';
+                        } else {
+                            codeS = codeS + ss[0];
+                        }
+                    }
+                } else {
+                    codeS = codeS + '无关联专项';//此处即代表本次循环即将结束，因此无需加,分隔符
+                }
+                codeS = codeS + ',';
+            }
+            codeS = codeS.substring(0,codeS.length-1);
+            if (codeS) {
+                var jsonData = {'codeS':codeS, 'specialNameP':$('#editSpecialNameP').text()};
+                $.post('/voucher/specialNamePBySpecialCode', jsonData, function (data) {
+                    if (data) {
+                        var data1 = data.split(",");
+                        for (var i=0;i<data1.length;i++) {
+                            if (data1[i]!=''&&data1[i]!='无关联专项') {
+                                var data2 = data1[i].split(";");
+                                for (var j=0;j<data2.length;j++) {
+                                    var id = 'specialName_' + i + '_' +j;
+                                    $('#'+id).html(data2[j]);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    function saveIt(){
+        var row = $('#leftGrid').datagrid('getSelected');
+        if (row) {
+            //获取科目关联的专项信息
+            $.get('/voucher/getCopyData?voucherNo='+row.voucherNo+'&yearMonth='+row.yearMonth+'&copyType='+copyType,
+                function(data){
+                    $('#dg').datagrid("loadData",data.data2);
+                    $('#dgS').datagrid("loadData",data.data3);
+                    sumData();
+                    $('#blg').dialog('close')
+                }
+            );
+        }
+    }
+
+    //等待
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+    var ii = 2;
+    function showalert() {
+        var text = "";
+        var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+    function onClose() {
+        clearInterval(loading);
+    }
+
+    function beforeOrAfterVoucher(type) {
+        var editkVoucherNo = $('#editVoucherNo').text();
+        var editYearMonth = $('#editYearMonth').text();
+        var editSpecialNameP = $('#editSpecialNameP').text();
+        var dataSession = {'voucherNo':editkVoucherNo, 'yearMonth':editYearMonth, 'specialNameP':editSpecialNameP, 'beforeOrAfter':type, 'type':'edit'};
+        if (type == 'before' && (editkVoucherNo == (editYearMonth.substring(2)+'00001'))) {
+            $.messager.alert('提示','已经是第一张凭证了！','info'); return false;
+        }
+        initPageData2(type, dataSession);
+    }
+
+    //关闭
+    function closeTab() {
+        var title = (originalEditVoucherNo==null?$('#editVoucherNo').text():originalEditVoucherNo)+'编辑';
+        var tabs = parent.$('#tabs').tabs('tabs');
+        for (var i=0;i<tabs.length;i++) {
+            if (tabs[i].panel('options').title==title){
+                parent.$('#tabs').tabs('close',i);
+            }
+        }
+    }
+    function closeTab5s() {
+        var title = $('#editVoucherNo').text()+'编辑';
+        var tabs = parent.$('#tabs').tabs('tabs');
+        for (var i=0;i<tabs.length;i++) {
+            if (tabs[i].panel('options').title==title){
+                parent.$('#tabs').tabs('close',i);
+            }
+        }
+        if (closeTab5st) {
+            //去掉定时器的方法
+            window.clearTimeout(closeTab5st);
+        }
+    }
+
+    function formatNumberByValue(value) {
+        if (value) {
+            return formatNumber(value*1,2,1);
+        } else {
+            return value;
+        }
+    }
+</script>
+</html>

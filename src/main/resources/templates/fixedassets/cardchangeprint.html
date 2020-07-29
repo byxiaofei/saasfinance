@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('固定资产卡片变动单打印','/css/datagridcell_text-overflow_ellipsis.css','')">
+
+</head>
+<body>
+<div align="center">
+    <div class="easyui-panel" style="height: auto; width:60%; text-align: center; padding: 0px 0px 0px 0px;overflow: hidden;">
+        <!--从controller传来的参数-->
+        <span id="changeType" style="display:none" th:text="${map.changeType}"></span>
+        <span id="changeCode" style="display:none" th:text="${map.changeCode}"></span>
+        <span id="changeDate" style="display:none" th:text="${map.changeDate}"></span>
+        <span id="cardCode" style="display:none" th:text="${map.cardCode}"></span>
+        <span id="assetCode" style="display:none" th:text="${map.assetCode}"></span>
+        <span id="startDate" style="display:none" th:text="${map.startDate}"></span>
+        <span id="assetName" style="display:none" th:text="${map.assetName}"></span>
+        <span id="specification" style="display:none" th:text="${map.specification}"></span>
+        <span id="changeOldData" style="display:none" th:text="${map.changeOldData}"></span>
+        <span id="changeNewData" style="display:none" th:text="${map.changeNewData}"></span>
+        <span id="useFlag" style="display:none" th:text="${map.useFlag}"></span>
+        <span id="depreName" style="display:none" th:text="${map.depreName}"></span>
+        <span id="changeReason" style="display:none" th:text="${map.changeReason}"></span>
+        <span id="operator" style="display:none" th:text="${map.operator}"></span>
+
+          <form id="fmA" method="post">
+                <table style="width: 100%; overflow: hidden;" border="0">
+                    <tr>
+                        <td colspan="4" style="text-align: center;font-size:22px;font-weight: bolder;">固定资产变动单</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" style="text-align: center;font-size: 15px;font-weight: bolder;" id="changeTypeA"></td>
+                    </tr>
+                    <tr>
+                        <td id = "changeCodeA" style="width: 33%; text-align: left;" ></td>
+                        <td id = "rq" style="width: 34%; text-align: center;"></td>
+                        <td id = "changeDateA" style="width: 33%; text-align: right;"></td>
+                    </tr>
+                </table>
+                <table  class="tt" border="1"  cellspacing="0" style="line-height:25px;height: auto; width:100%; padding: 0px 0px 0px 0px;overflow: hidden;">
+                    <tr>
+                        <td colspan="2" id="cardCodeA" class="ttd rtd" width="33.33%" style="text-align: center"></td>
+                        <td colspan="2" id="assetCodeA" class="ttd rtd" width="33.34%" style="text-align: center"></td>
+                        <td colspan="2" id="startDateA" class="ttd rtd" width="33.33%" style="text-align: center"></td>
+                    </tr>
+                    <tr>
+                        <td id="assetNameA" class="ttd rtd" colspan="3" style="text-align: center"></td>
+                        <td id="specificationA" class="ttd rtd" colspan="3" style="text-align: center"></td>
+
+                    </tr>
+                    <tr>
+                        <td colspan="3" id="changeOldDataA" class="ttd rtd"  width="50%" style="text-align: center"></td>
+                        <td colspan="3" id="changeNewDataA" class="ttd rtd"  width="50%" style="text-align: center"></td>
+                    </tr>
+                    <tr>
+                        <td id="useFlagA" class="ttd rtd" colspan="2" style="text-align: center"></td>
+                        <td id="depreNameA" class="ttd rtd" colspan="4"  style="text-align: center"></td>
+                    </tr>
+                    <tr>
+                        <td id="changeReasonA" class="ttd rtd" colspan="6" style="text-align: center"></td>
+
+                    </tr>
+                </table>
+                <div stye="text-align: right" align="right" id="operatorA"></div>
+                <input type="hidden" name="changeType" id="changeType1" value="">
+
+                <div id="dlg-buttons" align="center">
+                    <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-print'" style="width: 8%;" onclick="print_()">打印</a>
+                </div>
+            </form>
+        <!-- 用于打印的 --><!-- 多加一层，防止局部渲染导致区域之外的数据失效 -->
+        <div>
+            <div id="printDiv"></div>
+        </div>
+    </div>
+
+
+</div>
+</body>
+<script th:src="@{/js/windowOpenNewPage.js}"></script>
+<script th:src="@{/js/updataEasyUIDataGridTableStyle.js}"></script>
+<script type="text/javascript">
+    $(function () {
+        searchF();
+    });
+    function searchF() {
+        document.getElementById("changeTypeA").innerText =$('#changeType').text();
+        document.getElementById("changeCodeA").innerText =$('#changeCode').text();
+        document.getElementById("changeDateA").innerText =$('#changeDate').text();
+        document.getElementById("cardCodeA").innerText =$('#cardCode').text();
+        document.getElementById("assetCodeA").innerText =$('#assetCode').text();
+        document.getElementById("startDateA").innerText =$('#startDate').text();
+        document.getElementById("assetNameA").innerText =$('#assetName').text();
+        document.getElementById("specificationA").innerText =$('#specification').text();
+        document.getElementById("changeOldDataA").innerText =$('#changeOldData').text();
+        document.getElementById("changeNewDataA").innerText =$('#changeNewData').text();
+
+        document.getElementById("useFlagA").innerText =$('#useFlag').text();
+        document.getElementById("depreNameA").innerText =$('#depreName').text();
+        document.getElementById("changeReasonA").innerText =$('#changeReason').text();
+        document.getElementById("operatorA").innerText =$('#operator').text();
+
+
+        $('.easyui-linkbutton').css({'display':'none'})
+    }
+    function print_() {
+        $('.easyui-linkbutton').css({'display':'none'})
+        window.print();
+        $('.easyui-linkbutton').css({'display':'inline-block'})
+    }
+
+</script>
+</html>

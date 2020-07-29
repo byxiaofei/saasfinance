@@ -1,0 +1,36 @@
+spring:
+  profiles:
+    active: dev
+  mvc:
+#    view:
+#      prefix: /WEB-INF/pages/
+#      suffix: .jsp
+    servlet:
+      load-on-startup: 1
+    date-format: yyyy-MM-dd #日期样式
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 30MB #单文件最大
+      max-request-size: 100MB #一次请求最大
+  http:
+    encoding:
+      charset: UTF-8
+  thymeleaf:  #thymelea模板配置
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML5
+    encoding: UTF-8
+    cache: false
+  aop:
+    auto: true
+server:
+  servlet:
+    session:
+      timeout: 30m
+#    context-path: /finance
+
+security:
+  shiro:
+    saltDisabled: true
+    hashIterations: 0

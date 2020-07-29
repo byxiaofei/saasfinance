@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('机构管理','','')">
+
+</head>
+<body>
+    <div class="easyui-panel" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+        <!-- 筛选条件 -->
+        <form id="searchForm" method="post" style="margin-bottom: 0">
+            <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+                <tr>
+                    <td style="width:10%;text-align: right;" >
+                        <label>机构编码:</label>
+                    </td>
+                    <td style="width:13%;">
+                        <input style="width:100%;" id="comCodeF" name="comCode" class="easyui-textbox" data-options="prompt: '机构编码'">
+                    </td>
+                    <td style="width:10%;text-align: right;" >
+                        <label>机构中文名称:</label>
+                    </td>
+                    <td style="width:13%;">
+                        <input style="width:100%;" id="comNameF"  name="comName" class="easyui-textbox" data-options="prompt: '机构中文名称'">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="8" style="text-align: right; padding-right: 20px" >
+                        <a href="javascript:void(0)" class="easyui-linkbutton" onclick="searchF()"  data-options="iconCls:'e-icon fa fa-search'" style="width:8%;">查询</a>
+                        <a href="javascript:void(0)" class="easyui-linkbutton" onclick="resetF()" data-options="iconCls:'e-icon fa fa-refresh'" style="width:8%;">重置</a>
+                        <!--<a href="javascript:void(0)" class="easyui-linkbutton" onclick="exportF()" data-options="iconCls:'e-icon fa fa-table'" style="width:8%;">导出</a>
+                        <a href="javascript:void(0)" class="easyui-linkbutton" onclick="exportF()" data-options="iconCls:'e-icon fa fa-print'" style="width:8%;">打印</a>-->
+                    </td>
+                </tr>
+            </table>
+        </form>
+
+        <!--  数据列表 -->
+        <table id = "dg" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"></table>
+    </div>
+
+    <!--  新增弹框界面-->
+    <div id="dlg" class="easyui-dialog" style="width: 600px; padding: 10px 20px" align="center"
+         data-options="title:'新增机构',modal:true,closed:true"  buttons="#dlg-buttons">
+        <form id="fm" method="post">
+            <table>
+                <tr>
+                    <td style="width:20%; text-align: right;"><label>机构编码<span style="color: red">*</span>:</label></td>
+                    <td style="width:25%;">
+                        <input class="easyui-textbox" id="comCode" name="comCode" data-options="prompt:'机构编码',required:true,missingMessage:'请录入机构编码'">
+                    </td>
+                    <td style="width:20%; text-align: right;"><label>机构名称<span style="color: red">*</span>:</label></td>
+                    <td style="width:25%;">
+                        <input class="easyui-textbox" type="text" id="comName" name="comName" data-options="prompt:'机构名称',required:true,missingMessage:'请录入机构名称'">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;"><label>机构地址<span style="color: red">*</span>:</label></td>
+                    <td colspan="3">
+                        <input style="width: 100%" class="easyui-textbox" type="text"  id ="address" name="address"  data-options="prompt:'机构地址',required:true,missingMessage:'请录入机构地址'">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;"><label>机构英文地址<!--<span style="color: red">*</span>-->:</label></td>
+                    <td colspan="3">
+                        <input style="width: 100%" class="easyui-textbox" type="text"  id ="eaddress" name="eaddress"  data-options="prompt:'机构英文地址'">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;"><label>邮编<!--<span style="color: red">*</span>-->:</label></td>
+                    <td>
+                        <input  type="text" id="postcode" name="postcode" class="easyui-textbox" data-options="prompt:'邮编'" />
+                    </td>
+                    <td style="text-align: right;"><label>电话<!--<span style="color: red">*</span>-->:</label></td>
+                    <td>
+                        <input type="text" id="phone" name="phone" class="easyui-textbox" data-options="prompt:'电话'" />
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;"><label>传真<!--<span style="color: red">*</span>-->:</label></td>
+                    <td>
+                        <input  type="text" id="facsimile" name="facsimile" class="easyui-textbox" data-options="prompt:'传真'" />
+                    </td>
+                    <td style="text-align: right;"><label>税号<!--<span style="color: red">*</span>-->:</label></td>
+                    <td>
+                        <input type="text" id="ein" name="ein" class="easyui-textbox" data-options="prompt:'税号'" />
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;"><label>机构层级<span style="color: red">*</span>:</label></td>
+                    <td>
+                        <input id="level" name="level" class="easyui-combobox" data-options="prompt: '机构层级',editable:false,required:true,missingMessage:'请选择机构层级'"></input>
+                    </td>
+                    <td style="text-align: right;"><label>上级机构:</label></td>
+                    <td>
+                        <input class="easyui-combobox" id="superCom" name="superCom" data-options="prompt: '上级机构'">
+                    </td>
+                </tr>
+                <tr id="initAccountXZ">
+                    <td style="text-align: right;"><label>是否初始化账套<!-- <span style="color: red">*</span> -->:</label></td>
+                    <td>
+                        <input id="initAccount" name="initAccount" class="easyui-combobox" data-options="prompt: '是否初始化账套',editable:false"></input>
+                    </td>
+                    <td style="text-align: right;"><label>参考账套<!-- <span style="color: red">*</span> -->:</label></td>
+                    <td>
+                        <input id="referToAccount" name="referToAccount" class="easyui-combobox" data-options="prompt: '以XX账套为基础初始化',editable:false"></input>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;"><label>经理<!--<span style="color: red">*</span>-->:</label></td>
+                    <td>
+                        <input  type="text" id="manager" name="manager" class="easyui-textbox" data-options="prompt:'经理'" />
+                    </td>
+                    <td style="text-align: right;"><label>会计主管<!--<span style="color: red">*</span>-->:</label></td>
+                    <td>
+                        <input type="text" id="accountant" name="accountant" class="easyui-textbox" data-options="prompt:'会计主管'" />
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;"><label>财务领导<!--<span style="color: red">*</span>-->:</label></td>
+                    <td>
+                        <input  type="text" id="leader" name="leader" class="easyui-textbox" data-options="prompt:'财务领导'" />
+                    </td>
+                    <td style="text-align: right;"><label>出纳员<!--<span style="color: red">*</span>-->:</label></td>
+                    <td>
+                        <input type="text" id="cashier" name="cashier" class="easyui-textbox" data-options="prompt:'出纳员'" />
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;"><label>效力状态<span style="color: red">*</span>:</label></td>
+                    <td>
+                        <input id="flag" name="flag" class="easyui-combobox" data-options="prompt: '效力状态',editable:false,required:true,missingMessage:'请选择效力状态'"></input>
+                    </td>
+                    <td style="text-align: right;"><label>是否虚拟机构<span style="color: red">*</span>:</label></td>
+                    <td>
+                        <input id="isVirtual" name="isVirtual" class="easyui-combobox" data-options="prompt: '是否虚拟机构',editable:false,required:true,missingMessage:'请选择是否虚拟机构'"></input>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;"><label>备注<!--<span style="color: red">*</span>-->:</label></td>
+                    <td colspan="3">
+                        <input style="width: 100%" type="text" id="remark" name="remark" class="easyui-textbox" data-options="prompt:'备注'" />
+                    </td>
+                </tr>
+                <tr id="create">
+                    <td style="text-align: right;"><label>录入人<!--<span style="color: red">*</span>-->:</label></td>
+                    <td>
+                        <input  type="text" id="createByName" name="createByName" class="easyui-textbox" data-options="prompt:'录入人'" />
+                    </td>
+                    <td style="text-align: right;"><label>录入时间<!--<span style="color: red">*</span>-->:</label></td>
+                    <td>
+                        <input type="text" id="createTime" name="createTime" class="easyui-textbox" data-options="prompt:'录入时间'" />
+                    </td>
+                </tr>
+                <tr id="lastModify">
+                    <td style="text-align: right;"><label>修改人<!--<span style="color: red">*</span>-->:</label></td>
+                    <td>
+                        <input  type="text" id="lastModifyByName" name="lastModifyByName" class="easyui-textbox" data-options="prompt:'修改人'" />
+                    </td>
+                    <td style="text-align: right;"><label>修改时间<!--<span style="color: red">*</span>-->:</label></td>
+                    <td>
+                        <input type="text" id="lastModifyTime" name="lastModifyTime" class="easyui-textbox" data-options="prompt:'修改时间'" />
+                    </td>
+                </tr>
+            </table>
+            <input type="hidden" name="token" value="">
+        </form>
+
+        <div id="dlg-buttons">
+            <a id="save" href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-floppy-o" onclick="saveCom()">保存</a>
+            <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-close" onclick="cancel()">取消</a>
+        </div>
+    </div>
+</body>
+<script>
+    $(function(){
+        $('#dg').datagrid({
+            url: '/branchinfo/list'
+            ,striped: true  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false
+            ,method: 'post'  //默认为 post
+            ,pagination: true //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。默认false
+            //,rownumbers: true //设置为 true，则显示带有行号的列。默认false
+            ,fitColumns: true //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            //,autoRowHeight: true //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能。
+            ,singleSelect: true //设置为 true，则只允许选中一行。 默认false
+            ,checkOnSelect: true //如果设置为 true，当用户点击某一行时，则会选中/取消选中复选框。
+            ,pagePosition: 'bottom' //定义分页栏的位置。可用的值有：'top'、'bottom'、'both'。 默认 bottom
+            ,pageList: [10,20,30,40,50] //当设置了 pagination 属性时，初始化页面尺寸的选择列表。
+            ,nowrap: true
+            /**
+             * field: 列的字段名
+             * width: 列的宽度。如果未定义，则宽度会自动扩展以适应它的内容。没有定义宽度将会降低性能。
+             * align： 指示如何对齐该列的数据，可以用 'left'、'right'、'center'。 默认undefined
+             * halign：指示如何对齐该列的头部，可能的值：'left'、'right'、'center'。如果没有分配值，则头部对齐方式将与通过 'align' 属性定义的数据对齐方式一致。该属性自版本 1.3.2 起可用。
+             * sortable： 设置为 true，则允许该列被排序。
+             * order：默认的排序顺序，只能用 'asc' 或 'desc'。该属性自版本 1.3.2 起可用。
+             * resizable：设置为 true，则允许该列可调整尺寸。
+             * fixed: 设置为 true，则当 'fitColumns' 设置为 true 时放置调整宽度。
+             * hidden: 设置为 true，则隐藏该列。
+             * checkbox: 设置为 true，则显示复选框。复选框有固定宽度。
+             * formatter: 单元格的格式化函数，需要三个参数：value：字段的值。rowData：行的记录数据。rowIndex：行的索引。
+             */
+            ,columns: [
+                [
+                    {field:'',checkbox: true ,align:'center'}
+                    ,{field:'comCode',title:'机构编码',width:'15%',align:'center'}
+                    ,{field:'comName',title:'机构名称',width:'24%',align:'left'}
+                    ,{field:'address',title:'机构地址',width:'30%',align:'left'}
+                    ,{field:'superComCode',title:'上级机构编码',width:'15%',align:'center'}
+                    ,{field:'id',title:'操作',width:'15%',align:'center',  formatter: function(value,row,index){
+                        var edit = '<button class="sino-btn sino sino-btn-xs" onclick="editCom('+index+');">编辑</button>';
+                        var del = '<button class="sino-btn sino-btn-danger sino-btn-xs" onclick="delCom('+value+');">删除</button>';
+                        return edit+'&nbsp;&nbsp;&nbsp;&nbsp;'+del;
+                    }}
+                ]
+            ]
+            /*,toolbar: '#tbar'*/    //通过id选择器引用
+            ,toolbar: [{
+                text: '新增'
+                ,iconCls: 'e-icon fa fa-plus'
+                ,plain: true
+                ,handler: function(){
+                    //隐藏创建人、修改人、创建时间、修改时间
+                    $("#create").hide();
+                    $("#lastModify").hide();
+                    //隐藏是否初始化账套
+                    $("#initAccountXZ").hide();
+                    $('#referToAccount').combobox({required:false});
+                    //显示保存按钮
+                    $("#save").show();
+
+                    readonlyFalseOrTrue('N')
+                    $('#comCode').textbox({readonly:false});
+
+                    $('#dlg').dialog('open').window('center');
+                    $('#fm').form('clear');
+
+                    initSuperCom();
+                    url='/branchinfo/add';
+                }
+            }]
+            ,onDblClickRow:function (rowIndex, rowData) {
+                lookCom(rowData);
+            }
+            ,loadMsg:'加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        });
+
+        //初始化机构层级数据
+        $('#level').combobox({
+            valueField:'value',
+            textField:'text',
+            url:'/codeSelect?type=companyLevel',
+            method:'GET',
+            panelHeight:'120',
+            onSelect: function (rec) {
+                if (rec.value=='3'){
+                    //隐藏是否初始化账套
+                    $("#initAccountXZ").show();
+                    $('#superCom').combobox({required:true}).combobox({missingMessage:'请选择否初始化账套'});
+                } else {
+                    //隐藏是否初始化账套
+                    $("#initAccountXZ").hide();
+                    $('#superCom').combobox({required:false});
+                }
+            }
+        });
+        //效力状态
+        $('#flag').combobox({
+            valueField:'value',
+            textField:'text',
+            url:'/codeSelect?type=flag',
+            method:'GET',
+            panelHeight:'60',
+        });
+        var data = [
+            {'text' : '是', 'value' : '1'},
+            {'text' : '否', 'value' : '0'}
+        ];
+
+        $('#isVirtual').combobox({
+            textField : 'text',
+            valueField : 'value',
+            panelHeight : 'auto',
+            data : data
+        })
+
+
+
+
+        //是否初始化账套
+        $('#initAccount').combobox({
+            valueField:'value',
+            textField:'text',
+            url:'/codeSelect?type=initAccount',
+            method:'GET',
+            panelHeight:'60',
+            onSelect: function (rec) {
+                if(rec.value=='1'){
+                    $('#referToAccount').combobox({
+                        valueField:'value',
+                        textField:'text',
+                        url:'/codeSelect/referToAccount',
+                        method:'GET',
+                        panelHeight:'120'
+                    })
+                    $('#referToAccount').combobox({required:true}).combobox({missingMessage:'请选择账套初始化的参考账套'});
+                }else{
+                    $('#referToAccount').combobox({required:false});
+                }
+            }
+        });
+    });
+
+    //初始化上级机构下拉框
+    function initSuperCom() {
+        $('#superCom').combobox({
+            valueField:'value',
+            textField:'text',
+            url:'/codeSelect/initSuperCom',
+            method:'GET',
+            panelHeight:'120'
+        });
+    }
+    //搜索
+    function searchF(){
+        var params = {};
+        $('#searchForm').find('input').each(function(){
+            var obj = $(this);
+            var name = obj.attr('name');
+            if(name){
+                params[name] = obj.val();
+            }
+        });
+        $("#dg").datagrid({
+            queryParams: params,    //查询条件
+            onLoadSuccess: function(data){
+                if(data.total<=0) {
+                    $.messager.show({
+                        title: '提示'
+                        ,msg:'未查询到相关数据'
+                        ,showType:'slide'
+                    });
+                }
+            }
+        });
+    }
+
+    //编辑机构信息
+    function editCom(index) {
+        initSuperCom();
+
+        $('#dg').datagrid('selectRow',index);
+
+        var row = $('#dg').datagrid('getSelected');
+
+        //隐藏创建人、修改人、创建时间、修改时间
+        $("#create").hide();
+        $("#lastModify").hide();
+        //隐藏是否初始化账套
+        $("#initAccountXZ").hide();
+        $('#referToAccount').combobox({required:false});
+        //显示保存按钮
+        $("#save").show();
+
+        readonlyFalseOrTrue('N')
+        $('#comCode').textbox({readonly:true});
+
+        $('#fm').form('clear');
+
+        $('#fm').form('load',row);
+
+        $('#dlg').dialog('open').dialog('setTitle','编辑机构信息').window('center');
+        //获取token，防止表单重复提交
+        jsutil.tool.refreshToken('',$('#fm').find('input[name="token"]'));
+
+        url = '/branchinfo/update?id=' + row.id;
+    }
+
+    //保存机构信息（新增、编辑）
+    function saveCom() {
+        $.ajax({
+            url:url,
+            data:$('#fm').serialize(),
+            type:'post',
+            beforeSend: function(){
+                var flag=$('#fm').form('validate');
+                if(!flag){
+                    $.messager.alert('提示','请填写带*信息栏', 'info');
+                }
+                return flag;
+            },
+            success: function(result){
+                if (result.success){
+                    $('#dg').datagrid('reload');	// reload the user data
+                    $('#dlg').dialog('close');		// close the dialog
+                    $.messager.alert('提示','操作成功', 'info');
+                }else if (result.errorMsg){
+                    $.messager.alert('提示',result.errorMsg,'error');
+                }
+            }
+        });
+    }
+
+    //删除机构信息
+    function delCom(id) {
+        $.messager.confirm('删除','确认删除该机构信息吗?',function(r){
+            if (r){
+                $.post('/branchinfo/delete',{id:id},function(result){
+                    if (result.success){
+                        $('#dg').datagrid('reload');// reload the user data
+                        $.messager.alert('提示','操作成功', 'info');
+                    } else {
+                        $.messager.alert('提示',result.errorMsg,'error');
+                    }
+                },'json');
+            }
+        });
+    }
+
+    //查看机构信息
+    function lookCom(row) {
+        initSuperCom();
+
+        //显示创建人、修改人、创建时间、修改时间
+        $("#create").show();
+        $("#lastModify").show();
+        //隐藏是否初始化账套
+        $("#initAccountXZ").hide();
+        $('#referToAccount').combobox({required:false});
+        //隐藏保存按钮
+        $("#save").hide();
+
+        readonlyFalseOrTrue('Y');
+        $('#fm').form('clear');
+
+        $('#fm').form('load',row);
+        $('#dlg').dialog('open').dialog('setTitle','查看机构信息').window('center');
+    }
+
+    //combobox、textbox是否启用只读模式
+    function readonlyFalseOrTrue(falg) {
+        if(falg=='Y'){
+            $('#fm').find(".easyui-combobox").combobox({readonly:true});
+            $('#fm').find(".easyui-textbox").textbox({readonly:true});
+
+        }else{
+            $('#fm').find(".easyui-combobox").combobox({readonly:false})
+            $('#fm').find(".easyui-textbox").textbox({readonly:false});
+        }
+        /*$('#fm').find(".easyui-datebox").datebox({required:false}).datebox('readonly');
+        $('#fm').find(".easyui-combotree").combotree({required:false}).combotree('readonly');*/
+    }
+    
+    //重置
+    function resetF() {
+        $('#searchForm').form('clear');
+    }
+    //关闭新增、编辑、查看弹框
+    function cancel(){
+        $('#dlg').dialog('close');
+    }
+</script>
+</html>

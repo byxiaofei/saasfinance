@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('固定资产卡片清理','','')">
+
+</head>
+<body>
+<div class="easyui-panel"
+     style="height: auto; width:100%;padding: 8px 0px 0px 0px;overflow: hidden;">
+    <form id="serachFrom" method="post" style="margin-bottom:0;">
+        <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+
+            <tr>
+                <td style="width:12%;text-align: right;" >
+                    <label>卡片编号:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:90px;" id="cardCode" name="cardCode" class="easyui-textbox" data-options="prompt: '卡片编号'">&nbsp;-&nbsp;
+                    <input style="width:90px;" id="cardCodeEnd" name="cardCode" class="easyui-textbox" data-options="prompt: '卡片编号'">
+                </td>
+                <td style="width:12%;text-align: right;" >
+                    <label>固定资产编码:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:90px;" id="fixedAssetsCode" name="fixedAssetsCode" class="easyui-textbox" data-options="prompt: '请输入固定资产编码'">&nbsp;-&nbsp;
+                    <input style="width:90px;" id="fixedAssetsCodeEnd" name="fixedAssetsCode" class="easyui-textbox" data-options="prompt: '请输入固定资产编码'">
+                </td>
+                <td style="width:12%;text-align: right;" >
+                    <label>启用时间:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:90px;" id="timeStart" name="timeStart" class="easyui-textbox" data-options="prompt: '请输入启用时间'">&nbsp;-&nbsp;
+                    <input style="width:90px;" id="timeEnd" name="timeStart" class="easyui-textbox" data-options="prompt: '请输入启用时间'">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:12%;text-align: right;" >
+                    <label>原值:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:90px;" id="originalValue" name="originalValue" class="easyui-textbox" data-options="prompt: '请输入原值'">&nbsp;-&nbsp;
+                    <input style="width:90px;" id="originalValueMax" name="originalValue" class="easyui-textbox" data-options="prompt: '请输入原值'">
+                </td>
+                <td style="width:12%;text-align: right;" >
+                    <label>净值:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:90px;" id="netWeight" name="netWeight" class="easyui-textbox" data-options="prompt: '请输入净值'">&nbsp;-&nbsp;
+                    <input style="width:90px;" id="netWeightMax" name="netWeight" class="easyui-textbox" data-options="prompt: '请输入净值'">
+                </td>
+                <td style="width:12%;text-align: right;" >
+                    <label>累计折旧金额:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:90px;" id="depreciationValue" name="depreciationValue" class="easyui-textbox" data-options="prompt: '请输入累计折旧金额'">&nbsp;-&nbsp;
+                    <input style="width:90px;" id="depreciationValueMax" name="depreciationValue" class="easyui-textbox" data-options="prompt: '请输入累计折旧金额'">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:12%;text-align: right;" >
+                    <label>预计使用总量:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:90px;" id="useAmount" name="useAmount" class="easyui-textbox" data-options="prompt: '请输入预计使用总量'">&nbsp;-&nbsp;
+                    <input style="width:90px;" id="useAmountMax" name="useAmount" class="easyui-textbox" data-options="prompt: '请输入预计使用总量'">
+                </td>
+                <td style="width:12%;text-align: right;" >
+                    <label>折旧至日期:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:60%;" id="depreUtilDate" name="depreToDate" class="easyui-datebox" data-options="prompt: '请输入折旧至日期'">
+                </td>
+                <td style="width:12%;text-align: right;" >
+                    <label>变更信息:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:60%;" id="changeMessage" name="changeMessage" class="easyui-textbox" data-options="prompt: '请选择变更信息'">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:12%;text-align: right;" >
+                    <label>使用部门:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:60%;" id="useDept" name="useDept" class="easyui-textbox" data-options="prompt: '请输入使用部门'">
+                </td>
+                <td style="width:12%;text-align: right;" >
+                    <label>固定资产类别:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:60%;" id="fixedAssetsType" name="fixedAssetsType" class="easyui-textbox" data-options="prompt: '请输入固定资产类别'">
+                </td>
+                <td style="width:12%;text-align: right;" >
+                    <label>来源:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:60%;" id="source" name="source" class="easyui-textbox" data-options="prompt: '请输入来源'">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:12%;text-align: right;" >
+                    <label>是否包括已停用卡片:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:60%;" id="stopFlag" name="stopFlag" class="easyui-textbox" data-options="prompt: '请选择'">
+                </td>
+                <td style="width:12%;text-align: right;" >
+                    <label>是否包括已清理卡片:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:60%;" id="clearFlag" name="clearFlag" class="easyui-textbox" data-options="prompt: '请选择'">
+                </td>
+                <td style="width:12%;text-align: right;" >
+                    <label>制单人:</label>
+                </td>
+                <td style="width:20%;">
+                    <input style="width:60%;" id="madeBy" name="madeBy" class="easyui-textbox" data-options="prompt: '请输入制单人'">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="8" style="text-align: right; padding-right: 20px;">
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-search'" style="width: 8%;" onclick="serach()" >查询</a>
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-refresh'" style="width: 8%;" onclick="reset()">重置</a>
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-download'" style="width: 8%;" onclick="export_()">导出</a>
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-print'" style="width: 8%;" onclick="print_()">打印</a>
+                </td>
+            </tr>
+        </table>
+
+    </form>
+
+    <!-- 展示搜索结果 -->
+    <table id = "sg"></table>
+</div>
+
+</div>
+<!-- 新建弹框 -->
+<div id="dlg"  class="easyui-dialog" style="width: 650px;height: 500px; padding: 10px 20px" align="center"
+     data-options="modal:true,closed:true,resizable:true,maximizable:true"  buttons="#dlg-buttons">
+    <form id="fm" method="post">
+        <table cellpadding="4" class="tt">
+            <tr bgcolor="#6c90da">
+                <th colspan="4">基本信息</th>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>卡片编号</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="specialCodeChild" name="specialCodeChild" data-options="prompt:'专项代码'">
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>管理类别</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="specialName1" name="specialName" data-options="prompt:'专项简称'">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>固定资产类别</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-combobox" id="specialNameP1" name="specialNameP"  data-options="prompt:'专项全称'">
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>固定资产编号</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-combobox" id ="endflag1" name="endflag"   data-options="prompt:'末级标志'" >
+
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>固定资产名称</label></td>
+                <td class="ttd rtd">
+                    <input  class="easyui-textbox" id="superSpecialName1" name="superSpecialName"data-options="prompt:'上级专项代码'">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>厂商</label></td>
+                <td class="ttd rtd">
+                    <input  class="easyui-textbox" id="superSpecialName2" name="superSpecialName"data-options="prompt:'上级专项代码'">
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>规格</label></td>
+                <td class="ttd rtd">
+                    <input  class="easyui-textbox" id="standrad" name="superSpecialName"data-options="prompt:'规格'">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;"class="ttd ltd"><label>序列号</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="temp1" name="temp" data-options="prompt:'备注'" />
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>来源</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-combobox" id="temp2" name="temp" data-options="prompt:'来源'" />
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>计量单位</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="temp3" name="temp" data-options="prompt:'备注'" />
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>数量</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="temp4" name="temp" data-options="prompt:'备注'" />
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>使用部门</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-combobox" id="Method" name="temp" data-options="prompt:'备注'" />
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>启用时间</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-combobox" id="TYAJS" name="temp" data-options="prompt:'备注'" />
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>预计使用总量</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="useTotalAmount" name="temp" data-options="prompt:'备注'" />
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>原值</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="originalValue1" name="temp" data-options="prompt:'备注'" />
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>净量</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="netWeight1" name="temp" data-options="prompt:'备注'" />
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>使用状态</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="useState" name="temp" data-options="prompt:'备注'" />
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>备注</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="temp" name="temp" data-options="prompt:'备注'" />
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>存放地点</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="location" name="temp" data-options="prompt:'备注'" />
+                </td>
+            </tr>
+            <tr bgcolor="#6c90da">
+                <th colspan="4">折旧信息</th>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>预计残值率</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="preResRate" name="temp" data-options="prompt:'备注'" />
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>预计残值</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="preRes" name="temp" data-options="prompt:'备注'" />
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>预计清理费用</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="preResRate1" name="temp" data-options="prompt:'备注'" />
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>折旧方法</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="preRes1" name="temp" data-options="prompt:'备注'" />
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>期初折旧量</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="id1" name="temp" data-options="prompt:'备注'" />
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>期初折旧金额</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="ID2" name="temp" data-options="prompt:'备注'" />
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>折旧起始日期</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="id3" name="temp" data-options="prompt:'备注'" />
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>已折旧至日期</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="id4" name="temp" data-options="prompt:'备注'" />
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>期末累计折旧量</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="id5" name="temp" data-options="prompt:'备注'" />
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>期末累计折旧金额</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="id6" name="temp" data-options="prompt:'备注'" />
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>折旧计提状态</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-combobox" id="id7" name="temp" data-options="prompt:'备注'" />
+                </td>
+            </tr>
+            <tr bgcolor="#6c90da">
+                <th colspan="4">清理信息</th>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>清理生效年月</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="id8" name="specialCodeChild" data-options="prompt:'专项代码'">
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>清理原因</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="id9" name="specialName"  data-options="prompt:'专项简称'" required>
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>清理原因说明</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="id10" name="specialNameP"  data-options="prompt:'专项全称'">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>清理收入</label></td>
+                <td class="ttd rtd">
+                    <input  class="easyui-textbox" id="id11" name="superSpecialName"data-options="prompt:'上级专项代码'">
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>清理费用</label></td>
+                <td class="ttd rtd">
+                    <input  class="easyui-textbox" id="id12" name="superSpecialName"data-options="prompt:'上级专项代码'">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>清理操作单位</label></td>
+                <td class="ttd rtd">
+                    <input  class="easyui-textbox" id="id13" name="superSpecialName"data-options="prompt:'上级专项代码'">
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>清理操作人</label></td>
+                <td class="ttd rtd">
+                    <input  class="easyui-textbox" id="id14" name="superSpecialName"data-options="prompt:'规格'">
+                </td>
+            </tr>
+            <tr bgcolor="#6c90da">
+                <th colspan="4">卡片变动信息</th>
+            </tr>
+        </table>
+        <table id="dg"
+               class="easyui-datagrid"
+               toolbar="#toolbar"
+               rownumbers="true"
+               striped="true"
+               nowrap="false"
+               singleSelect="true"
+               showFooter="true"
+               autoRowHeight="false"
+               loadMsg="加载数据中..."
+               method="get"
+               style="width:100%;"
+        >
+            <thead>
+            <tr>
+                <th field="tagCode"  width="20%">变动类别</th>
+                <th field="remarkName"  width="20%" >变动前</th>
+                <th field="subjectCode"  width="20%" >变动后</th>
+                <th field="subjectName"  width="20%">变动原因</th>
+                <th field="debit"  width="20%" >变动日期</th>
+            </tr>
+            </thead>
+        </table>
+       <!-- <input type='Hidden' name="springmvc.token" value="">-->
+
+    </form>
+
+    <div id="dlg-buttons">
+        <a href="#" class="easyui-linkbutton" iconCls="iconCls:'e-icon fa fa-cut'" onclick="clear()">清理</a>
+        <a href="#" class="easyui-linkbutton" iconCls="iconCls:'e-icon fa fa-close'" onclick="cancel()">取消</a>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        $('#sg').datagrid({
+            url: ' ',
+            striped: true,  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false,
+            method: 'post', //默认为 post
+            pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。默认false
+            //,rownumbers: true //设置为 true，则显示带有行号的列。默认false
+            fitColumns: true,//设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            //,autoRowHeight: true //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能。
+            //   singleSelect: true,//设置为 true，则只允许选中一行。 默认false
+            checkOnSelect: true, //如果设置为 true，当用户点击某一行时，则会选中/取消选中复选框。
+            pagePosition: 'bottom', //定义分页栏的位置。可用的值有：'top'、'bottom'、'both'。 默认 bottom
+            pageList: [10, 20, 30, 40, 50], //当设置了 pagination 属性时，初始化页面尺寸的选择列表。
+            nowrap: true,
+            /**
+             * field: 列的字段名
+             * width: 列的宽度。如果未定义，则宽度会自动扩展以适应它的内容。没有定义宽度将会降低性能。
+             * align： 指示如何对齐该列的数据，可以用 'left'、'right'、'center'。 默认undefined
+             * halign：指示如何对齐该列的头部，可能的值：'left'、'right'、'center'。如果没有分配值，则头部对齐方式将与通过 'align' 属性定义的数据对齐方式一致。该属性自版本 1.3.2 起可用。
+             * sortable： 设置为 true，则允许该列被排序。
+             * order：默认的排序顺序，只能用 'asc' 或 'desc'。该属性自版本 1.3.2 起可用。
+             * resizable：设置为 true，则允许该列可调整尺寸。
+             * fixed: 设置为 true，则当 'fitColumns' 设置为 true 时放置调整宽度。
+             * hidden: 设置为 true，则隐藏该列。
+             * checkbox: 设置为 true，则显示复选框。复选框有固定宽度。
+             * formatter: 单元格的格式化函数，需要三个参数：value：字段的值。rowData：行的记录数据。rowIndex：行的索引。
+             */
+            columns: [
+                [
+                    {field: '', checkbox: true, align: 'center'}
+                    , {field: 'cardCode', title: '卡片编码', width: '10%', align: 'center', sortable: 'true', order: 'asc'}
+                    , {field: 'fixedAssetsCode', title: '固定资产编码', width: '10%', align: 'center',formatter:'doubleClick'}
+                    , {field: 'fixedAssetsType', title: '固定资产类别', width: '10%', align: 'center'}
+                    , {field: 'fixedAssetsName', title: '固定资产名称', width: '10%', align: 'center'}
+                    , {field: 'standard', title: '规格', width: '10%', align: 'center'}
+                    , {field: 'originalValue', title: '原值', width: '10%', align: 'center'}
+                    , {field: 'netWeight', title: '净值', width: '5%', align: 'center'}
+                    , {field: 'depreciationValue', title: '本月折旧金额', width: '10%', align: 'center'}
+                    , {field: 'oldMethod', title: '累计折旧金额', width: '10%', align: 'center'}
+                    , {field: 'moneySpecial', title: '预计使用总量', width: '15%', align: 'center'}
+                    , {field: 'depreciationAmount', title: '期末累计折旧量', width: '5%', align: 'center'}
+                    , {field: 'endflag', title: '预计残值', width: '10%', align: 'center'}
+                    , {field: 'oldMethod', title: '预计残值率', width: '10%', align: 'center'}
+                    , {field: 'moneySpecial', title: '启用日期', width: '15%', align: 'center'}
+                    , {field: 'useDept', title: '使用部门', width: '10%', align: 'center'}
+                    , {field: 'state', title: '状态', width: '15%', align: 'center'}
+                ]
+            ],
+            /*,toolbar: '#tbar'*/    //通过id选择器引用
+            toolbar: [{
+                text: '清理',
+                iconCls: 'e-icon fa fa-mail-reply-all',
+                plain: true,
+                handler: clearCard
+            }],
+            loadMsg: '加载中...' , //当从远程站点加载数据时，显示的提示消息。
+            onDblClickCell:function (index,field,value) {
+                var rows = $('#sg').datagrid('getRows')[index];
+                if(field=="fixedAssetsCode"){
+                    ('#fm').form('load',rows);
+                    $('#dlg').dialog('open').dialog('setTitle','查看固定资产卡片');
+                }
+            }
+        });
+
+        //折旧至日期 事件绑定  用于时间校验
+        $('#depreUtilDate').datebox({
+            onChange:function(n,o){
+                var data = {"depreUtilDate":n};
+                $.post('/fixedassetscard/checkDepreToDate', data, function(result){
+                    if(!result.success){
+                        $.messager.alert("提示",result.errorMsg,"error");
+                        $('#depreUtilDate').textbox('setValue',result.data.substring(0,4)+"-"+result.data.substring(4,6)+"-01");
+                        return false;
+                    }
+                },'json');
+            }
+        });
+
+    });
+    //双击事件————固定资产编码
+    function doubleClick(value,row,index){
+        if(value==row.fixedAssetsCode){
+            return '<span style="color:blue;cursor:pointer">'+value+'</span>';
+        }
+    }
+    //清理卡片（弹出窗口）
+    function clearCard() {
+        $('#fm').form('clear');
+        $('#dlg').dialog('open').dialog('setTitle','查看固定资产卡片');
+    }
+    //清理
+    function clear() {
+        alert("已完成固定资产卡片减少！固定资产编号为：")
+    }
+    function cancel() {
+        $('#dlg').dialog('close');
+    }
+
+</script>
+</body>
+</html>

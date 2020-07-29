@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('凭证打印','','')">
+</head>
+<body>
+<div id="panelDiv" align="center">
+    <div class="easyui-panel" style="height: auto; width: 70%; padding: 8px 0px 0px 0px; overflow: hidden;">
+        <span id="printCopyType" style="display:none" th:text="${map.printCopyType}"></span>
+
+        <span id="printYearMonth" style="display:none" th:text="${map.printYearMonth}"></span>
+        <span id="printVoucherNo" style="display:none" th:text="${map.printVoucherNo}"></span>
+
+        <span id="printYearMonthDate" style="display:none" th:text="${map.printYearMonthDate}"></span>
+        <span id="printVoucherNoStart" style="display:none" th:text="${map.printVoucherNoStart}"></span>
+        <span id="printVoucherNoEnd" style="display:none" th:text="${map.printVoucherNoEnd}"></span>
+        <span id="printCreateBy" style="display:none" th:text="${map.printCreateBy}"></span>
+
+        <span id="printSpecialNameP" style="display:none" th:text="${map.printSpecialNameP}"></span>
+        <span id="currentManageBranchName" style="display:none" th:text="${session.currentUser.currentManageBranchName}"></span>
+
+        <div><div id="printDiv"></div></div>
+
+        <table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+            <tr>
+                <td colspan="6" style="text-align: center;" hidden>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()" data-options="iconCls:'e-icon fa fa-print'" style="width:10%;">打印</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<!-- 等待提示框 -->
+<div id="waitMenu" class="easyui-dialog" style="width: 300px; height: 100px; padding: 10px 20px;" closed="true" align="center" data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+    <div id="msg"></div>
+</div>
+</body>
+<script th:src="@{/js/updataEasyUIDataGridTableStyle.js}"></script>
+<script th:src="@{/js/changeNumMoneyToChineseStr.js}"></script>
+<script>
+    $(function(){
+        searchF();
+    });
+
+    //搜索
+    function searchF(){
+        var url = '/voucherprint/printlist';
+        var data = null;
+        if ($('#printCopyType').text()=='4') {
+            data = {'copyType':'4','yearMonth':$("#printYearMonth").text(),'yearMonthDate':$("#printYearMonthDate").text(),'voucherNoStart':$("#printVoucherNoStart").text(),'voucherNoEnd':$("#printVoucherNoEnd").text(),'createBy':$("#printCreateBy").text(),'voucherNo':$("#printVoucherNo").text(),'specialNameP':$("#printSpecialNameP").text()};
+        } else {
+            data = {'yearMonth':$("#printYearMonth").text(),'voucherNo':$("#printVoucherNo").text(),'specialNameP':$("#printSpecialNameP").text()};
+        }
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        $.post(url, data, function (result) {
+            $('#waitMenu').dialog('close');//关闭等待窗口
+            if (result.length>0) {
+                //每一条 result 数据都是一张完整的凭证打印数据，然后根据该凭证的分录条数进行分张打印（每张不超过6条分录）
+                //creatPrintContent(result);
+                creatPrintContent2(result);
+            } else {
+                //无打印的凭证数据
+                $.messager.alert('提示','无凭证打印数据','info');
+            }
+        });
+    }
+
+    //打印
+    function printF() {
+        $('.easyui-linkbutton').css({'display':'none'})
+        window.print();
+        $('.easyui-linkbutton').css({'display':'inline-block'})
+    }
+
+    function creatPrintContent(result) {
+        //获得DIV
+        var parentDiv = $('#printDiv');
+        var pageAndRows = 10;
+        //每一条 result 数据都是一张完整的凭证打印数据，然后根据该凭证的分录条数进行分张打印（每张不超过 pageAndRows 条分录）
+        var resultLength = result.length;//代表本次打印共有多少张凭证
+        var printLength = 0;//代表本次打印总共多少打印凭证（每页1张）
+        for(var i=0;i<result.length;i++){
+            //每次循环一张完整的凭证打印数据
+            var suffix = result[i].suffix;//第 i 张凭证的所有分录信息
+            var currentSuffixNum = 0;
+            var suffixLength = suffix.length;
+            var page = 0;//该凭证需要多少张打印凭证的张数,每页张不超过6条分录，如果整整6条，由于存在合计项所以页数需要加1
+            if (suffixLength) {
+                page = parseInt(suffixLength/pageAndRows) +1;
+            }
+
+            for(var j=0;j<page;j++){
+                //第 i 张凭证的第 j 张打印凭证
+
+                //追加分页标志
+                if (i!=0 || (i!=0 && j!=0)) {parentDiv.append('<div style="page-break-after:always">');}
+                //追加头部信息
+                var vno = result[i].voucherNo;
+                if (page!=1) {vno = vno+'-'+(j+1)+'/'+page;}
+                parentDiv.append(printTableHeader(result[i].voucherDate, result[i].centerCode, vno));
+                parentDiv.append('<table id = "print_dg_' + printLength + '" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"></table>');
+                var flag = false;//false表示无需追加合计项
+                for(var k=0;k<pageAndRows;k++){
+                    //该凭证的第 j 张打印凭证的第 k 条分录，每张打印凭证 pageAndRows条分录（不足的则补(补空数据)到 pageAndRows-1条分录，第 pageAndRows条为合计项）
+                    if(currentSuffixNum<suffixLength){
+
+                    }else{
+                        if(k<pageAndRows-1){// k 从 0 开始的
+                            //不足的则补(补空数据)到 pageAndRows-1条分录，第 pageAndRows条为合计项
+                        } else {
+
+                        }
+                        flag = true;
+                    }
+                    currentSuffixNum++;
+                }
+                //追加尾部信息
+                parentDiv.append(printTableFooter(result[i].geneByName, result[i].approveByName, result[i].createByName));
+                //追加分页后部分
+                if (i!=0 || (i!=0 && j!=0)) {parentDiv.append('</div>');}
+                printLength++;
+            }
+        }
+
+        //局部渲染
+        $.parser.parse($('#printDiv').parent());
+        //打印区域赋值
+        setPrintContentValue(result, pageAndRows);
+    }
+    function printTableHeader(voucherDate, centerCode, voucherNo) {
+        var headerHtml1 = '<table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"><div align="center"><span align="center" style="font-size:18px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bolder">'+$('#currentManageBranchName').text()+'</span><br/><span align="center" style="font-size:20px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bold">记 账 凭 证</span></div></table>';
+        var headerHtml2 = '';
+        if (centerCode) {
+            headerHtml2 = '<table cellpadding="2" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0"><tr><td colspan="2" style="text-align: center"><label style="display: inline-block; padding-top: 2px; border-top: 1px solid black;">凭证日期：<span>'+voucherDate+'</span></label></td></tr><tr><td style="text-align: left; padding-left: 10px"><label>核算单位：<span>'+centerCode+'</span></label></td><td style="text-align: right; padding-right: 10px"><label>凭证号码：<span>'+voucherNo+'</span></label></td></tr></table>';
+        } else {
+            headerHtml2 = '<table cellpadding="2" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0"><tr><td colspan="2" style="text-align: center"><label style="display: inline-block; padding-top: 2px; border-top: 1px solid black;">凭证日期：<span>'+voucherDate+'</span></label></td></tr><tr><td style="text-align: left; padding-left: 10px"><label><span></span></label></td><td style="text-align: right; padding-right: 10px"><label>凭证号码：<span>'+voucherNo+'</span></label></td></tr></table>';
+        }
+        return headerHtml1 + headerHtml2;
+    }
+    function printTableFooter(geneByName, approveByName, createByName) {
+        var footer = '<table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"><tr><td style="width:10%;text-align: right;" ><label>记账：</label></td><td style="width:13%;"><span>'+geneByName+'</span></td><td style="width:10%;text-align: right;" ><label>复核：</label></td><td style="width:13%;"><span>'+approveByName+'</span></td><td style="width:10%;text-align: right;" ><label>制单：</label></td><td style="width:13%;"><span>'+createByName+'</span></td></tr></table>';
+        return footer;
+    }
+    function setPrintContentValue(result, pageAndRows) {
+        var printLength = 0;
+        for (var i=0;i<result.length;i++) {
+            var suffix = result[i].suffix;//第 i 张凭证的所有分录信息
+            var currentSuffixNum = 0;
+            var suffixLength = suffix.length;
+            var page = 0;//该凭证需要多少张打印凭证的张数,每页张不超过 pageAndRows条分录，如果整整 pageAndRows条，由于存在合计项所以页数需要加1
+            if (suffixLength) {page = parseInt(suffixLength/pageAndRows) +1;}
+            for (var j=0;j<page;j++) {
+                var flag = false;//false表示无需追加合计项
+                var newResult = [];
+                for(var k=0;k<pageAndRows;k++){
+                    //该凭证的第 j 张打印凭证的第 k 条分录，每张打印凭证 pageAndRows条分录（不足的则补(补空数据)到 pageAndRows-1条分录，第 pageAndRows条为合计项）
+                    if(currentSuffixNum<suffixLength){
+                        newResult[k] = suffix[currentSuffixNum];
+                    }else{
+                        if(k<pageAndRows-1){// k 从 0 开始的
+                            //不足的则补(补空数据)到5条分录，第 pageAndRows条为合计项
+                            newResult[k] = {};
+                        } else {
+                            newResult[k] = {'remark':'合计','directionIdxName':changeNumMoneyToChineseStr('人民币', result[i].debitSum),'debitDest':result[i].debitSum,'creditDest':result[i].creditSum};
+                        }
+                        flag = true;
+                    }
+                    currentSuffixNum++;
+                }
+                setDataGridData('print_dg_'+printLength, newResult, flag);
+                printLength++;
+            }
+        }
+    }
+    function setDataGridData(id, data , flag) {
+        $('#'+id).datagrid({
+            striped: true,
+            method: 'post',
+            fitColumns: false,
+            singleSelect: true,
+            nowrap: false,
+            autoRowHeight: true,
+            columns: [
+                [
+                    {field:'remark',title:'摘要',width:'30%',halign:'center',align:'left'},
+                    {field:'directionIdxName',title:'科目名称(专项)',width:'40%',halign:'center',align:'left'},
+                    {field:'debitDest',title:'借方',width:'15%',halign:'center',align:'right',formatter: function(value,row,index){return formate(value);}},
+                    {field:'creditDest',title:'贷方',width:'15%',halign:'center',align:'right',formatter: function(value,row,index){return formate(value);}}
+                ]
+            ],
+            onClickRow: function (rowIndex, rowData) {
+                $(this).datagrid('unselectRow', rowIndex);
+            }
+        });
+        if (flag) {
+            //存在合计项
+        }
+        $('#'+id).datagrid('loadData', data);
+        //修改样式
+        //修改样式
+        var panel = $('#'+id).datagrid('getPanel');
+        updata_easyUI_dataGrid_table_style(panel);
+    }
+
+    function creatPrintContent2(result) {
+        //获得DIV
+        var parentDiv = $('#printDiv');
+        var pageAndRows = 10;
+        //每一条 result 数据都是一张完整的凭证打印数据，然后根据该凭证的分录条数进行分张打印（每张不超过 pageAndRows 条分录）
+        var resultLength = result.length;//代表本次打印共有多少张凭证
+        var printLength = 0;//代表本次打印总共多少打印凭证（每页1张）
+        for(var i=0;i<result.length;i++){
+            //每次循环一张完整的凭证打印数据
+            var suffix = result[i].suffix;//第 i 张凭证的所有分录信息
+            var currentSuffixNum = 0;
+            var suffixLength = suffix.length;
+            var page = 0;//该凭证需要多少张打印凭证的张数,每页张不超过6条分录，如果整整6条，由于存在合计项所以页数需要加1
+            if (suffixLength) {page = parseInt(suffixLength/pageAndRows) +1;}
+
+            for(var j=0;j<page;j++){
+                //第 i 张凭证的第 j 张打印凭证
+
+                //追加分页标志
+                if (i!=0 || (i!=0 && j!=0)) {parentDiv.append('<div style="page-break-after:always">');}
+                //追加头部信息
+                var vno = result[i].voucherNo;
+                if (page!=1) {vno = vno+'-'+(j+1)+'/'+page;}
+                parentDiv.append(printTableHeader(result[i].voucherDate, result[i].centerCode, vno));
+                parentDiv.append('<table id = "print_dg_' + printLength + '" cellspacing="0" cellpadding="0" style="height: auto; border-collapse: collapse; width:100%;"></table>');
+                var flag = false;//false表示无需追加合计项
+
+                //获取当前表格
+                var table = document.getElementById ("print_dg_"+printLength);
+                table.border = '1px solid #0094ff';
+                //添加表头行信息
+                addTableHeaderRowInfo(table.insertRow(0));
+
+                for(var k=0;k<pageAndRows;k++){
+                    var row = table.insertRow(k+1);
+                    //该凭证的第 j 张打印凭证的第 k 条分录，每张打印凭证 pageAndRows条分录（不足的则补(补空数据)到 pageAndRows-1条分录，第 pageAndRows条为合计项）
+                    if(currentSuffixNum<suffixLength){
+                        addTableDataRowInfo(row, suffix[currentSuffixNum]);
+                    }else{
+                        if(k<pageAndRows-1){// k 从 0 开始的
+                            //不足的则补(补空数据)到5条分录，第 pageAndRows条为合计项
+                            addTableNoDataRowInfo(row);
+                        } else {
+                            var sumMoney = '';
+                            if (result[i].debitSum) {
+                                sumMoney = result[i].debitSum;
+                            } else {
+                                sumMoney = result[i].creditSum;
+                            }
+                            var sumDataRow = {'remark':'合计','directionIdxName':changeNumMoneyToChineseStr('人民币', sumMoney),'debitDest':result[i].debitSum,'creditDest':result[i].creditSum};
+                            addTableSumDataRow(row, sumDataRow);
+                        }
+                        flag = true;
+                    }
+                    currentSuffixNum++;
+                }
+                //追加尾部信息
+                parentDiv.append(printTableFooter(result[i].geneByName, result[i].approveByName, result[i].createByName));
+                //追加分页后部分
+                if (i!=0 || (i!=0 && j!=0)) {parentDiv.append('</div>');}
+                printLength++;
+            }
+        }
+    }
+    
+    function addTableHeaderRowInfo(row) {
+        row.style.height = '30px';
+        row.style.textAlign = 'center';
+        for (var i=0;i<4;i++) {
+            var cell = row.insertCell(i);
+            cellStylePadding(cell);
+            if (i==0) {
+                cellColSpan(cell, 2);
+                cellStyleWidth(cell, 1);
+                cell.innerHTML= "<td>摘要</td>";
+            } else if (i==1) {
+                cellStyleWidth(cell, 2);
+                cell.innerHTML= "<td>科目名称(专项)</td>";
+            } else if (i==2) {
+                cellStyleWidth(cell, 3);
+                cell.innerHTML= "<td>借方</td>";
+            } else {
+                cellStyleWidth(cell, 4);
+                cell.innerHTML= "<td>贷方</td>";
+            }
+        }
+    }
+    function addTableDataRowInfo(row, data) {
+        row.style.height = '40px';
+        for (var i=0;i<4;i++) {
+            var cell = row.insertCell(i);
+            cellStylePadding(cell);
+            if (i==0) {
+                cellColSpan(cell, 2);
+                cellStyleWidth(cell, 1);
+                cell.innerHTML = "<td>"+data.remark==''?'':data.remark+"</td>";
+            } else if (i==1) {
+                cellStyleWidth(cell, 2);
+                cell.innerHTML = "<td>"+data.directionIdxName==''?'':data.directionIdxName+"</td>";
+            } else if (i==2) {
+                cellTextAlignRight(cell);
+                cellStyleWidth(cell, 3);
+                cell.innerHTML= "<td>"+data.debitDest==''?'':formate(data.debitDest)+"</td>";
+            } else {
+                cellTextAlignRight(cell);
+                cellStyleWidth(cell, 4);
+                cell.innerHTML= "<td>"+data.creditDest==''?'':formate(data.creditDest)+"</td>";
+            }
+        }
+    }
+    function addTableNoDataRowInfo(row) {
+        row.style.height = '40px';
+        for (var i=0;i<4;i++) {
+            var cell = row.insertCell(i);
+            cellStylePadding(cell);
+            if (i==0) {
+                cellColSpan(cell, 2);
+            }
+            cell.innerHTML= "<td></td>";
+        }
+    }
+    function addTableSumDataRow(row, data) {
+        row.style.height = '40px';
+        for (var i=0;i<4;i++) {
+            var cell = row.insertCell(i);
+            cellStylePadding(cell);
+            if (i==0) {
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 5);
+                cell.innerHTML = "<td>"+data.remark==''?'':data.remark+"</td>";
+            } else if (i==1) {
+                cellColSpan(cell, 2);
+                cellStyleWidth(cell, 6);
+                cell.innerHTML = "<td>"+data.directionIdxName==''?'':data.directionIdxName+"</td>";
+            } else if (i==2) {
+                cellTextAlignRight(cell);
+                cellStyleWidth(cell, 3);
+                cell.innerHTML= "<td>"+data.debitDest==''?'':'¥'+formate(data.debitDest)+"</td>";
+            } else {
+                cellTextAlignRight(cell);
+                cellStyleWidth(cell, 4);
+                cell.innerHTML= "<td>"+data.creditDest==''?'':'¥'+formate(data.creditDest)+"</td>";
+            }
+        }
+    }
+    function cellTextAlignRight(cell) {
+        cell.style.textAlign = 'right';
+    }
+    function cellTextAlignCenter(cell) {
+        cell.style.textAlign = 'center';
+    }
+    function cellColSpan(cell, type) {
+        switch (type) {
+            case 2: cell.colSpan = '2'; break;
+            case 3: cell.colSpan = '3'; break;
+            case 4: cell.colSpan = '4'; break;
+            default:
+        }
+    }
+    function cellStyleWidth(cell, type) {
+        //type: 1-remark; 2-directionIdxName; 3-debitDest; 4-creditDest; 5-remark; 6-directionIdxName
+        if (type==1) {
+            cell.style.width = '30%';
+        } else if (type==2) {
+            cell.style.width = '40%';
+        } else if (type==3 || type==4) {
+            cell.style.width = '15%';
+        } else if (type==5) {
+            cell.style.width = '15%';
+        } else if (type==6) {
+            cell.style.width = '55%';
+        }
+    }
+    function cellStylePadding(cell) {
+        cell.style.padding = '2px';
+    }
+
+    function formate(data) {
+        if (data || (data+'')=='0') {
+            return formatNumber(data*1, 2, 1);
+        }
+        return data;
+    }
+
+    //等待
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+    var ii = 2;
+    function showalert() {
+        var text = "";
+        var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+    function onClose() {
+        clearInterval(loading);
+    }
+</script>
+</html>

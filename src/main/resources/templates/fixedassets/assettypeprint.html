@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('固定资产类别编码打印','/css/datagridcell_text-overflow_ellipsis.css','')">
+
+</head>
+<body>
+<div align="center">
+    <div class="easyui-panel" style="height: auto; width:90%; text-align: center; padding: 0px 0px 0px 0px;overflow: hidden;">
+        <span id="codeType" style="display:none" th:text="${map.codeType}"></span>
+        <span id="assetType" style="display:none" th:text="${map.assetType}"></span>
+        <span id="assetSimpleName" style="display:none" th:text="${map.assetSimpleName}"></span>
+        <span id="assetComplexName" style="display:none" th:text="${map.assetComplexName}"></span>
+        <span id="level" style="display:none" th:text="${map.level}"></span>
+        <span id="useFlag" style="display:none" th:text="${map.useFlag}"></span>
+        <div id = "orginalDiv" >
+            <!-- 表头 -->
+            <table id="dg1" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+                <tr>
+                    <td style="width:100%;text-align: center;" ><label>查询固定资产类别信息</label></td>
+                </tr>
+            </table>
+            <!--  数据列表 -->
+            <table id = "dg" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+
+            </table>
+            <!-- 表尾 -->
+            <table id = "dg2" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+             <tr>
+                 <td style="width:100%;text-align: center;" >
+                 <label>共条数据：</label>
+                 </td>
+             </tr>
+                <tr>
+                    <td style="text-align: center;">
+                        <a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()"  data-options="iconCls:'e-icon fa fa-print'" style="width:15%;">打印</a>
+                        <!--<a href="javascript:void(0)" class="easyui-linkbutton" onclick="closeF()"  data-options="iconCls:'e-icon fa fa-close'" style="width:10%;">关闭</a>-->
+                    </td>
+                </td>
+            </tr>
+        </table>
+        </div>
+        <!-- 用于打印的 --><!-- 多加一层，防止局部渲染导致区域之外的数据失效 -->
+        <div align="center">
+            <div id="printDiv" align="center">
+
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script th:src="@{/js/updataEasyUIDataGridTableStyle.js}"></script>
+<script>
+    $(function () {
+        $('#dg').datagrid({
+            striped: true  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false
+            ,method: 'post'  //默认为 post
+            ,fitColumns: true //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            ,singleSelect: true //设置为 true，则只允许选中一行。 默认false
+            ,nowrap: true
+            ,columns: [
+                [
+                    {field: 'codeType', title: '代码类别', width: '6%', align: 'center', sortable: 'true', order: 'asc'}
+                    , {field: 'assetType', title: '固定资产类别编码', width: '15%', halign: 'center', align: 'center'}
+                    , {field: 'assetSimpleName', title: '简称', width: '10%', halign: 'center', align: 'left'}
+                    , {field: 'assetComplexName', title: '全称', width: '17%', halign: 'center', align: 'left'}
+                    , {field: 'netSurplusRate', title: '净残值率', width: '8%', halign: 'center', align: 'right'}
+                    , {field: 'depYears', title: '折旧年限', width: '8%', halign: 'center', align: 'center'}
+                    , {field: 'level', title: '层次', width: '10%', halign: 'center', align: 'center'}
+                    , {field: 'endFlag', title: '是否末级', width: '6%', halign: 'center', align: 'center'}
+                    , {field: 'depType', title: '折旧方法', width: '10%', halign: 'center', align: 'center'}
+                    , {field: 'articleCode11', title: '资产专项', width: '10%', halign: 'center', align: 'center'}
+
+                ]
+            ],
+            onClickRow: function (rowIndex, rowData) {
+                $(this).datagrid('unselectRow', rowIndex);
+            },
+            loadMsg:'加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        });
+        searchF();
+    });
+    //搜索数据
+    function searchF() {
+        var params = {};
+        params['codeType'] = $('#codeType').text();
+        params['assetType'] = $('#assetType').text();
+        params['assetSimpleName'] = $('#assetSimpleName').text();
+        params['assetComplexName'] = $('#assetComplexName').text();
+        params['level'] = $('#level').text();
+        params['useFlag'] = $('#useFlag').text();
+        $('#dg').datagrid({
+            url:'/categoryCoding/listPrint',
+            queryParams:params,
+            onLoadSuccess:function (data) {
+                //隐藏原数据区域
+                $('#orginalDiv').hide();
+                var panel = $(this).datagrid('getPanel');
+                updata_easyUI_dataGrid_table_style(panel);
+                //修改样式
+                creatPrintContent();
+
+                $('#TableFooter').hide();
+            }
+        });
+    }
+
+    function creatPrintContent() {
+        //获得DIV
+        var parentDiv = $('#printDiv');
+        //获得dg数据
+        var rows = $('#dg').datagrid('getRows');
+        //每页数据量
+        var pageRowNum = 15;
+        //得到分页数
+        var pages =Math.ceil( rows.length/pageRowNum);
+        //每页的开始行
+        var rownum = 0;
+        for (var i = 0;i<pages;i++){
+            //追加分页标志,供打印机识别
+            if (i!=0){
+                parentDiv.append('<div style="page-break-after:always">');
+            }
+            parentDiv.append(printTableHeader(i+1,pages));
+            parentDiv.append('<table id = "print_dg_'+i+'" style="height:auto; width:100%; padding: 8px 0px 0px 0px;overflow:hidden;"></table>');
+
+            if (i!=0) {
+                parentDiv.append('</div>');
+            }
+        }
+        parentDiv.append(printTableFooter());
+        //局部渲染
+        $.parser.parse($('#printDiv').parent());
+        //打印区域赋值
+        setPrintContentValue(pageRowNum,pages);
+    }
+    function setPrintContentValue(pageRowNum,pages) {
+        var rowNum = 0;
+        var rows = $('#dg').datagrid('getRows');
+        for (var i=0;i<pages;i++){
+            //设置中心表格区域
+            $('#print_dg_'+i).datagrid({
+               striped:true ,
+                method:'post',
+                fitColumns:true,
+                singleSelect:true,
+               // nowrap:false,
+                columns:[
+                    [
+                        {field: 'codeType', title: '代码类别', width: '6%', align: 'center', sortable: 'true', order: 'asc'}
+                        , {field: 'assetType', title: '固定资产类别编码', width: '11%', halign: 'center', align: 'center'}
+                        , {field: 'assetSimpleName', title: '简称', width: '10%', halign: 'center', align: 'left',formatter: function (value,row,index) {
+                            if(value){return '<div style="word-break:break-all; word-wrap:break-word;white-space:pre-wrap;">'+value+'</div>';
+                            }else{return value;}
+                        }}
+                        , {field: 'assetComplexName', title: '全称', width: '20%', halign: 'center', align: 'left',formatter: function (value,row,index) {
+                            if(value){return '<div style="word-break:break-all; word-wrap:break-word;white-space:pre-wrap;">'+value+'</div>';
+                            }else{return value;}
+                        }}
+                        , {field: 'netSurplusRate', title: '净残值率', width: '8%', halign: 'center', align: 'right'}
+                        , {field: 'depYears', title: '折旧年限', width: '8%', halign: 'center', align: 'center'}
+                        , {field: 'level', title: '层次', width: '10%', halign: 'center', align: 'center'}
+                        , {field: 'endFlag', title: '是否末级', width: '6%', halign: 'center', align: 'center'}
+                        , {field: 'depType', title: '折旧方法', width: '10%', halign: 'center', align: 'center'}
+                        , {field: 'articleCode11', title: '资产专项', width: '11%', halign: 'center', align: 'center',formatter: function (value,row,index) {
+                            if(value){return '<div style="word-break:break-all; word-wrap:break-word;white-space:pre-wrap;">'+value+'</div>';
+                            }else{return value;}
+                        }}
+
+                    ]
+                ],
+                onClickRow: function (rowIndex, rowData) {
+                    $(this).datagrid('unselectRow', rowIndex);
+                },
+            });
+            for (var j=0;j<pageRowNum;j++){
+                if (rowNum < rows.length){
+                    $('#print_dg_'+i).datagrid('appendRow',rows[rowNum]);
+                    rowNum++;
+                } else {
+                    break;
+                }
+            }
+            //修改样式
+            var panel = $('#print_dg_'+i).datagrid('getPanel');
+            updata_easyUI_dataGrid_table_style(panel);
+        }
+    }
+    function printTableHeader(pageNum,pages) {
+        var headerHtml = '<table style="height: auto; width:100%; padding: 0px 0px 0px 0px;overflow: hidden;background-color: #1e9fff"><div align="center"><span align="center" style="font-size:18px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bolder;">查询固定资产类别信息</span><span style="float: right">'+JSON.stringify(pageNum)+'/'+JSON.stringify(pages)+'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br/></div>';
+        return headerHtml;
+    }
+
+    function printTableFooter() {
+        //获得dg数据
+        var rows = $('#dg').datagrid('getRows');
+        var num = rows.length;
+/*
+        var footer = '<table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"><tr><td style="width:10%;text-align: right;" ><label>财务主管：</label></td><td style="width:13%;"><span name="leaderPrint">'+$("#leader").text()+'</span></td><td style="width:10%;text-align: right;" ><label>操作员：</label></td><td style="width:13%;"><span name="operationUserPrint">'+$("#operationUser").text()+'</span></td><td style="width:10%;text-align: right;" ><label>打印日期：</label></td><td style="width:13%;"><span name="printDatePrint">'+$("#printDate").text()+'</span></td></tr></table>';
+*/
+        //var footer = '<div id="TableFooter"> <table style="height: auto; width:100%; padding: 0px 0px 0px 0px;overflow: hidden;"> <tr>  <td style="width:100%;text-align: center;" ><label>共'+JSON.stringify(num)+'条数据：</label></td></tr> <tr><td style="text-align: center;"><a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()"  data-options="iconCls:\'e-icon fa fa-print\'" style="width:10%;">打印</a></td></tr></table> </div>';
+        var footer = '<div id="TableFooter"> <table style="height: auto; width:100%; padding: 0px 0px 0px 0px;overflow: hidden;">  <tr><td style="text-align: center;"><a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()"  data-options="iconCls:\'e-icon fa fa-print\'" style="width:10%;">打印</a></td></tr></table> </div>';
+
+        return footer;
+    }
+    //打印
+    function printF() {
+        $('#TableFooter').hide();
+        window.print();
+        $('#TableFooter').show();
+    }
+    //关闭
+    function closeF() {
+        //关闭浏览器当前窗口
+        window.close();
+    }
+
+</script>
+</html>

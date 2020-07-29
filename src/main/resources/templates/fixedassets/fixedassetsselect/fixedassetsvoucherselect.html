@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('固定资产折旧凭证查询','','')">
+
+</head>
+<body>
+<script th:src="@{/js/certificatemanageExport.js}"></script>
+<!-- 搜索界面 -->
+    <div class="easyui-panel"
+         style="height: auto; width:100%;padding: 8px 0px 0px 0px;overflow: hidden;">
+        <form id="serachFrom" method="post" style="margin-bottom:0;">
+            <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+                <!--<tr bgcolor="#6c90da">
+                    <th colspan="4">折旧凭证查询</th>
+                </tr>-->
+                <tr>
+                    <td style="width:20%;text-align: right;" >
+                        <label>起始日期:</label>
+                    </td>
+                    <td style="width:40%;">
+                        <input style="width:60%;" id="date1" name="date1" editable="false" class="easyui-datebox" data-options="prompt: '请输入年月',onSelect:onSelect">
+                    </td>
+                    <td style="width:20%;text-align: right;" >
+                        <label>结束日期:</label>
+                    </td>
+                    <td style="width:40%;">
+                        <input style="width:60%;" id="date2" name="date2" editable="false"  class="easyui-datebox" data-options="prompt: '请输入年月',onSelect:onSelect">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="8" style="text-align: right; padding-right: 20px;">
+                        <a href="#" class="easyui-linkbutton" style="width: 10%;" onclick="serach()" >查询</a>
+                        <a href="#" class="easyui-linkbutton" style="width: 10%;" onclick="reset()">重置</a>
+
+                    </td>
+                </tr>
+            </table>
+
+        </form>
+        <!-- 展示搜索结果 -->
+        <table id = "sg" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"></table>
+    </div>
+<!--<div id="dlgA"  class="easyui-dialog" style="width: 800px; padding: 10px 20px" align="center"
+     data-options="modal:true,closed:true,resizable:true,maximizable:true"  buttons="#dlg-buttons">
+    <form id="fmA" method="post">
+        <table cellpadding="4" class="tt">
+            <tr bgcolor="#6c90da">
+                <th colspan="4">固定资产台账查询</th>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>固定资产类别:</label></td>
+                <td class="ttd rtd" >
+                    <input class="easyui-textbox" id="assetTypeA" editable="false" name="assetType"  data-options="prompt:'固定资产类别',missingMessage:'请输入固定资产类别'">
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>固定资产类别名称:</label></td>
+                <td class="ttd rtd ">
+                    <input class="easyui-textbox" id="assetTypeNameA" editable="false" name="assetTypeName"  data-options="prompt:'固定资产类别',missingMessage:'请输入固定资产类别'">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>卡片编号:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="cardCodeA" editable="false" name="cardCode" data-options="prompt:'专项代码'">
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>固定资产名称:</label></td>
+                <td class="ttd rtd">
+                    <input  class="easyui-textbox" id="assetNameA" editable="false" name="assetName"data-options="prompt:'固定资产名称',missingMessage:'请输入固定资产名称'">
+                </td>
+            </tr>
+            <tr bgcolor="#6c90da">
+                <th colspan="4">固定资产折旧查询</th>
+            </tr>
+        </table>
+
+        <table id="hg" class="easyui-datagrid">
+
+        </table>
+      <div id="dlg-buttons1" align="center">
+           &lt;!&ndash; <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-remove" onclick="cancel()">取消</a>&ndash;&gt;
+            <a href="#" id="print" class="easyui-linkbutton" iconCls="iconCls:'e-icon fa fa-print'" >打印</a>
+
+            <a href="#" class="easyui-linkbutton" iconCls="iconCls:'e-icon fa fa-print'" onclick="javascript:$('#dlgA').dialog('close')">返回</a>
+        </div>
+    </form>
+</div>
+<div id="dlgC"  class="easyui-dialog" style="width: 800px; padding: 10px 20px" align="center"
+     data-options="modal:true,closed:true,resizable:true,maximizable:true"  buttons="#dlg-buttons">
+    <form id="fmC" method="post">
+        <table cellpadding="4" class="tt">
+            <tr bgcolor="#6c90da">
+                <th colspan="4">XX有限责任公司</th>
+            </tr>
+            <tr bgcolor="#6c90da">
+                <th colspan="4">固定资产登记信息</th>
+            </tr>
+          &lt;!&ndash;  <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>核算单位:</label></td>
+                <td class="ttd rtd" >
+                    <input class="easyui-textbox" id="centerCode1" editable="false" name="centerCode"  data-options="prompt:'核算单位',missingMessage:'请输入核算单位'">
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>页码:</label></td>
+                <td class="ttd rtd ">
+                    <input class="easyui-textbox" id="assetTypeNames" editable="false" name="assetTypeName"  data-options="prompt:'固定资产类别',missingMessage:'请输入固定资产类别'">
+                </td>
+            </tr>&ndash;&gt;
+        </table>
+
+        <table id="fg" class="easyui-datagrid"></table>
+        <table>
+            <tr>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>财务主管:</label></td>
+                <td class="ttd rtd" >
+                    <input class="easyui-textbox" id="centerCode11" editable="false" name="centerCode"  data-options="prompt:'财务主管',missingMessage:'请输入核算单位'">
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>操作员:</label></td>
+                <td class="ttd rtd ">
+                    <input class="easyui-textbox" id="operatorCode" editable="false" name="operatorCode"  data-options="prompt:'操作员',missingMessage:'请输入固定资产类别'">
+                </td>
+                <td style="width:15%;text-align: right;" class="ttd ltd"><label>打印日期:</label></td>
+                <td class="ttd rtd ">
+                    <input class="easyui-textbox" id="date" editable="false" name="date"  data-options="prompt:'操作员',missingMessage:'请输入固定资产类别'">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="6" style="text-align: right; ">
+                    <a href="#" class="easyui-linkbutton" iconCls="iconCls:'e-icon fa fa-print'" >打印</a>
+
+                    <a href="#" class="easyui-linkbutton" iconCls="iconCls:'e-icon fa fa-print'" onclick="javascript:$('#dlgC').dialog('close')">关闭</a>
+
+                </td>
+
+            </tr>
+
+        </table>
+
+   &lt;!&ndash; <div  align="center">
+         &lt;!&ndash;   <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-remove" onclick="cancel()">取消</a>&ndash;&gt;
+            <a href="#" class="easyui-linkbutton" iconCls="iconCls:'e-icon fa fa-print'" >打印</a>
+
+            <a href="#" class="easyui-linkbutton" iconCls="iconCls:'e-icon fa fa-print'" onclick="javascript:$('#dlgC').dialog('close')">关闭</a>
+        </div>&ndash;&gt;
+    </form>
+</div>-->
+<script type="text/javascript">
+
+    $(function () {
+        $('#sg').datagrid({
+            url: '/fixedassetsvoucherselect/voucherselect',
+            striped: true,  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false,
+            method: 'post', //默认为 post
+            // pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。默认false
+            //,rownumbers: true //设置为 true，则显示带有行号的列。默认false
+            fitColumns: true,//设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            //,autoRowHeight: true //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能。
+            //singleSelect: true,//设置为 true，则只允许选中一行。 默认false
+            //checkOnSelect: false, //如果设置为 true，当用户点击某一行时，则会选中/取消选中复选框。
+            pagePosition: 'bottom', //定义分页栏的位置。可用的值有：'top'、'bottom'、'both'。 默认 bottom
+            // pageList: [10, 20, 30, 40, 50], //当设置了 pagination 属性时，初始化页面尺寸的选择列表。
+            nowrap: true,
+            /**
+             * field: 列的字段名
+             * width: 列的宽度。如果未定义，则宽度会自动扩展以适应它的内容。没有定义宽度将会降低性能。
+             * align： 指示如何对齐该列的数据，可以用 'left'、'right'、'center'。 默认undefined
+             * halign：指示如何对齐该列的头部，可能的值：'left'、'right'、'center'。如果没有分配值，则头部对齐方式将与通过 'align' 属性定义的数据对齐方式一致。该属性自版本 1.3.2 起可用。
+             * sortable： 设置为 true，则允许该列被排序。
+             * order：默认的排序顺序，只能用 'asc' 或 'desc'。该属性自版本 1.3.2 起可用。
+             * resizable：设置为 true，则允许该列可调整尺寸。
+             * fixed: 设置为 true，则当 'fitColumns' 设置为 true 时放置调整宽度。
+             * hidden: 设置为 true，则隐藏该列。
+             * checkbox: 设置为 true，则显示复选框。复选框有固定宽度。
+             * formatter: 单元格的格式化函数，需要三个参数：value：字段的值。rowData：行的记录数据。rowIndex：行的索引。
+             */
+            columns: [
+                [
+                    {field: 'voucherDate', title: '制单日期', width: '10%', align: 'center',sortable: 'true', order: 'asc'}
+                    , {field: 'voucherNo', title: '凭证号', width: '10%',  align: 'center',formatter: function(value,row,index){
+                        if (value) {
+                            return "<span style='color: blue; cursor: pointer;' onclick='lookByVoucherNo("+index+")'>" + value + "</span>";
+                        }
+                        return value;
+                    }}
+                    , {field: 'remarkName', title: '摘要', width: '12%', align: 'center'}
+
+                    , {field: 'debit', title: '借方金额合计', width: '10%', halign: 'center', align: 'right',formatter: function(value,row) {
+                        if(row.debit==null) return '0.00';
+                        if(row.debit!=null) return formate(value);
+                    }}
+                    , {field: 'credit', title: '贷方金额合计', width: '10%', halign: 'center', align: 'right',formatter: function(value,row) {
+                        if(row.credit==null) return '0.00';
+                        if(row.credit!=null) return formate(value);
+                    }}
+                    , {field: 'createBy', title: '制单人', width: '8%', align: 'center'}
+                    , {field: 'approveBy', title: '审核人', width: '7%', align: 'center'}
+                    , {field: 'geneBy', title: '记账人', width: '8%', align: 'center'}
+                    , {field: 'voucherFlag', title: '凭证状态', width: '8%', align: 'center'}
+                    , {field: 'auxNumber', title: '附件张数', width: '8%', align: 'center'}
+                    , {field: 'approveDate', title: '审核日期', width: '10%', align: 'center'}
+                ]
+            ],
+            onClickRow: function (rowIndex, rowData) {
+                $(this).datagrid('unselectRow', rowIndex);
+            },
+            /*,toolbar: '#tbar'*/    //通过id选择器引用
+           /* toolbar: [{
+                    text: '台账查询',
+                    iconCls: 'e-icon fa fa-plus',
+                    plain: true,
+                    handler: machine
+                }],*/
+            loadMsg: '加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        });
+    });
+
+
+    function lookByVoucherNo(index) {
+        $('#sg').datagrid('selectRow', index);
+        lookVoucher();
+    }
+
+    function lookVoucher() {
+        var row = $('#sg').datagrid('getSelected');
+        if(row) {
+            //CM代表调用凭证详情页面的是凭证管理(CertificateManage)
+            addTab(row.voucherNo+'查看', '/voucher/look?voucherNo='+row.voucherNo+'&yearMonth='+row.yearMonthDate+'&type='+'CM');
+        }else{
+            $.messager.alert('提示','请先选择凭证！','warning'); return false;
+        }
+    }
+
+    function addTab(subtitle, url) {
+        if (!parent.$('#tabs').tabs('exists', subtitle)) {
+            parent.$('#tabs').tabs(
+                'add',
+                {
+                    title: subtitle,
+                    content: createFrame(url),
+                    closable: true,
+                    width: parent.$('#mainPanle').width() - 10,
+                    height: parent.$('#mainPanle').height() - 26
+                });
+        } else {
+            parent.$('#tabs').tabs('select', subtitle);
+        }
+    }
+    function createFrame(url) {
+        var s = '<iframe name="mainFrame" fit="true" scrolling="auto" frameborder="0"  overflow-y:"hidden" src="'
+            + url + '" style="width:100%;height:100%;"></iframe>';
+        return s;
+    }
+
+    //日期校验
+    $('#date1').datebox({
+        onSelect:function(record){
+            var start=$('#date1').datebox('getValue');
+            var end=$('#date2').datebox('getValue');
+            if(start>end&&end!=null&&end!=""){
+                $.messager.alert("提示","开始日期不能大于结束日期！","info");
+                $('#date1').datebox('setValue','');
+            }
+        }
+    })
+    $('#date2').datebox({
+        onSelect:function(record){
+            var start=$('#date1').datebox('getValue');
+            var end=$('#date2').datebox('getValue');
+            if(start>end&&end!=null&&end!=""){
+                $.messager.alert("提示","结束日期不能小于开始日期！","info");
+                $('#date2').datebox('setValue','');
+            }
+        }
+    })
+    //搜索
+    function serach(){
+      //  var date1= $('#date1').datebox('getValue');
+      //   var date2= $('#date2').datebox('getValue');
+      // if(new Date(date1).getTime()>new Date(date2).getTime()){
+      //     $.messager.alert('提示','起始时间不能大于开始时间！', 'info');return false;
+      // }
+        var params = {};
+            $('#serachFrom').find('input').each(function(){
+                var obj = $(this);
+                var name = obj.attr('name');
+                if(name){
+                    params[name] = obj.val();
+                }
+            });
+            // //使用参数执行一次查询
+            // $("#sg").datagrid({
+            //     queryParams: params,
+            //     onLoadSuccess: function(data){
+            //         if(data.total<=0)
+            //             $.messager.alert("提示","未查询到相关数据","info");
+            //     }
+            // });
+        $("#sg").datagrid('load',params);
+
+    }
+    function formate(data) {
+        if (data || (data+'')=='0') {
+            return formatNumber(data*1, 2, 1);
+        }
+        return data;
+    }
+    //重置
+    function reset(){
+        $('#serachFrom').form('clear');
+    }
+
+
+   /* //查看（详情）
+    function look(row) {
+
+        $('#fg').datagrid({
+            url: '/fixedassetscardselect/depreMessage',
+            queryParams: row,
+            striped:true,
+            method:'post',
+            pagination:true,
+            fitColumns:true,
+            singleSelect: false,
+            checkOnSelect:true,
+            pagePosition:'bottom',
+            pageList:[10,20,30,40,50],
+            nowrap:true,
+
+            columns:[
+                [
+                    /!*  {field: '', checkbox: true,  width: '3%', align: 'center'}*!/
+                    {field: 'cardCode', title: '卡片号', width: '13%', align: 'center', sortable: 'true', order: 'asc',formatter: function(value,row1) {
+                            return "<span onclick='machine("+JSON.stringify(row1)+")' style='cursor:pointer;color:blue;'>"+row1.cardCode+"</span>";
+
+                        }}
+                    , {field: 'assetName', title: '固定资产名称', width: '12%', align: 'center'}
+                    , {field: 'quantity', title: '数量', width: '10%', align: 'center'}
+                    , {field: 'useStartDate', title: '启用日期', width: '10%', align: 'center'}
+                    , {field: 'unitName', title: '使用部门', width: '10%', align: 'center'}
+                    , {field: 'specification', title: '规格说明', width: '8%', align: 'center'}
+                    , {field: 'assetOriginValue', title: '原值', width: '10%', align: 'center'}
+                    , {field: 'endDepreMoney', title: '累计折旧', width: '10%', align: 'center'}
+                    , {field: 'money', title: '余额', width: '10%', align: 'center',formatter: function(value,row1) {
+                        return row1.assetOriginValue-row1.endDepreMoney;
+
+                    }}
+                    , {field: 'centerCode', title: '核算单位', width: '7%', align: 'center'}
+
+                ]
+            ],
+            /!* toolbar:[{
+                 text:"批量撤销",
+                 iconCls:'',
+                 plain:true,
+                 handler:someLeave
+             },
+             ],
+             loadMsg:'加载中......',*!/
+
+        });
+
+        $('#operatorCode').textbox('setValue',row.operator);
+        var date=new Date();
+        var str = date.getFullYear()+"-";
+        if (date.getMonth()+1<10) {
+            str += '0'+(date.getMonth()+1)+"-";
+        }else{ str +=date.getMonth()+1+"-";}
+        if (date.getDate()<10) {
+                str +='0'+ date.getDate();
+        }else{ str +=date.getDate();}
+        $('#date').textbox('setValue',str);
+        $('#dlgC').dialog('open').dialog('setTitle','固定资产卡片详情展示');
+    }*/
+    /*function  machine(row1){
+
+
+        $('#hg').datagrid({
+            url: '/fixedassetscardselect/deprelist',
+            queryParams: row1,
+            striped:true,
+            method:'post',
+            pagination:true,
+            fitColumns:true,
+            singleSelect: false,
+            checkOnSelect:true,
+            pagePosition:'bottom',
+            pageList:[10,20,30,40,50],
+            nowrap:true,
+
+            columns:[
+                [
+                    /!*  {field: '', checkbox: true,  width: '3%', align: 'center'}*!/
+                    {field: 'year_month_data', title: '年月', width: '13%', align: 'center', sortable: 'true', order: 'asc'}
+                    , {field: 'assetOriginValue', title: '原值', width: '12%', align: 'center'}
+                    , {field: 'thisMonthDrepre', title: '本月计提月数', width: '12%', align: 'center'}
+                    , {field: 'month_depre_money', title: '本月折旧', width: '12%', align: 'center'}
+                    , {field: 'endDepreAmount', title: '累计计提月数', width: '15%', align: 'center'}
+                    , {field: 'endDepreMoney', title: '累计折旧', width: '15%', align: 'center'}
+                    , {field: 'assetNetValue', title: '净值', width: '11%', align: 'center'}
+                    , {field: 'impairment', title: '减值准备', width: '10%', align: 'center'}
+
+                ]
+            ],
+        });
+        $('#fmA').form('load',row1);
+        $('#dlgA').dialog('open').dialog('setTitle','固定资产卡片详情展示');
+    }
+
+*/
+    //返回或关闭
+    function cancel() {
+        $('#dlg').dialog('close');
+    }
+
+
+
+
+  //校验
+    function onSelect(d) {
+        var issd = this.id == 'timeStart', timeStart = issd ? d : new Date($('#timeStart').datebox('getValue')), timeEnd = issd ? new Date($('#timeEnd').datebox('getValue')) : d;
+        if (timeEnd < timeStart) {
+            alert('结束日期小于开始日期');
+            $('#timeEnd').datebox('setValue', '').datebox('showPanel');
+        }
+    }
+   /* $(function(){
+        $("#cardCode").textbox('textbox').bind('keyup', function(e){
+            $("#cardCode").textbox('setValue', $(this).val().replace(/\D/g,''));
+        });
+
+        $("#cardCodeEnd").textbox('textbox').bind('keyup', function(e){
+            $("#cardCodeEnd").textbox('setValue', $(this).val().replace(/\D/g,''));
+        });
+        $("#fixedAssetsCode").textbox('textbox').bind('keyup', function(e){
+            $("#fixedAssetsCode").textbox('setValue', $(this).val().replace(/\D/g,''));
+        });
+        $("#fixedAssetsCodeEnd").textbox('textbox').bind('keyup', function(e){
+            $("#fixedAssetsCodeEnd").textbox('setValue', $(this).val().replace(/\D/g,''));
+        });
+        /!* $("input",$(".card1").next("span")).blur(function(){
+             var cardCode = $("#cardCode").val();
+             var cardCodeEnd = $("#cardCodeEnd").val();
+             console.log(cardCodeEnd<cardCode);
+             if ( cardCodeEnd<cardCode) {
+                 alert("请按照从小到大的顺序填写");
+             }
+         });*!/
+
+    });
+*/
+</script>
+
+</body>
+</html>

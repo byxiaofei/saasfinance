@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('用户管理','','')">
+
+</head>
+<body>
+<div class="easyui-panel" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+    <!-- 筛选条件 -->
+    <form id="searchForm" method="post" style="margin-bottom: 0">
+        <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="width:8%;text-align: right;" >
+                    <label>用户编码:</label>
+                </td>
+                <td style="width:13%;">
+                    <input style="width:100%;" id="userCode" name="userCode" class="easyui-textbox" data-options="prompt: '用户编码'">
+                </td>
+                <td style="width:8%;text-align: right;" >
+                    <label>用户名称:</label>
+                </td>
+                <td style="width:13%;">
+                    <input style="width:100%;" id="userName"  name="userName" class="easyui-textbox" data-options="prompt: '用户名称'">
+                </td>
+                <td style="width:8%;text-align: right;" >
+                    <label>所属机构:</label>
+                </td>
+                <td style="width:13%;">
+                    <input style="width:100%;" id="comName" name="comCode" class="easyui-combobox" data-options="prompt: '请选择机构',editable:false">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="8" style="text-align: right; padding-right: 20px" >
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="searchF()"  data-options="iconCls:'e-icon fa fa-search'" style="width:8%;">查询</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="resetF()" data-options="iconCls:'e-icon fa fa-refresh'" style="width:8%;">重置</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="exportXls('用户管理信息表')" data-options="iconCls:'e-icon fa fa-download'" style="width:8%;">导出</a>
+                    <!--<a href="javascript:void(0)" class="easyui-linkbutton" onclick="print()" data-options="iconCls:'e-icon fa fa-print'" style="width:8%;">打印</a>-->
+                </td>
+            </tr>
+        </table>
+    </form>
+
+    <!--  数据列表 -->
+    <table id = "dg" style="height: auto; overflow-y: hidden;"></table>
+</div>
+
+<!--  新增弹框界面-->
+<div id="dlg" class="easyui-dialog" style="width: 600px; padding: 10px 20px" align="center"
+     data-options="title:'创建用户',modal:true,closed:true"  buttons="#dlg-buttons">
+    <form id="fm" method="post">
+        <table>
+            <tr>
+                <td style="text-align: right;"><label>用户编码<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input class="easyui-textbox" name="userCode" data-options="prompt:'用户编码',required:true,missingMessage:'请录入用户编码'">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>用户名称<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input class="easyui-textbox" type="text"  name="userName" data-options="prompt:'用户名称',required:true,missingMessage:'请录入用户名称'">
+                </td>
+                <td style="text-align: right;"><label>英文名称:</label></td>
+                <td>
+                    <input class="easyui-textbox" type="text"  name="enName" data-options="prompt:'英文名称'">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>所属机构<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input class="easyui-combobox" type="text"  id ="n_comCode" name="comCode"  data-options="prompt:'所属机构',required:true,editable:false,missingMessage:'请选择机构'">
+                </td>
+                <td style="text-align: right;"><label>管理机构<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input class="easyui-combobox" type="text"  id ="n_manageCode" name="manageCode"  data-options="prompt:'管理机构',required:true,editable:false,missingMessage:'请选择机构'">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>座机号:</label></td>
+                <td>
+                    <input type="text"  name="tel" class="easyui-textbox" data-options="prompt:'座机号'" />
+                </td>
+                <td style="text-align: right;"><label>手机号:</label></td>
+                <td>
+                    <input type="text"  name="phone" class="easyui-textbox" data-options="prompt:'手机号'" />
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>邮箱<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input  type="text"  name="email" class="easyui-textbox" data-options="prompt:'邮箱',required:true,validType:'email'" />
+                </td>
+                <td style="text-align: right;"><label>专项代码<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input  type="text"  name="itemCode" class="easyui-textbox" data-options="prompt:'专项代码',required:true,missingMessage:'请选择账套'" />
+                </td>
+            </tr>
+            <tr>
+                <!--<td style="text-align: right;"><label>使用状态<span style="color: red">*</span>:</label></td>
+                <td><input id="useFlag" name = "useFlag" class="easyui-combobox" data-options="prompt: '使用状态',editable:false" ></input></td>-->
+                <td style="text-align: right;"><label>备注:</label></td>
+                <td colspan="3"><input class="easyui-textbox" name="remark" style="width: 100%;height: 100px" data-options="prompt: '备注'"></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
+        <input type='hidden' name="id" value="">
+        <input type='hidden' name="token" value="">
+    </form>
+
+    <div id="dlg-buttons">
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-floppy-o" onclick="saveUser()">保存</a>
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-close" onclick="cancel()">取消</a>
+    </div>
+</div>
+
+
+<!-- 查看详细信息 -->
+<div id="l_dlg" class="easyui-dialog" style="width: 600px; padding: 10px 20px" align="center"
+     data-options="modal:true,closed:true"  buttons="#l_dlg-buttons">
+    <form id="l_fm" method="post">
+        <table>
+            <tr>
+                <td style="text-align: right;"><label>用户编码<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input class="easyui-textbox" name="userCode"th:disabled="true">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>用户名称<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input class="easyui-textbox" type="text"  name="userName" th:disabled="true">
+                </td>
+                <td style="text-align: right;"><label>英文名称:</label></td>
+                <td>
+                    <input class="easyui-textbox" type="text"  name="enName" th:disabled="true">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>所属机构<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input class="easyui-combobox" type="text"  id ="l_comCode" name="comCode"  th:disabled="true">
+                </td>
+                <td style="text-align: right;"><label>管理机构<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input class="easyui-combobox" type="text"  id ="l_manageCode" name="manageCode"  th:disabled="false">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>座机号:</label></td>
+                <td>
+                    <input type="text"  name="tel" class="easyui-textbox" th:disabled="true" />
+                </td>
+                <td style="text-align: right;"><label>手机号:</label></td>
+                <td>
+                    <input type="text"  name="phone" class="easyui-textbox" th:disabled="true" />
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>邮箱<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input  type="text"  name="email" class="easyui-textbox" th:disabled="true" />
+                </td>
+                <td style="text-align: right;"><label>专项代码<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input  type="text"  name="itemCode" class="easyui-textbox" th:disabled="true" />
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>备注:</label></td>
+                <td colspan="3"><input class="easyui-textbox" name="remark" data-options="prompt: '备注'" th:disabled="true"></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
+        <input type='hidden' name="id" value="">
+    </form>
+
+    <div id="l_dlg-buttons">
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-close" onclick="javascript:$('#l_dlg').dialog('close');">关闭</a>
+    </div>
+</div>
+
+<div id="dlg-userrole" class="easyui-dialog" style="width:700px; height: 400px; padding: 10px 20px" align="center" data-options="title:'关联角色',modal:true,closed:true" buttons="#btn-userrole">
+
+    <div style="width: 100%; height: 100%">
+        <table style="width: 100%; height: 300px;">
+            <tr>
+                <td style="width: 40%; height: 100%;">
+                    <table id="branchtb" class="easyui-datagrid" style="width: 100%; height: 100%;" data-options="title:'账套'"></table>
+                </td>
+                <td>
+                    <a href="#" style="display: block" class="easyui-linkbutton" iconCls="e-icon fa fa-refresh" onclick="javascript: $('#roletb').tree('reload');">重置</a><br>
+                    <a href="#" style="display: block" class="easyui-linkbutton" iconCls="e-icon fa fa-save" onclick="saveUserRole()">保存</a>
+
+                </td>
+                <td style="width: 40%; height: 100%;">
+                    <div class="easyui-panel" style="width: 100%; height: 100%;" data-options="title: '角色'">
+                        <ul id="roletb" class="easyui-tree"></ul>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="btn-userrole">
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-close" onclick="javascript:$('#dlg-userrole').dialog('close');">关闭</a>
+    </div>
+</div>
+
+<div id="dlg-userBranchAccount" class="easyui-dialog" style="width:700px; height: 400px; padding: 10px 20px" align="center" data-options="title:'关联账套',modal:true,closed:true" buttons="#btn-useraccount">
+
+    <div style="width: 100%; height: 100%">
+        <table style="width: 100%; height: 300px;">
+            <tr>
+                <td style="width: 40%; height: 100%;">
+                    <table id="manageBranchTb" class="easyui-datagrid" style="width: 100%; height: 100%;" data-options="title:'管理机构'"></table>
+                </td>
+                <td>
+                    <a href="#" style="display: block" class="easyui-linkbutton" iconCls="e-icon fa fa-refresh" onclick="javascript: $('#accountTb').tree('reload');">重置</a><br>
+                    <a href="#" style="display: block" class="easyui-linkbutton" iconCls="e-icon fa fa-save" onclick="saveUserBranchAccount()">保存</a>
+
+                </td>
+                <td style="width: 40%; height: 100%;">
+                    <div class="easyui-panel" style="width: 100%; height: 100%;" data-options="title: '账套'">
+                        <ul id="accountTb" class="easyui-tree"></ul>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="btn-useraccount">
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-close" onclick="javascript:$('#dlg-userBranchAccount').dialog('close');">关闭</a>
+    </div>
+</div>
+
+
+</body>
+<script th:src="@{/js/userinfoExport.js}"></script>
+<script>
+    $(function(){
+
+        //初始化机构数据
+        $('#comName').combobox({
+            valueField:'value',
+            textField:'text',
+            url:'/branchinfo/fillCombobox',
+            method:'GET',
+            onChange: function(nval, oval){  //nval 新值 oval 旧值
+                //初始化机构数据
+                /*$('#deptName').combobox({
+                    valueField:'value',
+                    textField:'text',
+                    url:'/branchinfo/fillCombobox?level=3&parentId=' + nval,
+                    method:'GET'
+                });*/
+            }
+        });
+
+        searchF();
+    });
+
+    //搜索
+    function searchF(){
+        var params = {};
+        $('#searchForm').find('input').each(function(){
+            var obj = $(this);
+            var name = obj.attr('name');
+            if(name){
+                params[name] = obj.val();
+            }
+        });
+
+        $('#dg').datagrid({
+            url: '/userinfo/list'
+            ,queryParams: params    //查询条件
+            ,striped: true  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false
+            //,method: 'get'  //默认为 post， 注意：使用get方式时， ie浏览器存在缓存问题，不推荐。
+            ,pagination: true //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。默认false
+            //,rownumbers: true //设置为 true，则显示带有行号的列。默认false
+            ,fitColumns: true //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            ,autoRowHeight: true //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能。
+            ,singleSelect: true //设置为 true，则只允许选中一行。 默认false
+            ,checkOnSelect: true //如果设置为 true，当用户点击某一行时，则会选中/取消选中复选框。
+            ,pagePosition: 'bottom' //定义分页栏的位置。可用的值有：'top'、'bottom'、'both'。 默认 bottom
+            ,pageList: [10,20,30,40,50] //当设置了 pagination 属性时，初始化页面尺寸的选择列表。
+            ,nowrap: true
+            /**
+             * field: 列的字段名
+             * width: 列的宽度。如果未定义，则宽度会自动扩展以适应它的内容。没有定义宽度将会降低性能。
+             * align： 指示如何对齐该列的数据，可以用 'left'、'right'、'center'。 默认undefined
+             * halign：指示如何对齐该列的头部，可能的值：'left'、'right'、'center'。如果没有分配值，则头部对齐方式将与通过 'align' 属性定义的数据对齐方式一致。该属性自版本 1.3.2 起可用。
+             * sortable： 设置为 true，则允许该列被排序。
+             * order：默认的排序顺序，只能用 'asc' 或 'desc'。该属性自版本 1.3.2 起可用。
+             * resizable：设置为 true，则允许该列可调整尺寸。
+             * fixed: 设置为 true，则当 'fitColumns' 设置为 true 时放置调整宽度。
+             * hidden: 设置为 true，则隐藏该列。
+             * checkbox: 设置为 true，则显示复选框。复选框有固定宽度。
+             * formatter: 单元格的格式化函数，需要三个参数：value：字段的值。rowData：行的记录数据。rowIndex：行的索引。
+             */
+            ,columns: [
+                [
+                    {field:'ck',checkbox: true ,align:'center'}
+                    ,{field:'userCode',title:'用户编码',width:'10%',align:'center'}
+                    ,{field:'userName',title:'用户名',width:'10%',align:'center'}
+                    ,{field:'email',title:'邮箱',width:'20%',align:'center'}
+                    ,{field:'useFlag',title:'状态',width:'8%',align:'center', formatter: function(value,row,index){
+                        if(row.id != 1){
+                            if(value == '1'){
+                                return '<a href="#" data-id='+ row.id+' class="switchbutton" data-options="onText:\'启用\',offText:\'停用\'" checked></a>';
+                            }else{
+                                return '<a href="#" data-id='+ row.id+' class="switchbutton" data-options="onText:\'启用\',offText:\'停用\'"></a>';
+                            }
+                        }else{
+                            return '<a href="#" data-id='+ row.id+' class="switchbutton" data-options="onText:\'启用\',offText:\'停用\'" checked disabled></a>';
+                        }
+                    }}
+                    ,{field:'createTime',title:'创建时间',width:'20%',align:'center'}
+                    ,{field:'id',title:'操作',width:'8%',align:'center',  formatter: function(value,row,index){
+                        //格式：双引号必须在外，单双引号保持一致。不然脚本执行异常
+                        return "<button class='sino-btn  sino-btn-xs' onclick='edit("+ JSON.stringify(row) +")'>编辑</button>";
+                    }}
+                ]
+            ]
+            ,toolbar: [{
+                text: '新增'
+                ,iconCls: 'e-icon fa fa-plus'
+                ,plain: true
+                ,handler: function(){
+                    //初始化机构、账套
+                    initCombo('n');
+
+                    //获取token,防止表单重复提交
+                    jsutil.tool.refreshToken('',$('#fm').find('input[name="token"]'));
+                    $('#dlg').dialog('open').dialog('setTitle','创建用户');
+                    $('#fm').form('clear');
+                    $('#fm').find('input[name="id"]').val('000');
+                    url = "/userinfo/add";
+
+                }
+            }
+                ,'-'    //分隔符
+                ,{
+                    text: '关联账套'
+                    ,iconCls: 'e-icon fa fa-link'
+                    ,plain: true
+                    ,handler: function () {
+                        var row = $('#dg').datagrid('getSelected');
+                        if(row){
+                            $('#dlg-userBranchAccount').dialog('open');
+                            $('#accountTb').tree('loadData',{});
+                            //根据用户ID，加载账套信息
+                            $('#manageBranchTb').datagrid({
+                                url: '/branchinfo/getManageBranchByUserId'
+                                ,queryParams: {'userId':row.id}    //查询条件
+                                ,striped: true  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false
+                                ,singleSelect: true //设置为 true，则只允许选中一行。 默认false
+                                ,method: 'post'  //默认为 post
+                                ,nowrap: true
+                                ,columns: [
+                                    [
+                                        {field:'id',align:'center', hidden: true},
+                                        {field:'comCode',title:'机构编码',width:'40%',align:'center'},
+                                        {field:'comName',title:'机构名称',width:'60%',align:'center'},
+                                    ]
+                                ]
+                                ,onSelect: function (index, rowD) {  //index:行索引  rowD:账套数据
+                                    $('#accountTb').tree('loadData',{});
+                                    $('#accountTb').tree({
+                                        url: '/accountinfo/getAccountByUserIdAndBranchId?userId='+row.id + '&branchId='+ rowD.id
+                                        ,animate: true
+                                        ,checkbox: true
+                                        ,cascadeCheck: true
+                                        ,lines: true
+                                        ,onCheck: function (node, checked) {
+                                            if($('#manageBranchTb').datagrid('getSelected')){
+
+                                            }else{
+
+                                                $.messager.show({
+                                                    title:'消息提示',
+                                                    msg:'请选择一条管理机构数据',
+                                                    timeout:5000,
+                                                    showType:'slide'
+                                                });
+                                                $('#accountTb').tree('uncheck', node.target);
+                                            }
+                                        }
+                                    });
+                                }
+                                ,loadMsg:'加载中...'  //当从远程站点加载数据时，显示的提示消息。
+                            });
+                        }else{
+                            $.messager.show({
+                                title:'消息提示',
+                                msg:'请选择一条数据',
+                                timeout:5000,
+                                showType:'slide'
+                            });
+                        }
+                    }
+                }
+            ,'-'    //分隔符
+            ,{
+                text: '关联角色'
+                ,iconCls: 'e-icon fa fa-link'
+                ,plain: true
+                ,handler: function () {
+                        var row = $('#dg').datagrid('getSelected');
+                        if(row){
+                            $('#dlg-userrole').dialog('open');
+                            $('#roletb').tree('loadData',{});
+                            //根据用户ID，加载账套信息
+                            $('#branchtb').datagrid({
+                                url: '/branchinfo/getBranchAccountByUserId'
+                                ,queryParams: {'userId':row.id}    //查询条件
+                                ,striped: true  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false
+                                ,singleSelect: true //设置为 true，则只允许选中一行。 默认false
+                                ,method: 'post'  //默认为 post
+                                ,nowrap: true
+                                ,columns: [
+                                    [
+                                        {field:'id',align:'center', hidden: true},
+                                        {field:'comName',title:'管理机构',width:'60%',align:'center'},
+                                        {field:'accountName',title:'管理账套',width:'40%',align:'center'},
+                                    ]
+                                ]
+                                ,onSelect: function (index, rowD) {  //index:行索引  rowD:账套数据
+                                    $('#roletb').tree('loadData',{});
+                                    $('#roletb').tree({
+                                        url: '/roleinfo/getRoleByUserIdAndUserBAId?userId='+row.id + '&userBAId='+ rowD.id
+                                        ,animate: true
+                                        ,checkbox: true
+                                        ,cascadeCheck: true
+                                        ,lines: true
+                                        ,onCheck: function (node, checked) {
+                                            if($('#branchtb').datagrid('getSelected')){
+
+                                            }else{
+
+                                                $.messager.show({
+                                                    title:'消息提示',
+                                                    msg:'请选择一条账套数据',
+                                                    timeout:5000,
+                                                    showType:'slide'
+                                                });
+                                                $('#roletb').tree('uncheck', node.target);
+                                            }
+                                        }
+                                    });
+                                }
+                                ,loadMsg:'加载中...'  //当从远程站点加载数据时，显示的提示消息。
+                            });
+                        }else{
+                            $.messager.show({
+                                title:'消息提示',
+                                msg:'请选择一条数据',
+                                timeout:5000,
+                                showType:'slide'
+                            });
+                        }
+                }
+            }
+            ,'-'    //分隔符
+            ,{
+                text: '重置密码'
+                ,iconCls: 'e-icon fa fa-retweet'
+                ,plain: true
+                ,handler: function () {
+                    var row = $('#dg').datagrid('getSelected');
+                    if(row){
+                        $.messager.confirm('确认', '是否重置用户'+ row.userCode +'的密码为“12345678”？',function (r) {
+                            if(r){
+                                $.ajax({
+                                    type: 'POST'  //默认值: "GET")。请求方式 ("POST" 或 "GET")， 默认为 "GET"。注意：其它 HTTP 请求方法，如 PUT 和 DELETE 也可以使用，但仅部分浏览器支持。
+                                    ,url: '/userinfo/resetPwd/' + row.id
+                                    ,data: '' //发送到服务器的数据。将自动转换为请求字符串格式。
+                                    ,dataType: 'json'
+                                    ,success: function(result){
+                                        if(result.success){
+                                            $.messager.alert('提示','操作成功！', 'info');
+                                            $('#dg').datagrid('reload');
+                                        }else{
+                                            $.messager.alert('提示',result.errorMsg,'error');
+                                        }
+                                    }
+                                    ,error: function(xmlHttpRequest , msg){
+
+                                    }
+                                });
+                            }else{
+                                return false;
+                            }
+                        });
+                    }else{
+                        $.messager.show({
+                            title:'消息提示',
+                            msg:'请选择一条数据',
+                            timeout:5000,
+                            showType:'slide'
+                        });
+                    }
+                }
+            }
+        ]
+        ,onDblClickRow: function (index, row) {
+                initCombo('l');
+                $('#l_fm').form('load',row);
+                $('#l_dlg').dialog('open').dialog('setTitle', '用户信息');
+
+            }
+        ,loadMsg:'加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        ,onLoadSuccess: function(data){
+            $('.switchbutton').switchbutton({
+                onChange: function (checked) {
+                    //console.log($(this).attr('data-id'));
+                    var val = 0;
+                    if(checked){
+                        val = 1 ;
+                    }
+
+                    $.ajax({
+                        url: '/userinfo/changeUseFlag'
+                        ,data: {'id': $(this).attr('data-id'),'useFlag': val}
+                        ,type: 'POST'
+                        ,dataType: 'json'
+                        ,success: function (result) {
+                            if(result.success){
+                                $.messager.show({
+                                    title:'消息提示',
+                                    msg:'操作成功',
+                                    timeout:5000,
+                                    showType:'slide'
+                                });
+                                $('#dg').datagrid('reload');
+                            }else {
+                                $.messager.alert('提示', result.errorMsg,'error');
+                                if(checked){
+                                    $(this).switchbutton('setValue', false);
+                                }else{
+                                    $(this).switchbutton('setValue', true);
+                                }
+                            }
+                        }
+                        ,error: function () {
+
+                        }
+                    });
+                }
+            });
+
+            if(data.total<1) {
+                $.messager.show({
+                    title:'消息提示',
+                    msg:'未查到匹配数据',
+                    timeout:5000,
+                    showType:'slide'
+                });
+            }
+            //$('#dg').datagrid('resize');
+        }
+        });
+    }
+
+    function addNode(){
+        var ids=[];
+        var checkData = $('#roletb').tree('getChecked');
+        if(checkData.length==0){
+            //$.messager.alert('提示','请勾选角色信息!','info');return ;
+        }else{
+            for(var index in checkData){
+                ids.push(checkData[index].id);
+                var parent = $('#roletb').tree('getParent',checkData[index].target);
+                if(parent==null)
+                    continue;
+                else
+                    ids.push(parent.id);
+            }
+        }
+
+        return ids;
+    }
+
+    function saveUserRole(){
+        //获取选择的账套
+        var row = $('#branchtb').datagrid('getSelected');
+
+        if(row){
+            var urow = $('#dg').datagrid('getSelected');
+            //获取选择角色
+            var ids = addNode();
+            var idArr =[{name:'roleId',value:ids.join(',') },{name:'userId',value: urow.id},{name:'userBAId', value: row.id}];
+            $.ajax({
+                type: 'POST'  //默认值: "GET")。请求方式 ("POST" 或 "GET")， 默认为 "GET"。注意：其它 HTTP 请求方法，如 PUT 和 DELETE 也可以使用，但仅部分浏览器支持。
+                ,url: '/userinfo/userToRole'
+                ,data: idArr //发送到服务器的数据。将自动转换为请求字符串格式。
+                ,dataType: 'json'
+                ,success: function(result){
+                    if (result.success){
+
+                        $.messager.alert('提示','操作成功！','info');
+                    } else {
+                        $.messager.alert('提示',result.errorMsg,'error');
+                    }
+                }
+                ,error: function(xmlHttpRequest , msg){
+
+                }
+            });
+        }else {
+            $.messager.show({
+                title:'消息提示',
+                msg:'请选择一条账套数据',
+                timeout:5000,
+                showType:'slide'
+            });
+        }
+    }
+
+    function addNodeAccount(){
+        var ids=[];
+        var checkData = $('#accountTb').tree('getChecked');
+        if(checkData.length==0){
+            //$.messager.alert('提示','请勾选账套信息!','info');return ;
+        }else{
+            for(var index in checkData){
+                ids.push(checkData[index].id);
+                var parent = $('#accountTb').tree('getParent',checkData[index].target);
+                if(parent==null)
+                    continue;
+                else
+                    ids.push(parent.id);
+            }
+        }
+
+        return ids;
+    }
+
+    function saveUserBranchAccount(){
+        //获取选择的管理机构
+        var row = $('#manageBranchTb').datagrid('getSelected');
+
+        if(row){
+            //获取用户信息
+            var urow = $('#dg').datagrid('getSelected');
+            //获取选择账套
+            var ids = addNodeAccount();
+            var idArr =[{name:'accountId',value:ids.join(',') },{name:'userId',value: urow.id},{name:'branchId', value: row.id}];
+            $.ajax({
+                type: 'POST'  //默认值: "GET")。请求方式 ("POST" 或 "GET")， 默认为 "GET"。注意：其它 HTTP 请求方法，如 PUT 和 DELETE 也可以使用，但仅部分浏览器支持。
+                ,url: '/userinfo/userToBranchAndAccount'
+                ,data: idArr //发送到服务器的数据。将自动转换为请求字符串格式。
+                ,dataType: 'json'
+                ,success: function(result){
+                    if (result.success){
+
+                        $.messager.alert('提示','操作成功！','info');
+                    } else {
+                        $.messager.alert('提示',result.errorMsg,'error');
+                    }
+                }
+                ,error: function(xmlHttpRequest , msg){
+
+                }
+            });
+        }else {
+            $.messager.show({
+                title:'消息提示',
+                msg:'请选择一条管理机构数据',
+                timeout:5000,
+                showType:'slide'
+            });
+        }
+    }
+
+    //初始化机构、账套
+    function initCombo(flag){
+        //初始化机构数据
+        $('#'+flag+'_comCode').combobox({
+            valueField:'value',
+            textField:'text',
+            url:'/branchinfo/fillCombobox',
+            method:'GET'
+        });
+
+        $('#'+flag+'_manageCode').combobox({
+            valueField:'value',
+            textField:'text',
+            url:'/branchinfo/fillCombobox',
+            method:'GET',
+            multiple: true
+        });
+    }
+
+    //编辑
+    function edit(row) {
+        //获取token,防止表单重复提交
+        jsutil.tool.refreshToken('',$('#fm').find('input[name="token"]'));
+        $('#dlg').dialog('open').dialog('setTitle','编辑用户');
+        $('#fm').form('clear');  //clear 对 readonly有影响， clear 放在 readonly 后input显示为灰色；celar放在readonly之前无颜色变化，看不出只读
+        initCombo('n');
+        $('#fm').form('load', row);
+        url = "/userinfo/update";
+    }
+
+    // 创建用户
+    function saveUser(){
+        //表单数据序列化  jquery的方法
+        if($('#fm').form('validate')){
+            var data = $('#fm').serialize();
+
+            $.ajax({
+                type: 'POST'  //默认值: "GET")。请求方式 ("POST" 或 "GET")， 默认为 "GET"。注意：其它 HTTP 请求方法，如 PUT 和 DELETE 也可以使用，但仅部分浏览器支持。
+                ,url: url
+                ,data: data //发送到服务器的数据。将自动转换为请求字符串格式。
+                ,dataType: 'json'
+                ,success: function(result){
+                    if(result.success){
+                        $.messager.alert('提示','操作成功！', 'info');
+                        $('#dlg').dialog('close');
+                        $('#dg').datagrid('reload');
+                    }else{
+                        $.messager.alert('提示',result.errorMsg,'error');
+                    }
+                }
+                ,error: function(xmlHttpRequest , msg){
+
+                }
+            });
+        }else{
+            return false;
+        }
+    }
+
+    function cancel(){
+        $('#dlg').dialog('close');
+    }
+
+    //重置
+    function resetF(){
+        $('#searchForm').form("clear");
+    }
+
+
+    //导出用户管理信息列表
+    function exportXls(xlsName){
+        //准备参数
+        var result = prepareParam(xlsName);
+        if (result == "false") {
+            return false;
+        }
+        //使用参数执行一次查询，且将查询数据导出
+        jsutil.core.download(
+            'userinfodownload',
+            result);
+    }
+
+
+    //准备参数
+    function prepareParam(xlsName) {
+        var param = {
+            name : xlsName,
+            queryConditions : {},
+            cols : userinfoExport
+        };
+        var grid = $("#dg");
+        var datas = grid.datagrid("getRows");
+        if (datas.length > 0) {
+            //查询之前验证
+            $('#searchForm').find('input').each(
+                function() {
+                    var obj = $(this);
+                    var name = obj.attr('name');
+                    if (name) {
+                        param.queryConditions[name] = obj.val();
+                    }
+                });
+            return param;
+        } else {
+            $.messager.alert("提示", "请先查询或者没有要导出的数据", "warning");
+            return "false";
+        }
+    }
+
+</script>
+</html>

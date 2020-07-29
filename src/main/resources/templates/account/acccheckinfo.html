@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('对账','/css/Standard.css','')">
+</head>
+<body>
+    <!--搜索模块-->
+    <div class="easyui-panel"
+         style="height: auto; width:100%;padding: 8px 0px 0px 0px;overflow: hidden;">
+        <form id="serachFrom" method="post" style="margin-bottom:0;">
+            <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+                <tr>
+                    <td style="width:8%;text-align: right;" ><label>年份:</label></td>
+                    <td style="width:10%;">
+                        <input style="width:100%;" id="year" name="year" class="easyui-combobox" data-options="valueField:'value',textField:'text',data:yearJson,prompt: '年份'">
+                    </td>
+                    <td style="width:8%;text-align: right;" ><label>总账与明细账:</label></td>
+                    <td style="width:10%;">
+                        <input style="width:100%;" id="generalLedgerAndDetail" name="generalLedgerAndDetail" class="easyui-combobox" data-options="valueField:'value',textField:'text',data:flagData,panelHeight:90,prompt: '总账与明细账'">
+                    </td>
+                    <td style="width:8%;text-align: right;" ><label>总账与辅助账:</label></td>
+                    <td style="width:10%;">
+                        <input style="width:100%;" id="generalLedgerAndAssist" name="generalLedgerAndAssist" class="easyui-combobox" data-options="valueField:'value',textField:'text',data:flagData,panelHeight:90,prompt: '总账与辅助账'">
+                    </td>
+                    <td style="width:8%;text-align: right;" ><label>辅助账与明细账:</label></td>
+                    <td style="width:10%;">
+                        <input style="width:100%;" id="assistAndDetail" name="assistAndDetail" class="easyui-combobox" data-options="valueField:'value',textField:'text',data:flagData,panelHeight:90,prompt: '辅助账与明细账'">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="8" style="text-align: right; padding-right: 20px;">
+                        <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-search'" style="width: 8%;" onclick="searchF()" >查询</a>
+                        <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-refresh'" style="width: 8%;" onclick="reset()">重置</a>
+                    </td>
+                </tr>
+            </table>
+        </form>
+
+        <!-- 展示搜索结果 -->
+        <table id = "dg" data-show-footer="true"></table>
+    </div>
+
+    <div id="blg"
+         class="easyui-dialog" style="padding: 5px 5px; top: 15px;"
+         data-options="modal:true,closed:true,resizable:true,maximizable:true" buttons="#blg-buttons">
+        <form id="bm" method="post">
+            <table cellpadding="5">
+                <tr><td class=formtitle colspan="4">总账与明细账对账结果</td></tr>
+                <tr>
+                    <td>
+                        <table id="topGrid" class="easyui-datagrid" title="" style="width: 700px; height: auto"
+                            singleSelect="true" striped="true" nowrap="true" fitColumns="false" loadMsg="加载数据中...">
+                            <thead>
+                            <th field="isBalance" width="10%" align="center" halign="center" formatter="replaceIsBalance">平衡情况</th>
+                            <th field="itemCode" width="36%" align="left" halign="center">科目及名称</th>
+                            <th field="detail" width="56%" align="left" halign="center">详细</th>
+                            </thead>
+                        </table>
+                    </td>
+                </tr>
+                <tr><td class=formtitle colspan="4">总账与辅助账对账结果</td></tr>
+                <tr>
+                    <td>
+                        <table id="middleGrid" class="easyui-datagrid" title="" style="width: 700px; height: auto"
+                            singleSelect="true" striped="true" nowrap="true" fitColumns="false" loadMsg="加载数据中...">
+                            <thead>
+                            <th field="isBalance" width="10%" align="center" halign="center" formatter="replaceIsBalance">平衡情况</th>
+                            <th field="itemCode" width="36%" align="left" halign="center">科目及名称</th>
+                            <th field="detail" width="56%" align="left" halign="center">详细</th>
+                            </thead>
+                        </table>
+                    </td>
+                </tr>
+                <tr><td class=formtitle colspan="4" height="10px">辅助账与明细账对账结果</td></tr>
+                <tr>
+                    <td>
+                        <table id="bottomGrid" class="easyui-datagrid" title="" style="width: 700px; height: auto"
+                            singleSelect="true" striped="true" nowrap="true" fitColumns="false" loadMsg="加载数据中...">
+                            <thead>
+                            <th field="isBalance" width="10%" align="center" halign="center" formatter="replaceIsBalance">平衡情况</th>
+                            <th field="itemCode" width="36%" align="left" halign="center">科目及名称</th>
+                            <th field="detail" width="56%" align="left" halign="center">详细</th>
+                            </thead>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </form>
+        <div id="blg-buttons">
+            <a href="#" class="easyui-linkbutton"iconCls="icon-remove icon-large" onclick="javascript:$('#blg').dialog('close')">关闭</a>
+        </div>
+    </div>
+
+    <div id="waitMenu" class="easyui-dialog" style="width: 300px; height: 100px; padding: 10px 20px;" closed="true" align="center" data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+        <div id="msg"></div>
+    </div>
+
+    <script type="text/javascript">
+        var flagData = [{'value':'Y','text':'是'},{'value':'N','text':'否'}];
+
+        function initTopGrid(flag){
+            if (flag) {
+                $('#topGrid').datagrid('loadData', [{itemCode:'总账与明细账对账结果无不符数据'}]);
+            } else {
+                $('#topGrid').datagrid('loadData', [{itemCode:'未对账'}]);
+            }
+        }
+        function initMiddleGrid(flag){
+            if (flag) {
+                $('#middleGrid').datagrid('loadData', [{itemCode:'总账与辅助账对账结果无不符数据'}]);
+            } else {
+                $('#middleGrid').datagrid('loadData', [{itemCode:'未对账'}]);
+            }
+        }
+        function initBottomGrid(flag){
+            if (flag) {
+                $('#bottomGrid').datagrid('loadData', [{itemCode:'辅助账与明细账对账结果无不符数据'}]);
+            } else {
+                $('#bottomGrid').datagrid('loadData', [{itemCode:'未对账'}]);
+            }
+        }
+
+        $(function () {
+            $('#dg').datagrid({
+                striped: true,  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false,
+                method: 'post', //默认为 post
+                rownumbers: false,
+                fitColumns: true,//设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+                nowrap: true,
+                columns: [
+                    [
+                        {field: 'yearMonthDate', title: '会计期间', width: '25%', align: 'center', halign: 'center', formatter: function (value, row, index) {
+                            if (row.isCheck) {
+                                return row.id.yearMonthDate;
+                                //return "<span style='color: blue; cursor: pointer;'' onclick='lookInfo("+row.id.yearMonthDate+")'>" + row.id.yearMonthDate + "</span>";
+                            } else {
+                                return row.id.yearMonthDate;
+                            }
+                        }},
+                        {field: 'isCarry', title: '是否结账', width: '30%', align: 'center', halign: 'center', formatter: function (value, row, index) {
+                            if(value == 'Y'){return '已结转';}else{return '未结转';}
+                        }},
+                        {field: 'isCheck', title: '是否对账', width: '30%', align: 'center', halign: 'center', formatter: function (value, row, index) {
+                            if(value == 'Y'){return '已对账';}else if(value == 'N'){return '对账失败';}else{return '未对账';}
+                        }},
+                        {field: 'check', title: '操作', width: '16%', align: 'center', halign: 'center', formatter: function (value, row, index) {
+                            return "<button class='sino-btn sino-btn-xs' onclick='computeAccCheckInfo("+JSON.stringify(row)+")'>对账</button>";
+                        }},
+                    ]
+                ],
+                onClickRow: function (rowIndex, rowData) {
+                    $(this).datagrid('unselectRow', rowIndex);
+                },
+                loadMsg: '加载中...' , //当从远程站点加载数据时，显示的提示消息。
+            });
+
+            /*$('#year').combobox({
+                url:'/codeSelect?type=yearsByAccMonthTrace',
+                method:'GET',
+                valueField:'value',
+                textField:'text'
+            });*/
+            $('#year').combobox('setValue', getCurrentYear());
+            $('#generalLedgerAndDetail').combobox('setValue', 'Y');
+            $('#generalLedgerAndAssist').combobox('setValue', 'Y');
+            $('#assistAndDetail').combobox('setValue', 'Y');
+            searchF();
+
+            $('#topGrid').datagrid({
+                onClickRow: function (rowIndex, rowData) {
+                    $(this).datagrid('unselectRow', rowIndex);
+                }
+            });
+            $('#middleGrid').datagrid({
+                onClickRow: function (rowIndex, rowData) {
+                    $(this).datagrid('unselectRow', rowIndex);
+                }
+            });
+            $('#bottomGrid').datagrid({
+                onClickRow: function (rowIndex, rowData) {
+                    $(this).datagrid('unselectRow', rowIndex);
+                }
+            });
+        });
+
+        function computeAccCheckInfo(row) {
+            $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+            var data = {'yearMonthDate':row.id.yearMonthDate, 'isCarry':row.isCarry, 'generalLedgerAndDetail':$('#generalLedgerAndDetail').combobox('getValue'), 'generalLedgerAndAssist':$('#generalLedgerAndAssist').combobox('getValue'), 'assistAndDetail':$('#assistAndDetail').combobox('getValue')};
+            $.post('/acccheckinfo/compute', data, function(result){
+                if (result.success){
+                    /*$.messager.show({title: '提示', msg: "操作成功"});*/
+                    lookAccCheckResult(data);
+                    $('#dg').datagrid('reload');
+                } else {
+                    closeWaitMenu();//关闭等待窗口
+                    if(result.errorMsg=="notmessage"){
+                        $.messager.alert({title: '提示', msg: "该会计期间内没有对账数据,默认对账成功！"});
+                        searchF();
+                    }else{
+                        $.messager.show({
+                            title: '提示',
+                            msg: result.errorMsg
+                        });
+                    }
+                }
+            },'json');
+        }
+
+        function lookAccCheckResult(data) {
+            $.post('/acccheckinfo/qrycompute', data, function(result){
+                closeWaitMenu();//关闭等待窗口
+                if (result.success){
+                    var resultData = result.data;
+                    if (resultData[0].length>0) {
+                        if (resultData[0][0].isBalance != '0') {
+                            $('#topGrid').datagrid('loadData', resultData[0]);
+                        } else {
+                            initTopGrid("Y");//已对账，但无不符数据
+                        }
+                    } else {
+                        initTopGrid();//未对账，无数据
+                    }
+                    if (resultData[1].length>0) {
+                        if (resultData[1][0].isBalance != '0') {
+                            $('#middleGrid').datagrid('loadData', resultData[1]);
+                        } else {
+                            initMiddleGrid("Y");//已对账，但无不符数据
+                        }
+                    } else {
+                        initMiddleGrid();//未对账，无数据
+                    }
+                    if (resultData[2].length>0) {
+                        if (resultData[2][0].isBalance != '0') {
+                            $('#bottomGrid').datagrid('loadData', resultData[2]);
+                        } else {
+                            initBottomGrid("Y");//已对账，但无不符数据
+                        }
+                    } else {
+                        initBottomGrid();//未对账，无数据
+                    }
+                    /*$('#blg').window('center');//使Dialog居中显示*/
+                    $('#blg').dialog('open').dialog('setTitle','对账结果');
+                } else {
+                    $.messager.show({title: '提示', msg: result.errorMsg});
+                }
+            },'json');
+        }
+
+        function lookInfo(yearMonthDate) {
+            $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+            var data = {'yearMonthDate':yearMonthDate, 'generalLedgerAndDetail':$('#generalLedgerAndDetail').combobox('getValue'), 'generalLedgerAndAssist':$('#generalLedgerAndAssist').combobox('getValue'), 'assistAndDetail':$('#assistAndDetail').combobox('getValue')};
+            lookAccCheckResult(data);
+        }
+
+        //查询
+        function searchF() {
+            var params = {};
+            $('#serachFrom').find('input').each(function(){
+                var obj = $(this);
+                var name = obj.attr('name');
+                if(name){
+                    params[name] = obj.val();
+                }
+            });
+            $('#dg').datagrid({
+                url:'/acccheckinfo/list',
+                queryParams:params
+            });
+        }
+        
+        function replaceIsBalance(value,row,index) {
+            if(value)
+                return value=='1'?'不平':'平衡';
+            return value;
+        }
+        
+        //重置
+        function reset() {
+            $('#serachFrom').form('clear');
+            $('#year').combobox('setValue', getCurrentYear());
+            $('#generalLedgerAndDetail').combobox('setValue', 'Y');
+            $('#generalLedgerAndAssist').combobox('setValue', 'Y');
+            $('#assistAndDetail').combobox('setValue', 'Y');
+        }
+
+        function closeWaitMenu() {
+            $('#waitMenu').dialog('close');//关闭等待窗口
+        }
+
+        //等待
+        function onOpen() {
+            loading = setInterval(showalert, 500);
+        }
+        var ii = 2;
+        function showalert() {
+            var text = "";
+            var text1 = "";
+            if (ii == 1) {
+                text = '正在处理，请稍后.';
+            } else if (ii == 2) {
+                text = '正在处理，请稍后..';
+            } else if (ii == 3) {
+                text = '正在处理，请稍后...';
+                ii = 0;
+            }
+            ii++;
+            $('#msg').text(text);
+        }
+        function onClose() {
+            clearInterval(loading);
+        }
+    </script>
+</body>
+</html>

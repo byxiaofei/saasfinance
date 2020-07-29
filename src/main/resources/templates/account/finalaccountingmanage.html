@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('生成损益结转凭证','','')">
+</head>
+<body>
+<!--搜索模块-->
+
+    <div class="easyui-panel"
+         style="height: auto; width:100%;padding: 8px 0px 0px 0px;overflow: hidden;">
+        <form id="serachFrom" method="post" style="margin-bottom:0;">
+            <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+                <tr>
+                    <td style="width:8%;text-align: right;" ><label>决算期范围:</label></td>
+                    <td  id="s" style="width:42%;text-align: left;">
+                        <input style="width:20%;" id="settlePeriod1" name="settlePeriod1" class="easyui-textbox" data-options="prompt: '开始年份'">&nbsp;--&nbsp;
+                        <input style="width:20%;" id="settlePeriod2" name="settlePeriod2" class="easyui-textbox" data-options="prompt: '结束年份'">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: right; padding-right: 20px;">
+                        <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-search'" style="width: 8%;" onclick="searchF()" >查询</a>
+                        <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-refresh'" style="width: 8%;" onclick="reset()">重置</a>
+                    </td>
+                </tr>
+            </table>
+        </form>
+
+        <!-- 展示搜索结果 -->
+        <table id = "sg"></table>
+    </div>
+<div id="waitMenu" class="easyui-dialog"
+     style="width: 300px; height: 100px; padding: 10px 20px;" closed="true"
+     align="center"
+     data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+    <div id="msg"></div>
+</div>
+<div id="dlgC"  class="easyui-dialog" style="width: 400px; padding: 10px 20px" align="center"
+     data-options="modal:true,closed:true,resizable:true,maximizable:true"  buttons="#dlg-buttons">
+    <form id="fmC" method="post">
+        <table class="tt">
+            <tr>
+                <td style="width:15%;text-align: right;"><label>制单日期:</label></td>
+                <td style="width:18%;">
+                    <input class="easyui-datebox"  id="voucherDate"  name="voucherDate" editable="false"  style="width:140px;" data-options="prompt:'制单日期',missingMessage:'请输入制单日期'">
+                </td>
+            </tr>
+        </table>
+    </form>
+    <br>
+    <div id="dlg-buttons" align="right">
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-check" onclick="confirmC()">保存</a>
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-remove" onclick="javascript:$('#dlgC').dialog('close')">取消</a>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function () {
+        $('#sg').datagrid({
+            url: '/finalaccountingmanage/list',
+            striped: true,  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false,
+            method: 'post', //默认为 post
+            // pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。默认false
+            fitColumns: true,//设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            singleSelect: true,//设置为 true，则只允许选中一行。 默认false
+            checkOnSelect: true, //如果设置为 true，当用户点击某一行时，则会选中/取消选中复选框。
+            pagePosition: 'bottom', //定义分页栏的位置。可用的值有：'top'、'bottom'、'both'。 默认 bottom
+            // pageList: [10, 20, 30, 40, 50], //当设置了 pagination 属性时，初始化页面尺寸的选择列表。
+            nowrap: true,
+            columns: [
+                [
+                    {field: '', checkbox: true, align: 'center'}
+                    , {field: 'yearMonthDate', title: '会计期间', width: '50%', align: 'center', sortable: 'true', order: 'asc'}
+                    , {field: 'accMonthStat', title: '状态', width: '25%', align: 'center',formatter: function(value,row,index){
+                        if (value && value=='Y') {
+                            return "已决算";
+                        } else if (value && value=='N' && row.temp=='Y') {
+                            return "已决算(无数据)";
+                        }  else if (value && value=='N') {
+                            return "未决算";
+                        }else {
+                            return value;
+                        }
+                    }}
+                    , {field: 'createBy', title: '操作人', width: '24%', align: 'center'}
+                ]
+            ],
+            /*,toolbar: '#tbar'*/    //通过id选择器引用
+            toolbar: [{
+                text: '生成决算凭证',
+                iconCls: 'e-icon fa fa-newspaper-o',
+                plain: true,
+                handler: final
+            }, '-'
+            , {
+                text: '回退决算凭证',
+                iconCls: 'e-icon fa fa-mail-reply-all',
+                plain: true,
+                handler: unFinal
+            }],
+            loadMsg: '加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        })
+    })
+
+
+    //未加制单日期--决算
+    /*function final() {
+        var rows = $('#sg').datagrid('getSelections');
+        if(rows.length==0){$.messager.alert('消息提示','请选择要决算的会计期间!','warning');return ;}
+        if(rows[0].accMonthStat == "Y"){
+            $.messager.alert('提示',rows[0].yearMonthDate+"为已决算状态，不允许进行重复决算操作！",'warning');
+            return;
+        }
+        var data =[{name:'yearMonthDate',value:rows[0].yearMonthDate }];
+        $.messager.confirm('决算','确认要决算选中的会计期间吗?',function(r){
+            if (r){
+                $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+                $.post('/finalaccountingmanage/final',data,function(result){
+                    if (result.success){
+                        $('#waitMenu').dialog('close');//关闭等待窗口
+                        $('#sg').datagrid('reload');	// reload the user data
+                        $.messager.show({	// show error message
+                            title: '提示',
+                            msg: "操作成功"
+                        });
+                    } else {
+                        $('#waitMenu').dialog('close');//关闭等待窗口
+                        $.messager.show({	// show error message
+                            title: '提示',
+                            msg: result.errorMsg
+                        });
+                    }
+                },'json');
+            }
+        })
+    }*/
+    //加上制单日期后
+    function final() {
+        var rows = $('#sg').datagrid('getSelections');
+        if(rows.length==0){$.messager.alert('消息提示','请选择要决算的会计期间!','warning');return ;}
+        if(rows[0].accMonthStat == "Y"){
+            $.messager.alert('提示',rows[0].yearMonthDate+"为已决算状态，不允许进行重复决算操作！",'warning');
+            return;
+        }
+        //打开制单日期页面
+        $('#fmC').form('clear');
+        $('#dlgC').dialog('open').dialog('setTitle','生成凭证');
+        $('#voucherDate').datebox('setValue',date());
+    }
+    function confirmC(){
+        var rows = $('#sg').datagrid('getSelections');
+        var data =[{name:'yearMonthDate',value:rows[0].yearMonthDate },{name:'createTime',value:$('#voucherDate').datebox('getValue')}];
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        $.post('/finalaccountingmanage/final',data,function(result){
+            if (result.success){
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                $('#dlgC').dialog('close');
+                $('#sg').datagrid('reload');	// reload the user data
+                $.messager.show({	// show error message
+                    title: '提示',
+                    msg: "操作成功"
+                });
+            } else {
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                $.messager.show({	// show error message
+                    title: '提示',
+                    msg: result.errorMsg
+                });
+            }
+        },'json');
+    }
+    //反决算
+    function unFinal() {
+        var rows = $('#sg').datagrid('getSelections');
+        if(rows.length==0){$.messager.alert('消息提示','请选择要反决算的会计期间!','warning');return ;}
+        if(rows[0].accMonthStat != "Y"){
+            $.messager.alert('提示',rows[0].yearMonthDate+"已为未决算状态！",'warning');
+            return;
+        }
+        var data = rows[0];
+        // var data =[{name:'yearMonthDate',value:rows[0].yearMonthDate }];
+        $.messager.confirm('反决算','确认要反决算选中的会计期间吗?',function(r){
+            if (r){
+                $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+                $.post('/finalaccountingmanage/unFinal',data,function(result){
+                    if (result.success){
+                        $('#waitMenu').dialog('close');//关闭等待窗口
+                        $('#sg').datagrid('reload');	// reload the user data
+                        $.messager.show({	// show error message
+                            title: '提示',
+                            msg: "操作成功"
+                        });
+                    } else {
+                        $('#waitMenu').dialog('close');//关闭等待窗口
+                        $.messager.show({	// show error message
+                            title: '提示',
+                            msg: result.errorMsg
+                        });
+                    }
+                },'json');
+            }
+        })
+    }
+
+    //查询
+    function searchF() {
+        var params = {};
+        $('#serachFrom').find('input').each(function(){
+            var obj = $(this);
+            var name = obj.attr('name');
+            if(name){
+                params[name] = obj.val();
+            }
+        });
+        $('#sg').datagrid("load", params);
+    }
+
+    //重置
+    function reset() {
+        $('#serachFrom').form('clear');
+    }
+
+    //等待
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+
+    var ii = 2;
+    function showalert() {
+        var text = "";
+        var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+
+    function onClose() {
+        clearInterval(loading);
+    }
+    function date(){
+        var date=new Date();
+        var str = date.getFullYear()+"-";
+        str += date.getMonth()+1+"-";
+        str += date.getDate()+"-";
+        return str;
+    }
+</script>
+</body>
+</html>

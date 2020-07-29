@@ -1,0 +1,99 @@
+.e-icon{
+    padding-top: 3px;
+}
+
+.sino-btn-normal {
+    background-color: #1e9fff;
+}
+
+/**圆角按钮*/
+.sino-btn-radius {
+    border-radius: 100px;
+}
+
+.sino-btn {
+    display: inline-block;
+    height: 38px;
+    line-height: 38px;
+    padding: 0 18px;
+    background-color: #009688;
+    color: #fff;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 14px;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+.sino-btn:hover {
+    opacity: 0.8;
+    filter: alpha(opacity=80);
+    color: #fff;
+}
+
+/**原始按钮*/
+.sino-btn-primary {
+    border: 1px solid #C9C9C9;
+    background-color: #fff;
+    color: #555;
+}
+
+.sino-btn-primary:hover {
+    border-color: #009688;
+    color: #333;
+}
+
+/**警告按钮*/
+.sino-btn-danger {
+    background-color: #ff5722;
+}
+
+/**暖色按钮*/
+.sino-btn-warm {
+    background-color: #ffb800;
+}
+
+/**按钮组*/
+.sino-btn-group {
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 0px;
+}
+
+/**禁用按钮*/
+.sino-btn-disabled, .sino-btn-disabled:active, .sino-btn-disabled:hover {
+    border: 1px solid #e6e6e6;
+    background-color: #fbfbfb;
+    color: #c9c9c9;
+    cursor: not-allowed;
+    opacity: 1;
+}
+
+.sino-btn, .sino-disabled, .sino-icon, .sino-unselect {
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    -moz-user-select: none;
+}
+
+
+/**迷你按钮*/
+.sino-btn-xs {
+    height: 22px;
+    line-height: 22px;
+    padding: 0 5px;
+    font-size: 12px;
+}
+
+/**小型按钮*/
+.sino-btn-sm {
+    height: 30px;
+    line-height: 30px;
+    padding: 0 10px;
+    font-size: 12px;
+}
+
+
+
+
+

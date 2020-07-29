@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('凭证管理','','')">
+</head>
+<body>
+<script th:src="@{/js/certificatemanageExport.js}"></script>
+<!-- 搜索模块 -->
+<div class="easyui-panel"
+     style="height: auto; width:100%;height: 885px;padding: 8px 0px 0px 0px;overflow: hidden;">
+    <form id="searchForm" method="post" style="margin-bottom:0;">
+        <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="width:8%;text-align: right;" ><label>凭证类型:</label></td>
+                <td style="width:12%;">
+                    <input style="width:100%;" id="voucherType" name="voucherType" class="easyui-combobox" data-options="prompt: '凭证类型',editable:false">
+                </td>
+                <td style="width:12%;text-align: right;" ><label>会计期间:</label></td>
+                <td style="width:18%;">
+                    <input style="width:100%;" id="yearMonth" name="yearMonth" class="easyui-combobox" data-options="prompt: '会计期间',editable:false">
+                </td>
+                <td style="width:8%;text-align: right;" ><label>日期:</label></td>
+                <td  id="s" style="width:42%;text-align: left;">
+                    <input style="width:40%;" id="voucherDateStart" name="voucherDateStart" class="easyui-datebox" data-options="prompt: '开始日期',editable:false">&nbsp;--&nbsp;
+                    <input style="width:40%;" id="voucherDateEnd" name="voucherDateEnd" class="easyui-datebox" data-options="prompt: '结束日期',editable:false">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" ><label>科目代码:</label></td>
+                <td>
+                    <input style="width:100%;" id="itemCode1" name="itemCode1" class="easyui-textbox" data-options="prompt: '科目代码'">
+                </td>
+                <td style="text-align: right;" ><label>对方科目代码:</label></td>
+                <td >
+                    <input style="width:100%;" id="itemCode2" name="itemCode2" class="easyui-textbox" data-options="prompt: '对方科目代码'">
+                </td>
+                <td style="text-align: right;" ><label>凭证号范围:</label></td>
+                <td>
+                    <input style="width:40%;" id="voucherNoStart" name="voucherNoStart" class="easyui-textbox" data-options="prompt: '开始',disabled:true">&nbsp;--&nbsp;
+                    <input style="width:40%;" id="voucherNoEnd" name="voucherNoEnd" class="easyui-textbox" data-options="prompt: '结束',disabled:true">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" ><label>凭证状态:</label></td>
+                <td>
+                    <input style="width:100%;" id="voucherFlag" name="voucherFlag" class="easyui-combobox" data-options="prompt: '凭证状态',editable:false">
+                </td>
+                <td style="text-align: right;" ><label>制单人:</label></td>
+                <td>
+                    <input style="width:100%;" id="createBy" name="createBy" class="easyui-textbox" data-options="prompt: '制单人'">
+                </td>
+                <td style="text-align: right;" ><label>发生金额:</label></td>
+                <td>
+                    <input style="width:40%;" id="moneyStart" name="moneyStart" class="easyui-textbox" data-options="prompt: '发生金额'">&nbsp;--&nbsp;
+                    <input style="width:40%;" id="moneyEnd" name="moneyEnd" class="easyui-textbox" data-options="prompt: '发生金额'">
+                </td>
+
+            </tr>
+            <tr>
+                <td style="text-align: right;" ><label>摘要:</label></td>
+                <td>
+                    <input style="width:100%;" id="remarkName" name="remarkName" class="easyui-textbox" data-options="prompt: '摘要'">
+                </td>
+                <td style="text-align: right;" ><label>专项名称全级显示:</label></td>
+                <td>
+                    <input style="width:100%;" id="specialNameP" name="specialNameP" class="easyui-combobox" data-options="prompt: '专项名称全级显示',editable:false">
+                </td>
+                <td></td>
+                <td  style="text-align: right; padding-right: 20px;">
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-search'" style="width: 20%;" onclick="searchF()" >查询</a>
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-refresh'" style="width: 20%;" onclick="reset()">重置</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton"  data-options="iconCls:'e-icon fa fa-download'" style="width: 20%;" onclick="exported('凭证管理信息表')">导出</a>
+                </td>
+            </tr>
+           <!-- <tr>
+                <td colspan="8" style="text-align: right; padding-right: 20px;">
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-search'" style="width: 8%;" onclick="searchF()" >查询</a>
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-refresh'" style="width: 8%;" onclick="reset()">重置</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton"  data-options="iconCls:'e-icon fa fa-download'" style="width: 8%;" onclick="exported('凭证管理信息表')">导出</a>
+                </td>
+            </tr>-->
+        </table>
+    </form>
+    <table id = "sg"></table>
+</div>
+<div id="subjectGrid" class="easyui-dialog" style="width: 40%;top: 15%;padding:10px 10px 10px 10px;" data-options="modal:true,closed:true,resizable:false,collapsible:false,minimizable:false,maximizable:true" buttons="#roleData-buttons">
+    <div class="easyui-panel" style="width: 100%;height: 350px;">
+        <ul id="subjectTree" class="easyui-tree"  data-options="method:'get',animate:true,checkbox:true,cascadeCheck:false"></ul>
+    </div>
+    <div id="roleData-buttons">
+        <a href="#" class="easyui-linkbutton" iconCls="icon-ok icon-large" onclick="saveSuperSubject()">保存</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove icon-large" onclick="javascript:$('#subjectGrid').dialog('close')">取消</a>
+
+    </div>
+</div>
+
+<!-- 等待框 -->
+<div id="waitMenu" class="easyui-dialog" style="width: 300px; height: 100px; padding: 10px 20px;" closed="true" align="center" data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+    <div id="msg"></div>
+</div>
+
+<script type="text/javascript">
+    var flag="";
+    $(function () {
+        $('#voucherType').combobox({
+            url:'/codeSelect/unlimited?type=voucherType',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#yearMonth').combobox({
+            url:'/codeSelect/group?type=yearMonthGroup',
+            method:'GET',
+            valueField:'value',
+            textField:'text',
+            groupField:'group',
+            onLoadSuccess:function () {
+                var data = $('#yearMonth').combobox('getData');
+                for (var i=0;i<data.length;i++) {
+                    if (data[i].group == '已结转') {
+                        if (i!=0) {
+                            $('#yearMonth').combobox('setValue',data[i-1].value);
+                        }
+                        searchF();
+                        break;
+                    } else if (i==data.length-1) {
+                        $('#yearMonth').combobox('setValue',data[i].value);
+                        searchF();
+                    }
+                }
+            },
+            onChange:function(newValue,oldValue){
+                if(newValue!=null&&newValue!=""&&newValue!=undefined){
+                    $('#voucherNoStart').textbox({
+                        disabled: false
+                    });
+                    $('#voucherNoEnd').textbox({
+                        disabled: false
+                    });
+                }else{
+                    $('#voucherNoStart').textbox({
+                        disabled: true
+                    });
+                    $('#voucherNoEnd').textbox({
+                        disabled: true
+                    });
+                }
+            }
+        });
+        $('#voucherFlag').combobox({
+            url:'/codeSelect/unlimited?type=voucherFlag',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#specialNameP').combobox({
+            url:'/codeSelect?type=initAccount',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        //日期校验
+        $('#voucherDateStart').datebox({
+            onSelect:function(record){
+                var start=$('#voucherDateStart').datebox('getValue');
+                var end=$('#voucherDateEnd').datebox('getValue');
+                if(start>end&&end!=null&&end!=""){
+                    $.messager.alert("提示","开始日期不能大于结束日期！","info");
+                    $('#voucherDateStart').datebox('setValue','');
+                }
+            }
+        })
+        $('#voucherDateEnd').datebox({
+            onSelect:function(record){
+                var start=$('#voucherDateStart').datebox('getValue');
+                var end=$('#voucherDateEnd').datebox('getValue');
+                if(start>end&&end!=null&&end!=""){
+                    $.messager.alert("提示","结束日期不能小于开始日期！","info");
+                    $('#voucherDateEnd').datebox('setValue','');
+                }
+            }
+        })
+        //凭证号校验
+        $('#voucherNoStart').textbox({
+            onChange:function(newValue, oldValue){
+                var start=$('#voucherNoStart').textbox('getValue');
+                var end=$('#voucherNoEnd').textbox('getValue');
+                if(end!=null&&end!=""&&parseInt(start)>parseInt(end)){
+                    $.messager.alert("提示","开始凭证号不能大于结束凭证号！","info");
+                    $('#voucherNoStart').textbox('setValue','');
+                }
+            }
+        })
+        $('#voucherNoEnd').textbox({
+            onChange:function(newValue, oldValue){
+                var start=$('#voucherNoStart').textbox('getValue');
+                var end=$('#voucherNoEnd').textbox('getValue');
+                if(end!=null&&end!=""&&parseInt(start)>parseInt(end)){
+                    $.messager.alert("提示","结束凭证号不能小于开始凭证号！","info");
+                    $('#voucherNoEnd').textbox('setValue','');
+                }
+            }
+        })
+        //发生金额校验
+        $('#moneyStart').textbox({
+            onChange:function(newValue, oldValue){
+                var start=$('#moneyStart').textbox('getValue');
+                var end=$('#moneyEnd').textbox('getValue');
+                if(end!=null&&end!=""&&parseFloat(start)>parseFloat(end)){
+                    $.messager.alert("提示","开始金额不能大于结束金额！","info");
+                    $('#moneyStart').textbox('setValue','');
+                }
+            }
+        })
+        $('#moneyEnd').textbox({
+            onChange:function(newValue, oldValue){
+                var start=$('#moneyStart').textbox('getValue');
+                var end=$('#moneyEnd').textbox('getValue');
+                if(end!=null&&end!=""&&parseFloat(start)>parseFloat(end)){
+                    $.messager.alert("提示","结束金额不能小于开始金额！","info");
+                    $('#moneyEnd').textbox('setValue','');
+                }
+            }
+        })
+        $('#sg').datagrid({
+            /*url: '/vouchermanage/list',*/
+            striped: true,  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false,
+            method: 'post', //默认为 post
+            //pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。默认false
+            fitColumns: true,//设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            singleSelect: true,//设置为 true，则只允许选中一行。 默认false
+            checkOnSelect: true, //如果设置为 true，当用户点击某一行时，则会选中/取消选中复选框。
+            pagePosition: 'bottom', //定义分页栏的位置。可用的值有：'top'、'bottom'、'both'。 默认 bottom
+            //pageList: [10, 20, 30, 40, 50], //当设置了 pagination 属性时，初始化页面尺寸的选择列表。
+            height: 735,
+            nowrap: true,
+            columns: [
+                [
+                      {field: 'ck', checkbox: true, align: 'center'}
+                    , {field: 'voucherDate', title: '制单日期', width: '8%', align: 'center', sortable: 'true', order: 'asc'}
+                    , {field: 'voucherNo', title: '凭证号', width: '10%', align: 'center', formatter: function(value,row,index){
+                        if (value) {
+                            return "<span style='color: blue; cursor: pointer;' onclick='lookByVoucherNo("+index+")'>" + value + "</span>";
+                        }
+                        return value;
+                    }}
+                    , {field: 'remarkName', title: '摘要', width: '10%', align: 'center'}
+                    , {field: 'debit', title: '借方金额合计', width: '12%', align: 'right',halign: 'center' ,formatter:function (value,row,index) {
+                        return formatNumber(value*1, 2, 1);
+                    }}
+                    , {field: 'credit', title: '贷方金额合计', width: '12%', align: 'right', halign: 'center' ,formatter:function (value,row,index) {
+                        return formatNumber(value*1, 2, 1);
+                    }}
+                    , {field: 'createBy', title: '制单人', width: '8%', align: 'center'}
+                    , {field: 'approveBy', title: '复核人', width: '7%', align: 'center'}
+                    , {field: 'geneBy', title: '记账人', width: '8%', align: 'center'}
+                    , {field: 'voucherFlag', title: '凭证状态', width: '7%', align: 'center'}
+                    , {field: 'auxNumber', title: '附件张数', width: '7%', align: 'center'}
+                    , {field: 'approveDate', title: '审核日期', width: '10%', align: 'center'}
+                ]
+            ],
+            /*,toolbar: '#tbar'*/    //通过id选择器引用
+            toolbar: [{
+                text: '查看',
+                iconCls: 'e-icon fa fa-newspaper-o',
+                plain: true,
+                handler: lookVoucher
+            }, '-'
+            , {
+                text: '编辑',
+                iconCls: 'e-icon fa fa-pencil-square-o',
+                plain: true,
+                handler: editVoucher
+            },'-'
+            , {
+                text: '删除',
+                iconCls: 'e-icon fa fa-trash-o',
+                plain: true,
+                handler: deleteVoucher
+            },'-'
+            , {
+                text: '重新排序',
+                iconCls: 'e-icon fa fa-sort',
+                plain: true,
+                handler: rearrangement
+            }],
+            loadMsg: '加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        })
+
+        var subjectCodeReg=/^[0-9]*$/;
+        //如果同时存在双击监听，则此onChange监听要在双击之前初始化，否则可能会失效，暂未知
+        $('#itemCode1').textbox({
+            onChange:function (newValue, oldValue) {
+                if (newValue && subjectCodeReg.exec(newValue)) {
+                    $.ajax({
+                        type: 'post',
+                        url: '/subject/getSubjectCodeByNumCode',
+                        data: {'slashFlag': false, 'numberCode': newValue},
+                        async: true,
+                        success: function(result){
+                            if(result){ $('#itemCode1').textbox('setValue', result); }
+                        }
+                    });
+                }
+            }
+        });
+        //如果同时存在双击监听，则此onChange监听要在双击之前初始化，否则可能会失效，暂未知
+        $('#itemCode2').textbox({
+            onChange:function (newValue, oldValue) {
+                if (newValue && subjectCodeReg.exec(newValue)) {
+                    $.ajax({
+                        type: 'post',
+                        url: '/subject/getSubjectCodeByNumCode',
+                        data: {'slashFlag': false, 'numberCode': newValue},
+                        async: true,
+                        success: function(result){
+                            if(result){ $('#itemCode2').textbox('setValue', result); }
+                        }
+                    });
+                }
+            }
+        });
+
+        //搜索框双击tree选择
+        $("input",$("#itemCode1").next("span")).dblclick(function(){
+            flag=1;
+            subjectTree($('#itemCode1').textbox('getText'));
+        });
+        $("input",$("#itemCode2").next("span")).dblclick(function(){
+            flag=2;
+            subjectTree($('#itemCode2').textbox('getText'));
+        });
+    });
+    function subjectTree(code){
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        $('#subjectTree').tree({
+            url:'/vouchermanage/super?code='+encodeURI(code)+'&onlyLastStage=N',
+            onSelect: function (node) {
+                var cknodes = $('#subjectTree').tree("getChecked");
+                for (var i = 0; i < cknodes.length; i++) {
+                    if (cknodes[i].id != node.id) {
+                        $('#subjectTree').tree("uncheck", cknodes[i].target);
+                    }
+                }
+                if (node.checked) {
+                    $('#subjectTree').tree('uncheck', node.target);
+                } else {
+                    $('#subjectTree').tree('check', node.target);
+                }
+            },
+            onDblClick: function (node) {
+                saveSuperSubject();
+            },
+            onLoadSuccess: function (node, data) {
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                if (flag == '1') {
+                    $('#subjectGrid').dialog('open').dialog('setTitle','科目代码');
+                } else if (flag == '2') {
+                    $('#subjectGrid').dialog('open').dialog('setTitle','对方科目代码');
+                }
+                $(this).find('span.tree-checkbox').unbind().click(function () {
+                    $('#subjectTree').tree('select', $(this).parent());
+                    return false;
+                });
+            }
+        });
+    }
+    function saveSuperSubject(){
+        var superCode="";
+        var nodes = $('#subjectTree').tree('getChecked');//获取选中科目信息
+        if (nodes.length>0){
+            var parent1= $('#subjectTree').tree('getParent',nodes[0].target);
+            if(parent1==null){
+                superCode = nodes[0].id+"/";
+                $.messager.alert('提示','请重新选择，不允许选择科目分类','warning');
+                return false;
+            }else{
+                var parent2= $('#subjectTree').tree('getParent',parent1.target);
+                if(parent2==null){
+                    superCode = parent1.id+"/"+nodes[0].id+"/";
+                }else{
+                    var parent3= $('#subjectTree').tree('getParent',parent2.target);
+                    if(parent3==null){
+                        superCode = parent2.id+"/"+parent1.id+"/"+nodes[0].id+"/";
+                    }else{
+                        var parent4= $('#subjectTree').tree('getParent',parent3.target);
+                        if(parent4==null){
+                            superCode = parent3.id+"/"+parent2.id+"/"+parent1.id+"/"+nodes[0].id+"/";
+                        }else{
+                            var parent5= $('#subjectTree').tree('getParent',parent4.target);
+                            if(parent5==null){
+                                superCode = parent4.id+"/"+parent3.id+"/"+parent2.id+"/"+parent1.id+"/"+nodes[0].id+"/";
+                            }else {
+                                var parent6= $('#subjectTree').tree('getParent',parent5.target);
+                                if(parent6==null){
+                                    superCode = parent5.id+"/"+parent4.id+"/"+parent3.id+"/"+parent2.id+"/"+parent1.id+"/"+nodes[0].id+"/";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            /* for(var obj in nodes){
+                 superCode += nodes[obj].id+"/";
+             }*/
+            //去除一级（科目分类：资产、负债、权益、损益）
+            var superCodeArr = superCode.split("/");
+            if (superCodeArr.length>2) {//最后一个是空的，因此为2
+                superCode = superCode.substring(superCode.indexOf("/")+1);
+                //$('#subjectTypeIn').combobox('setValue',superCodeArr[0])
+            }
+            superCode = superCode.substring(0,superCode.length-1)
+            //console.log(superCode);
+
+            if(flag==1){
+                $('#itemCode1').textbox('setValue',superCode);
+            }else{
+                $('#itemCode2').textbox('setValue',superCode);
+            }
+
+        } else {
+            if(flag==1){
+                $('#itemCode1').textbox('setValue',"");
+            }else{
+                $('#itemCode2').textbox('setValue',"");
+            }
+        }
+
+        $('#subjectGrid').dialog('close');
+    }
+
+    //查询
+    function searchF() {
+        var params = {};
+        $('#searchForm').find('input').each(function(){
+            var obj = $(this);
+            var name = obj.attr('name');
+            if(name){
+                params[name] = obj.val();
+            }
+        });
+        $('#sg').datagrid({
+            url:'/vouchermanage/list',
+            queryParams:params
+        });
+    }
+    //重置
+    function reset() {
+        $('#searchForm').form('clear');
+        $('#voucherNoStart').textbox({disabled: true});
+        $('#voucherNoEnd').textbox({disabled: true});
+
+        var data = $('#yearMonth').combobox('getData');
+        for (var i=0;i<data.length;i++) {
+            if (data[i].group == '已结转') {
+                if (i!=0) {
+                    $('#yearMonth').combobox('setValue',data[i-1].value);
+                    break;
+                }
+            } else if (i==data.length-1) {
+                $('#yearMonth').combobox('setValue',data[i].value);
+            }
+        }
+    }
+
+    //导出
+    function exported(xlsName) {
+        var result = prepareParam(xlsName);
+        if (result == "false") {
+            return false;
+        }
+       //console.log(result);
+        //使用参数执行一次查询，且将查询数据导出
+        jsutil.core.download(
+            'vouchermanagedownload',
+            result);
+    }
+
+    function prepareParam(xlsName) {
+        var param ={
+            name:xlsName,
+            queryConditions :{},
+            cols:certificatemanageExportXls
+        }
+        var grid = $("#sg");
+        var datas = grid.datagrid("getRows");
+        if (datas.length > 0) {
+            //查询之前验证
+            $('#searchForm').find('input').each(
+                function() {
+                    var obj = $(this);
+                    var name = obj.attr('name');
+                    if (name) {
+                        param.queryConditions[name] = obj.val();
+                    }
+                });
+            return param;
+        } else {
+            $.messager.alert("提示", "请先查询或者没有要导出的数据", "warning");
+            return "false";
+        }
+    }
+
+    function lookByVoucherNo(index) {
+        $('#sg').datagrid('selectRow', index);
+        lookVoucher();
+    }
+
+    function lookVoucher() {
+        var row = $('#sg').datagrid('getSelected');
+        if(row) {
+            //beforeOrAfter代表调用凭证详情页面的是凭证管理界面
+            addTab(row.voucherNo+'查看', '/voucher/look?voucherNo='+row.voucherNo+'&yearMonth='+row.yearMonthDate+'&specialNameP='+$('#specialNameP').combobox('getValue')+'&type='+'beforeOrAfter');
+        }else{
+            $.messager.alert('提示','请先选择凭证！','warning'); return false;
+        }
+    }
+    function editVoucher() {
+        var row = $('#sg').datagrid('getSelected');
+        if(row) {
+            //CM代表调用凭证详情页面的是凭证管理(CertificateManage)
+            if(row.voucherFlag == '未复核'){
+                var r;
+                if(row.generateWay == 1 ){
+                    if(row.voucherType == 5 || row.voucherType == 6){
+                        /*$.messager.alert('提示','此凭证为<span style="color: red;">系统对接</span>凭证,不可进行修改！','warning'); return false;*/
+                        $.messager.confirm('提示','此凭证为<span style="color: red;">系统对接</span>凭证,确认修改？',function (r) {
+                            if(r)   addTab(row.voucherNo + '编辑', '/voucher/autoedit?voucherNo=' + row.voucherNo + '&yearMonth=' + row.yearMonthDate + '&specialNameP=' + $('#specialNameP').combobox('getValue'));
+                        });
+                    }else if(row.voucherType == 3){
+                        /*$.messager.alert('提示','此凭证为<span style="color: red;">固定资产自动生成</span>凭证,不可进行修改！','warning'); return false;*/
+                        $.messager.confirm('提示','此凭证为<span style="color: red;">固定资产自动生成</span>凭证,确认修改？',function (r) {
+                            if(r)   addTab(row.voucherNo + '编辑', '/voucher/autoedit?voucherNo=' + row.voucherNo + '&yearMonth=' + row.yearMonthDate + '&specialNameP=' + $('#specialNameP').combobox('getValue'));
+                        });
+                    }else if(row.voucherType == 4){
+                        /*$.messager.alert('提示','此凭证为<span style="color: red;">无形资产自动生成</span>凭证,不可进行修改！','warning'); return false;*/
+                        $.messager.confirm('提示','此凭证为<span style="color: red;">无形资产自动生成</span>凭证,确认修改？',function (r) {
+                            if(r)   addTab(row.voucherNo + '编辑', '/voucher/autoedit?voucherNo=' + row.voucherNo + '&yearMonth=' + row.yearMonthDate + '&specialNameP=' + $('#specialNameP').combobox('getValue'));
+                        });
+                    }else if(row.voucherType == 1){
+                        /*$.messager.alert('提示','此凭证为<span style="color: red;">决算自动生成</span>凭证,不可进行修改！','warning'); return false;*/
+                        $.messager.confirm('提示','此凭证为<span style="color: red;">决算自动生成</span>凭证,确认修改？',function (r) {
+                            if(r)   addTab(row.voucherNo + '编辑', '/voucher/autoedit?voucherNo=' + row.voucherNo + '&yearMonth=' + row.yearMonthDate + '&specialNameP=' + $('#specialNameP').combobox('getValue'));
+                        });
+                    }else if(row.voucherType == 7){
+                        /*$.messager.alert('提示','此凭证为<span style="color: red;">费用分摊</span>凭证,不可进行修改！','warning'); return false;*/
+                        $.messager.confirm('提示','此凭证为<span style="color: red;">费用分摊</span>凭证,确认修改？',function (r) {
+                            if(r)   addTab(row.voucherNo + '编辑', '/voucher/autoedit?voucherNo=' + row.voucherNo + '&yearMonth=' + row.yearMonthDate + '&specialNameP=' + $('#specialNameP').combobox('getValue'));
+                        });
+                    }else if(row.voucherType == 8){
+                        /*$.messager.alert('提示','此凭证为<span style="color: red;">损益分摊</span>凭证,不可进行修改！','warning'); return false;*/
+                        $.messager.confirm('提示','此凭证为<span style="color: red;">损益分摊</span>凭证,确认修改？',function (r) {
+                            if(r)   addTab(row.voucherNo + '编辑', '/voucher/autoedit?voucherNo=' + row.voucherNo + '&yearMonth=' + row.yearMonthDate + '&specialNameP=' + $('#specialNameP').combobox('getValue'));
+                        });
+                    }else {
+                        addTab(row.voucherNo + '编辑', '/voucher/edit?voucherNo=' + row.voucherNo + '&yearMonth=' + row.yearMonthDate + '&specialNameP=' + $('#specialNameP').combobox('getValue'));
+                    }
+                }else{
+                    addTab(row.voucherNo + '编辑', '/voucher/edit?voucherNo=' + row.voucherNo + '&yearMonth=' + row.yearMonthDate + '&specialNameP=' + $('#specialNameP').combobox('getValue'));
+                }
+
+            }else if (row.voucherFlag == '已复核') {
+                $.messager.alert('提示','该凭证已复核，不可进行修改！','warning'); return false;
+            }else{
+                $.messager.alert('提示','该凭证已记账，不可进行修改！','warning'); return false;
+            }
+        }else{
+            $.messager.alert('提示','请先选择凭证！','warning'); return false;
+        }
+    }
+    function deleteVoucher() {
+        var row = $('#sg').datagrid('getSelected');
+        if(row) {
+            if(row.voucherFlag == '未复核'){
+                var value = '';
+                if(row.generateWay == 1 ){
+                    if(row.voucherType == 5 || row.voucherType == 6){
+                        value = '此凭证为<span style="color: red;">系统对接</span>凭证。';
+                    }else if(row.voucherType == 3){
+                        value = '此凭证为<span style="color: red;">固定资产自动生成</span>凭证。';
+                    }else if(row.voucherType == 4){
+                        value = '此凭证为<span style="color: red;">无形资产自动生成</span>凭证。';
+                    }else if(row.voucherType == 1){
+                        value = '此凭证为<span style="color: red;">决算自动生成</span>凭证。';
+                    }else if(row.voucherType == 7){
+                        value = '此凭证为<span style="color: red;">费用分摊</span>凭证。';
+                    }else if(row.voucherType == 8){
+                        value = '此凭证为<span style="color: red;">损益分摊</span>凭证。';
+                    }
+                }
+                if (value) {
+                    $.messager.alert('提示',value+'不可删除！','warning'); return false;
+                    /*$.messager.confirm('提示','确认删除编号为:'+row.voucherNo+'的凭证？<br/>'+value,function(r){
+                        if (r) {
+                            deleteVoucherExecute(row);
+                        }
+                    });*/
+                } else {
+                    $.messager.confirm('提示','确认删除编号为:'+row.voucherNo+'的凭证？',function(r){
+                        if (r) {
+                            deleteVoucherExecute(row);
+                        }
+                    });
+                }
+            }else if (row.voucherFlag == '已复核') {
+                $.messager.alert('提示','该凭证已复核，不可删除！','warning'); return false;
+            }else{
+                $.messager.alert('提示','该凭证已记账，不可删除！','warning'); return false;
+            }
+        }else{
+            $.messager.alert('提示','请先选择凭证！','warning'); return false;
+        }
+    }
+
+    function deleteVoucherExecute(row) {
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        $.ajax({
+            url:'/vouchermanage/delete?',
+            type:'post',
+            data:{
+                voucherNo:row.voucherNo,
+                yearMonth:row.yearMonthDate
+            },
+            dataType:'json',
+            success:function(result){
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                if(result.success){
+                    $.messager.show({title: "提示", msg: '已删除编号为:'+row.voucherNo+'的凭证！'});
+                    $('#sg').datagrid('reload');
+                } else {
+                    $.messager.alert('提示',result.errorMsg);
+                }
+            }
+        });
+    }
+
+    function rearrangement() {
+        var ymd = $('#yearMonth').combobox('getValue');
+        if (ymd) {
+            $.messager.confirm('提示','确认对 <span style="color: red;">'+ymd+'</span> 期间的凭证进行<span style="color: red;">重排</span>？',function(r){
+                if (r) {
+                    $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+                    $.ajax({
+                        url:'/vouchermanage/rearrangement',
+                        type:'post',
+                        data:{
+                            yearMonth:ymd
+                        },
+                        dataType:'json',
+                        success:function(result){
+                            $('#waitMenu').dialog('close');//关闭等待窗口
+                            if(result.success){
+                                $.messager.show({title: "提示", msg: '已完成 '+ymd+' 期间凭证的重排！'});
+                                $('#sg').datagrid('reload');
+                            } else {
+                                $.messager.alert('提示',result.errorMsg);
+                            }
+                        }
+                    });
+                }
+            });
+        } else {
+            $.messager.alert('提示','请先选择会计期间！');
+        }
+    }
+
+    function addTab(subtitle, url) {
+        if (!parent.$('#tabs').tabs('exists', subtitle)) {
+            parent.$('#tabs').tabs(
+                'add',
+                {
+                    title: subtitle,
+                    content: createFrame(url),
+                    closable: true,
+                    width: parent.$('#mainPanle').width() - 10,
+                    height: parent.$('#mainPanle').height() - 26
+                });
+        } else {
+            parent.$('#tabs').tabs('select', subtitle);
+        }
+    }
+
+    function createFrame(url) {
+        var s = '<iframe name="mainFrame" fit="true" scrolling="auto" frameborder="0"  overflow-y:"hidden" src="'
+            + url + '" style="width:100%;height:100%;"></iframe>';
+        return s;
+    }
+
+    //等待
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+    var ii = 2;
+    function showalert() {
+        var text = "";
+        var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+    function onClose() {
+        clearInterval(loading);
+    }
+</script>
+</body>
+</html>

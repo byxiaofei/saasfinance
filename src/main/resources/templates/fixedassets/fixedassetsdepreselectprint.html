@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('固定资产登记信息打印','/css/datagridcell_text-overflow_ellipsis.css','')">
+</head>
+<body>
+<div align="center">
+    <div class="easyui-panel" style="height: auto; width:90%; text-align: center; padding: 0px 0px 0px 0px;overflow: hidden;">
+        <!-- 从controller传来的参数 -->
+        <div id="searchForm">
+            <!--<span id="codeType" style="display:none" th:text="${map.codeType}"></span>
+            <span id="assetType" style="display:none" th:text="${map.assetType}"></span>
+            <span id="assetTypeName" style="display:none" th:text="${map.assetTypeName}"></span>
+            <span id="assetCode" style="display:none" th:text="${map.assetCode}"></span>
+            <span id="cardCode" style="display:none" th:text="${map.cardCode}"></span>
+            <span id="assetName" style="display:none" th:text="${map.assetName}"></span>-->
+            <span id="map" style="display:none" th:text="${map}"></span>
+            <span id="currentManageBranchName" style="display:none" th:text="${session.currentUser.currentManageBranchName}"></span>
+          <span id="operationUser" th:text="${session.currentUser.userName}" hidden></span>
+        </div>
+        <div id="originalDiv" hidden>
+            <!-- 表头 -->
+            <table id="dg1" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+                <tr>
+                    <td style="width:100%;text-align: center;" ><label>固定资产卡片台账查询结果</label></td>
+                </tr>
+            </table>
+            <!--  数据列表 -->
+            <table id = "dg" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+
+            </table>
+                <!-- 表尾 -->
+            <table id = "dg2" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+                <tr>
+                    <td style="width:100%;text-align: center;" >
+                        <label>共条数据：</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: center;">
+                        <a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()"  data-options="iconCls:'e-icon fa fa-print'" style="width:15%;">打印</a>
+                        <!--<a href="javascript:void(0)" class="easyui-linkbutton" onclick="closeF()"  data-options="iconCls:'e-icon fa fa-close'" style="width:10%;">关闭</a>-->
+                    </td>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <!-- 用于打印的 --><!-- 多加一层，防止局部渲染导致区域之外的数据失效 -->
+        <div>
+            <div id="printDiv"></div>
+        </div>
+        <table id="TableFooter" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+            <tr>
+                <td colspan="6" style="text-align: center;">
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()" data-options="iconCls:'e-icon fa fa-print'" style="width:10%;">打印</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    </div>
+</div>
+    <!-- 等待提示框 -->
+    <div id="waitMenu" class="easyui-dialog" style="width: 300px; height: 100px; padding: 10px 20px;" closed="true" align="center" data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+        <div id="msg"></div>
+    </div>
+</body>
+<script th:src="@{/js/updataEasyUIDataGridTableStyle.js}"></script>
+<script>
+    $(function () {
+       searchF();
+    });
+
+    //搜索数据
+    var centercode='';
+    function searchF() {
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+       /* var params = {};
+        $('#searchForm').find('span').each(function () {
+            var obj = $(this);
+            var name = obj.attr('id');
+            if (name) {
+                params[name] = obj.text();
+            }
+        });*/
+       var params=JSON.parse($('#map').text());
+       centercode=params.centerCode;
+        var url = '/fixedassetsdepreselect/getAssetdepremessageprint';
+        $.post(url, params, function (result) {
+            $('#waitMenu').dialog('close');//关闭等待窗口
+            if (result.length>0) {
+                creatPrintContent(result);
+            } else {
+                //无打印的凭证数据
+                $.messager.alert('提示','无相关打印数据','info');
+            }
+            $('#TableFooter').hide();
+        });
+
+    }
+
+    //等待
+    var loading;
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+    var ii = 2;
+    function showalert() {
+        var text = "";
+        var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+    function onClose() {
+        clearInterval(loading);
+    }
+    function creatPrintContent(result) {
+        //获得DIV
+        var parentDiv = $('#printDiv');
+        //获得dg数据
+        var rows = result;
+        //每页数据量
+        var pageRowNum = 17 ;
+        //得到分页数
+        var pages = Math.ceil(rows.length/pageRowNum);
+        var rowNow = 0;
+        for(var i=0;i<pages;i++){
+            //追加分页标志，供打印机识别
+            if (i!=0){
+                parentDiv.append('<div style="page-break-after:always">');
+            }
+            parentDiv.append(printTableHeader(i+1,pages));
+            parentDiv.append('<table id = "print_dg_' + i + '" cellspacing="0" cellpadding="0"  style="height: auto;border-collapse: collapse; width:100%; "></table>');//overflow: hidden;
+            //获取当前表格
+            var table = document.getElementById ("print_dg_"+i);
+            table.border = '1px solid #0094ff';
+            //添加表头行信息
+            addTableHeaderRowInfo(table.insertRow(0));
+            for(var k=0;k<pageRowNum;k++){
+                if(!rows[rowNow]){
+                    continue;
+                }
+                var row = table.insertRow(k+1);
+                addTableDataRowInfo(row,rows[rowNow]);
+
+                rowNow++;
+            }
+
+            if (i!=0){
+                parentDiv.append('</div>');
+            }
+            parentDiv.append(printTableFooter());
+        }
+        //parentDiv.append(printTableFooter(result));
+
+    }
+    function addTableHeaderRowInfo(row) {
+        row.style.height = '30px';
+        row.style.textAlign = 'center';
+        for (var i=0;i<9;i++) {
+            var cell = row.insertCell(i);
+            cellStylePadding(cell);
+            if (i==0) {
+                cellStyleWidth(cell, 1);
+                cell.innerHTML= "<td>卡片号</td>";
+            } else if (i==1) {
+                cellStyleWidth(cell, 2);
+                cell.innerHTML= "<td>固定资产名称</td>";
+            } else if (i==2) {
+                cellStyleWidth(cell, 3);
+                cell.innerHTML= "<td>数量</td>";
+            } else if(i==3) {
+                cellStyleWidth(cell, 4);
+                cell.innerHTML= "<td>启用日期</td>";
+            }else if(i==4) {
+                cellStyleWidth(cell, 5);
+                cell.innerHTML= "<td>使用部门</td>";
+            }else if(i==5) {
+                cellStyleWidth(cell, 6);
+                cell.innerHTML= "<td>规格说明</td>";
+            }else if(i==6) {
+                cellStyleWidth(cell, 7);
+                cell.innerHTML= "<td>原值</td>";
+            }else if(i==7) {
+                cellStyleWidth(cell, 8);
+                cell.innerHTML= "<td>累计折旧</td>";
+            }else if(i==8) {
+                cellStyleWidth(cell, 9);
+                cell.innerHTML= "<td>余额</td>";
+            }
+        }
+    }
+    /*function addTableNoDataRowInfo(row) {
+        row.style.height = '35px';
+        for (var i=0;i<8;i++) {
+            var cell = row.insertCell(i);
+            cell.innerHTML= "<td></td>";
+        }
+    }*/
+    function addTableDataRowInfo(row, data) {
+        console.log(data);
+        row.style.height = '35px';
+        for (var i=0;i<9;i++) {
+            var cell = row.insertCell(i);
+            cellStylePadding(cell);
+            if (i==0) {//年月
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 1);
+                cell.innerHTML = "<td>"+data.cardCode==''||data.cardCode==null?'':data.cardCode+"</td>";
+            } else if (i==1) {//原值
+                cellTextAlignLeft(cell);
+                cellStyleWidth(cell, 2);
+                cell.innerHTML = "<td>"+data.assetName==''||data.assetName==null?'':data.assetName+"</td>";
+            } else if (i==2) {//本月摊销月数
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 3);
+                var quantity=data.quantity==""||data.quantity==null?"":data.quantity;
+                cell.innerHTML= "<td>"+quantity+"</td>";
+            }else if(i==3) {//本月摊销
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 4);
+                var useStartDate=data.useStartDate==""||data.useStartDate==null?'':data.useStartDate;
+                cell.innerHTML= "<td>"+useStartDate+"</td>";
+            }else if(i==4) {//累计摊销月数
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 5);
+                cell.innerHTML= "<td>"+data.unitName==''||data.unitName==null?'':data.unitName+"</td>";
+            }else if(i==5) {//累计摊销
+                cellTextAlignCenter(cell);
+                cellStyleWidth(cell, 6);
+                cell.innerHTML= "<td>"+data.specification==''||data.specification==null?'':data.specification+"</td>";
+            }else if(i==6) {//净值
+                cellTextAlignRight(cell);
+                cellStyleWidth(cell, 7);
+                cell.innerHTML= "<td>"+data.assetOriginValue==''||data.assetOriginValue==null?'0.00':formate(data.assetOriginValue)+"</td>";
+            }else if(i==7) {//减值准备
+                cellTextAlignRight(cell);
+                cellStyleWidth(cell, 8);
+                cell.innerHTML= "<td>"+data.endDepreMoney==''||data.endDepreMoney==null?'0.00':formate(data.endDepreMoney)+"</td>";
+            }else if(i==8) {//减值准备
+                cellTextAlignRight(cell);
+                cellStyleWidth(cell, 9);
+                cell.innerHTML= "<td>"+data.money==''||data.money==null?'0.00':formate(data.money)+"</td>";
+            }
+        }
+    }
+    function cellStylePadding(cell) {
+        cell.style.padding = '2px';
+    }
+    function cellTextAlignRight(cell) {
+        cell.style.textAlign = 'right';
+    }
+    function cellTextAlignLeft(cell) {
+        cell.style.textAlign = 'left';
+    }
+    function cellTextAlignCenter(cell) {
+        cell.style.textAlign = 'center';
+    }
+    function cellStyleWidth(cell, type) {
+        //8,7,15,17,18,10,10,3,12
+        if (type==1) {
+            cell.style.width = '9%';//卡片编码
+        } else if (type==2) {
+            cell.style.width = '11%';//凭证号7
+        } else if (type==3 ) {
+            cell.style.width = '10%';//固定资产编码
+        }else if (type==4 ) {
+            cell.style.width = '9%';//固定资产类别
+        } else if (type==5) {
+            cell.style.width = '9%';//固定资产专项
+           // console.log("7");
+        } else if (type==6) {   // 9 9 9  9 9 10
+            cell.style.width = '9%';//固定资产名称
+        }else if (type==7) {
+            cell.style.width = '9%';//原值
+        }else if (type==8) {
+            cell.style.width = '9%';//净值
+        }else if (type==9) {
+            cell.style.width = '9%';//净值
+        }
+    }
+    function printTableHeader(pageNum,pages) {
+        var headerHtml = '<table style="height: auto; width:100%; padding: 0px 0px 0px 0px;overflow: hidden;background-color: #1e9fff"><div align="center"><span align="center" style="font-size:18px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bolder;">'+$(currentManageBranchName).text()+'</span></div></table>';//<span style="float: right">'+JSON.stringify(pageNum)+'/'+JSON.stringify(pages)+'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br/>
+        var header=' <table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">\n' +
+            '            <div align="center">\n' +
+            '            <span align="center" style="font-size:20px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bolder">'+$(currentManageBranchName).text()+'</span>\n' +
+            '            <br/>\n' +
+            '            <span align="center" style="font-size:18px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bold"><span id="accsumName" style="font-size:20px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bold"></span>固定资产登记信息</span>\n' +
+            '          </div>\n' +
+            '        </table>'
+        +'<table cellpadding="3" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">\n' +
+            '            <tr>\n' +
+            '                <td style="text-align: left; padding-left: 10px"><label>核算单位：<span id="centerCode">'+centercode+'</span></label></td>\n' +
+            '                <td style="text-align: center; padding-right: 20px"><label><span id="yearMonth1"></span></label></td>\n' +
+            '                <td style="text-align: right; padding-right: 20px"><label>页码：<span id="pageNum">'+JSON.stringify(pageNum)+'</span></label></td>\n' +
+            '            </tr>\n' +
+            '        </table>';
+        return header;
+    }
+
+  /*  function printTableFooter(result) {
+        var num = result.length;
+
+       // var footer = '<table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"><tr><td style="width:10%;text-align: right;" ><label>财务主管：</label>'+$("#leader").text()+'</td><td style="width:10%;text-align: right;" ><label>操作员：</label></td><td style="width:13%;"><span name="operationUserPrint">'+$("#operationUser").text()+'</span></td><td style="width:10%;text-align: right;" ><label>打印日期：</label></td><td style="width:13%;"><span name="printDatePrint">'+getCurrentData()+'</span></td></tr></table>';
+
+       // var footer = '<div id="TableFooter"> <table style="height: auto; width:100%; padding: 0px 0px 0px 0px;overflow: hidden;"> <tr>  <td style="width:100%;text-align: center;" ><label>共'+JSON.stringify(num)+'条数据：</label></td></tr> <tr><td style="text-align: center;"><a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()"  data-options="iconCls:\'e-icon fa fa-print\'" style="width:10%;">打印</a></td></tr></table> </div>';
+        // var footer = ' <table id = "dg2" style="height: auto; width:100%; padding: 0px 0px 0px 0px;overflow: hidden;"> <tr>  <td style="width:100%;text-align: center;" ><label>共条数据：</label></td></tr> <tr><td style="text-align: center;"><a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()"  data-options="iconCls:\'e-icon fa fa-print\'" style="width:10%;">打印</a></td> </td></tr></table> ';
+       var footer='<div id="footerDiv" >\n' +
+           '        <table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">\n' +
+           '            <tr>\n' +
+           '                <td style="width:10%;text-align: left;" ><label>     财务主管：</label></td>\n' +
+         //  '                <td style="width:13%;"><span id="leader"></span></td>\n' +
+           '                <td style="width:10%;text-align: center;" ><label>操作员：'+$("#operationUser").text()+'</label></td>\n' +
+         //  '                <td style="width:13%;"><span id="operationUser">'+$("#operationUser").text()+'</span></td>\n' +
+           '                <td style="width:10%;text-align: right;" ><label>打印日期：'+getCurrentData()+'      </label></td>\n' +
+        //   '                <td style="width:13%;"><span id="printDate">'+getCurrentData()+'</span></td>\n' +
+           '            </tr>\n' +
+           '        </table>\n' +
+           '    </div>';
+        return footer;
+    }*/
+    function printTableFooter() {
+        //打印日期
+        var curr_time = new Date();
+        var footer = '<table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"><tr><td style="width:10%;text-align: right;" ><label>财务主管：</label></td> <td style="width:13%;"><span id="leader"></span></td> <td style="width:10%;text-align: right;" ><label>操作员：</label></td> <td style="width:13%;text-align: left;"><span id="operationUser" >'+$("#operationUser").text()+'</span></td> <td style="width:10%;text-align: right;" ><label>打印日期：</label></td> <td style="width:13%;text-align: left;"><span id="printDate">'+getCurrentData()+'</span></td></tr></table>';
+        return footer;
+    }
+    //打印
+    function printF() {
+        $('#TableFooter').hide();
+        window.print();
+        $('#TableFooter').show();
+    }
+    //关闭
+    function closeF() {
+        //关闭浏览器当前窗口
+        window.close();
+    }
+    function formate(data) {
+        if (data || (data+'')=='0') {
+            return formatNumber(data*1, 2, 1);
+        }
+        return data;
+    }
+</script>
+</html>

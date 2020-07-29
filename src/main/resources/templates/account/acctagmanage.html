@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('标注管理','','')">
+
+</head>
+<body>
+<div class="easyui-panel" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+    <!-- 筛选条件 -->
+    <form id="searchForm" method="post" style="margin-bottom: 0">
+        <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="width:8%;text-align: right;" >
+                    <label>标注编码:</label>
+                </td>
+                <td style="width:13%;">
+                    <input style="width:100%;" id="tagCode" name="tagCode" class="easyui-textbox" data-options="prompt: '标注编码'">
+                </td>
+                <td style="width:8%;text-align: right;" >
+                    <label>末级标志:</label>
+                </td>
+                <td style="width:13%;">
+                    <input style="width:100%;" id="endFlag"  name="endFlag" class="easyui-combobox" data-options="prompt: '末级标志'">
+                </td>
+
+                <td colspan="4" style="text-align: right; padding-right: 20px" >
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="searchF()"  data-options="iconCls:'e-icon fa fa-search'" style="width:12%;">查询</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="javascript:$('#searchForm').form('clear');" data-options="iconCls:'e-icon fa fa-refresh'" style="width:12%;">重置</a>
+
+                </td>
+            </tr>
+        </table>
+    </form>
+
+    <!--  数据列表 -->
+    <table id = "dg" style="height: auto; overflow-y: hidden;"></table>
+</div>
+<!--  新增弹框界面-->
+<div id="dlg" class="easyui-dialog" style="width: 600px; padding: 10px 20px" align="center"
+     data-options="title:'创建标注',modal:true,closed:true"  buttons="#dlg-buttons">
+    <form id="fm" method="post">
+        <table>
+            <tr>
+                <td style="text-align: right;"><label>标注编码<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input class="easyui-textbox" id="tagCodeX" name="tagCode" data-options="prompt:'标注编码',required:true,missingMessage:'请录入标注编码'">
+                </td>
+                <td style="text-align: right;"><label>标注名称<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input class="easyui-textbox" name="tagName" data-options="prompt:'标注名称',required:true,missingMessage:'请录入标注名称'">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>是否末级<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input class="easyui-combobox" type="text" id="n_endFlag" name="endFlag" data-options="prompt:'是否末级',required:true,missingMessage:'请选择'">
+                </td>
+                <td style="text-align: right;"><label>上级标注编码:</label></td>
+                <td>
+                    <input class="easyui-textbox" type="text" id="upperTag" name="upperTag" readonly="readonly">
+                </td>
+            </tr>
+        </table>
+        <input type='hidden' name="id" value="">
+        <input type='hidden' name="ntagCode" value="">
+        <input type='hidden' name="token" value="">
+    </form>
+
+    <div id="dlg-buttons">
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-floppy-o" onclick="save()">保存</a>
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-close" onclick="javascript:$('#dlg').dialog('close')">取消</a>
+    </div>
+</div>
+<!--加载树状标注代码-->
+<div id="tagGrid" class="easyui-dialog" style="width: 450px; top: 25%;padding:10px 10px 10px 10px;" data-options="modal:true,closed:true,resizable:false,collapsible:false,minimizable:false,maximizable:true" buttons="#tag-buttons">
+    <div class="easyui-panel" style="width: 100%;">
+        <ul id="tagTree" class="easyui-tree"  data-options="method:'get',animate:true,checkbox:true,cascadeCheck:false"></ul>
+    </div>
+    <div id="tag-buttons">
+        <a href="#" class="easyui-linkbutton" iconCls="icon-ok icon-large" onclick="getTagCode()">保存</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove icon-large" onclick="javascript:$('#tagGrid').dialog('close')">取消</a>
+
+    </div>
+</div>
+
+<div id="waitMenu" class="easyui-dialog"
+     style="width: 300px; height: 100px; padding: 10px 20px;" closed="true"
+     align="center"
+     data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+    <div id="msg"></div>
+</div>
+</body>
+<script>
+    $(function(){
+
+        $('#endFlag').combobox({
+            valueField:'value',
+            textField:'text',
+            url:'/codeSelect/unlimited?type=endflag',
+            method:'GET',
+            editable:false
+        });
+        $("input",$('#tagCode').next("span")).dblclick(function () {
+            var value = $('#tagCode').textbox('getValue');
+            $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+            $('#tagTree').tree({
+                url:'/accTagManage/tagcodelist?value='+value,
+                cascadeCheck:true,
+                onSelect:function (node) {
+                    var cknodes = $('#tagTree').tree("getChecked");
+
+                    if (node.checked){
+                        $('#tagTree').tree('uncheck',node.target);
+                    } else {
+                        $('#tagTree').tree('check',node.target());
+                    }
+                },
+                onLoadSuccess:function (node,data) {
+                    $('#waitMenu').dialog('close');//关闭等待窗口
+                    $('#tagGrid').dialog('open').dialog('setTitle','标注编码');
+                    $(this).find('span.tree-checkbox').unbind().click(function () {
+                       $('#tagTree').tree('select',$(this).parent());
+                       return false;
+                    });
+                }
+            });
+        });
+
+        searchF();
+    });
+
+    //获取树状下拉框中选中的专项代码
+    function getTagCode() {
+        var nodes = $('#tagTree').tree('getChecked');//获取选中的节点
+        if (nodes != null || nodes != undefined){
+            var nodeList = new Array();
+            var textList = new Array();
+            for (var i = 0;i<nodes.length;i++){
+                nodeList[i]=nodes[i].value;
+                textList[i]=nodes[i].text;
+            }
+            $('#tagCode').textbox('setValue',nodeList);
+        } else {
+            $('#tagCode').textbox('setValue','');
+        }
+        $('#tagGrid').dialog('close');
+    }
+    //搜索
+    function searchF(){
+        var params = {};
+        $('#searchForm').find('input').each(function(){
+            var obj = $(this);
+            var name = obj.attr('name');
+            if(name){
+                params[name] = obj.val();
+            }
+        });
+
+        $('#dg').datagrid({
+            url: '/accTagManage/list'
+            ,queryParams: params    //查询条件
+            ,striped: true  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false
+            //,method: 'get'  //默认为 post， 注意：使用get方式时， ie浏览器存在缓存问题，不推荐。
+            ,pagination: true //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。默认false
+            //,rownumbers: true //设置为 true，则显示带有行号的列。默认false
+            ,fitColumns: true //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            ,autoRowHeight: true //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能。
+            ,singleSelect: true //设置为 true，则只允许选中一行。 默认false
+            ,checkOnSelect: true //如果设置为 true，当用户点击某一行时，则会选中/取消选中复选框。
+            ,pagePosition: 'bottom' //定义分页栏的位置。可用的值有：'top'、'bottom'、'both'。 默认 bottom
+            ,pageList: [10,20,30,40,50] //当设置了 pagination 属性时，初始化页面尺寸的选择列表。
+            ,nowrap: true
+            ,columns: [
+                [
+                    {field:'',checkbox: true ,align:'center'}
+                    ,{field:'tagCode',title:'标注编码',width:'20%',align:'left',halign:'center'}
+                    ,{field:'tagName',title:'标注名称',width:'30%',align:'center'}
+                    ,{field:'endFlag',title:'末级标注',width:'10%',align:'center', formatter: function (value, row, index) {
+                        if(value == 1){
+                            return '非末级';
+                        }else{
+                            return '末级';
+                        }
+                    }}
+                    ,{field:'upperTag',title:'上级标注',width:'15%',align:'left',halign:'center'}
+                    ,{field:'id',title:'操作',width:'24%',align:'center',  formatter: function(value,row,index){
+                        //格式：双引号必须在外，单双引号保持一致。不然脚本执行异常
+                        //var btn = "<button class='sino-btn  sino-btn-xs' onclick='newTag(\""+ row.tagCode +"\")'>新增下级</button>&nbsp;&nbsp;<button class='sino-btn  sino-btn-xs' onclick='edit("+ JSON.stringify(row) +")'>编辑</button>";
+                        var add = "";
+                        var edit = "";
+                        var del = "";
+                        if (row.endFlag == 0) {
+                            add = "<button class='sino-btn sino-btn-disabled sino-btn-xs' disabled='disabled'>新增下级</button>";
+                        } else {
+                            add = "<button class='sino-btn  sino-btn-xs' onclick='newTag(\""+ row.tagCode +"\")'>新增下级</button>";
+                        }
+                        if (row.existLowerOrUse == 'Y') {
+                            edit = "<button class='sino-btn sino-btn-disabled sino-btn-xs' disabled='disabled'>编辑</button>";
+                            del = '<button class="sino-btn sino-btn-disabled sino-btn-xs" disabled="disabled">删除</button>';
+                        } else {
+                            edit = "<button class='sino-btn  sino-btn-xs' onclick='edit("+ JSON.stringify(row) +")'>编辑</button>";
+                            del = "<button class='sino-btn sino-btn-danger sino-btn-xs' onclick='del("+JSON.stringify(row)+")'>删除</button>";
+                        }
+                        return add + '&nbsp;&nbsp;&nbsp;' + edit + '&nbsp;&nbsp;&nbsp;' + del;
+                    }}
+                    ,{field:'accBookType',title:'账套类型', hidden: true}
+                    ,{field:'accBookCode',title:'账套编码', hidden: true}
+                ]
+            ]
+            ,toolbar: [{
+                text: '新增'
+                ,iconCls: 'e-icon fa fa-plus'
+                ,plain: true
+                ,handler: function(){
+                    //获取token,防止表单重复提交
+                    /*jsutil.tool.refreshToken('',$('#fm').find('input[name="token"]'));
+                    $('#dlg').dialog('open').dialog('setTitle','创建标注');
+                    $('#fm').form('clear');
+                    $('#fm').find('input[name="id"]').val('000');
+
+                    $('#n_endFlag').combobox({
+                        valueField:'value',
+                        textField:'text',
+                        url:'/codeSelect?type=endflag',
+                        method:'GET',
+                        editable:false
+                    });
+
+                    url = "/accTagManage/add";*/
+
+                    newTag('noupper');
+
+                }
+            }
+            ]
+            ,loadMsg:'加载中...'  //当从远程站点加载数据时，显示的提示消息。
+            ,onLoadSuccess: function(data){
+                if(data.total<1) {
+                    $.messager.show({
+                        title:'消息提示',
+                        msg:'未查到匹配数据',
+                        timeout:5000,
+                        showType:'slide'
+                    });
+                }
+                //$('#dg').datagrid('resize');
+            }
+        });
+    }
+
+    function newTag(val) {
+
+        //获取token,防止表单重复提交
+        jsutil.tool.refreshToken('',$('#fm').find('input[name="token"]'));
+        $('#dlg').dialog('open').dialog('setTitle','创建标注');
+        $('#fm').form('clear');
+        $('#fm').find('input[name="id"]').val('000');
+
+        $('#n_endFlag').combobox({
+            valueField:'value',
+            textField:'text',
+            url:'/codeSelect?type=endflag',
+            method:'GET',
+            editable:false
+        });
+
+        if(val != "noupper"){
+            $('#upperTag').textbox('setValue', val);
+        }
+
+        url = "/accTagManage/add";
+    }
+
+    function edit(row) {
+
+        //获取token,防止表单重复提交
+        jsutil.tool.refreshToken('',$('#fm').find('input[name="token"]'));
+
+        $('#dlg').dialog('open').dialog('setTitle','编辑标注');
+        $('#fm').form('clear');  //clear 对 readonly有影响， clear 放在 readonly 后input显示为灰色；celar放在readonly之前无颜色变化，看不出只读
+
+        $('#n_endFlag').combobox({
+            valueField:'value',
+            textField:'text',
+            url:'/codeSelect?type=endflag',
+            method:'GET',
+            editable:false
+        });
+        $('#fm').form('load', row);
+        $('#fm').find('input[name="ntagCode"]').val(row.tagCode);
+        url = "/accTagManage/update"
+    }
+
+    // 创建标注
+    function save(){
+        //表单数据序列化  jquery的方法
+        if($('#fm').form('validate')){
+            //校验标注代码的规范性（前缀必须为上级编码）
+            var upperTag = $('#upperTag').textbox('getValue');
+            var tagCode = $('#tagCodeX').textbox('getText');
+
+            if (upperTag && (upperTag!=tagCode.substring(0,upperTag.length))) {
+                $.messager.alert('提示','请将上级标注编码作为标注编码的前缀','error');
+                return false;
+            }
+            $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+            var data = $('#fm').serialize();
+            $.ajax({
+                type: 'POST'  //默认值: "GET")。请求方式 ("POST" 或 "GET")， 默认为 "GET"。注意：其它 HTTP 请求方法，如 PUT 和 DELETE 也可以使用，但仅部分浏览器支持。
+                ,url: url
+                ,data: data //发送到服务器的数据。将自动转换为请求字符串格式。
+                ,dataType: 'json'
+                ,success: function(result){
+                    $('#waitMenu').dialog('close');//关闭等待窗口
+                    if(result.success){
+                        $.messager.alert('提示','操作成功！', 'info');
+                        $('#dlg').dialog('close');
+                        $('#dg').datagrid('reload');
+                    }else{
+                        $.messager.alert('提示',result.errorMsg,'error');
+                    }
+                }
+                ,error: function(xmlHttpRequest , msg){
+
+                }
+            });
+        }else{
+            return false;
+        }
+    }
+
+    /**
+     * 根据ID删除角色
+     * @param val 角色id
+     */
+    function del(row) {
+        $.messager.confirm('删除', '确认删除该标注吗?', function (r){
+          if (r){
+              $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+              $.ajax({
+                  type: 'POST'
+                  ,url: '/accTagManage/del/' + row.id
+                  ,dataType: 'json'
+                  ,success: function (result) {
+                      $('#waitMenu').dialog('close');//关闭等待窗口
+                      if(result.success){
+                          $.messager.alert('提示','操作成功！', 'info');
+                          $('#dg').datagrid('reload');
+                      }else{
+                          $.messager.alert('提示',result.errorMsg,'error');
+                      }
+                  }
+                  ,error: function (xmlHttpRequest , msg) {
+
+                  }
+              });
+          }
+        })
+
+    }
+
+    //等待
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+
+    var ii = 2;
+    function showalert() {
+        var text = "";
+        var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+
+    function onClose() {
+        clearInterval(loading);
+    }
+</script>
+</html>

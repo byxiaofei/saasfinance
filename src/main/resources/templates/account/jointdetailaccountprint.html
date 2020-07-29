@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('联查明细账打印','/css/datagridcell_text-overflow_ellipsis.css','')">
+</head>
+<body>
+<div id="panelDiv" align="center">
+    <div class="easyui-panel" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+        <span id="detaiDirectionIdx" style="display:none" th:text="${map.detaiDirectionIdx}"></span>
+        <span id="detaiItemName" style="display:none" th:text="${map.detaiItemName}"></span>
+        <span id="detaiYearMonth" style="display:none" th:text="${map.detaiYearMonth}"></span>
+        <span id="detaiEndDate" style="display:none" th:text="${map.detaiEndDate}"></span>
+        <span id="detaiSpecialNameP" style="display:none" th:text="${map.detaiSpecialNameP}"></span>
+        <span id="currentManageBranchName" style="display:none" th:text="${session.currentUser.currentManageBranchName}"></span>
+        <!-- 用于展示的 -->
+        <div id="searchDiv" >
+            <table id = "dg1" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+                <div align="center">
+                    <span align="center" style="font-size:18px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bolder" th:text="${session.currentUser.currentManageBranchName}"/>
+                    <br/>
+                    <span align="center" style="font-size:20px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bold">联查明细账</span>
+                </div>
+            </table>
+            <!-- 筛选条件 --><!-- 已隐藏，不可删 -->
+            <form id="searchForm" method="post" style="margin-bottom: 0" hidden>
+                <table cellpadding="6" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+                    <tr style="display: none">
+                        <td style="width:10%;text-align: right;" ><label>开始时间:</label></td>
+                        <td style="width:13%;">
+                            <input style="width:100%;" id="beginDate"  name="beginDate" class="easyui-combobox" data-options="readonly:true,prompt: '开始时间',editable: false">
+                        </td>
+                        <td style="width:10%;text-align: right;"></td>
+                        <td style="width:10%;text-align: right;" ><label>截止日期:</label></td>
+                        <td style="width:13%;">
+                            <input style="width:100%;" id="endDate"  name="endDate" class="easyui-datebox" data-options="readonly:true,prompt: '截止日期'">
+                        </td>
+                        <td style="width:10%;text-align: right;"></td>
+                    </tr>
+                </table>
+            </form>
+
+            <table cellpadding="2" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+                <tr>
+                    <td style="text-align: left; padding-left: 10px"><label>科目：<span id="itemName"></span><span>(</span><span id="directionIdx"></span><span>)</span></label></td>
+                    <td style="text-align: right; padding-right: 20px"><label>日期:<span id="dateText"></span></label></td>
+                </tr>
+            </table>
+
+            <!--  数据列表 -->
+
+            <table id = "dg" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;" ></table>
+
+            <table id = "dg2" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+                <tr>
+                    <td style="width:10%;text-align: right;" ><label>财务主管：</label></td>
+                    <td style="width:13%;"><span id="leader"></span></td>
+                    <td style="width:10%;text-align: right;" ><label>操作员：</label></td>
+                    <td style="width:13%;"><span id="operationUser" th:text="${session.currentUser.userName}"></span></td>
+                    <td style="width:10%;text-align: right;" ><label>打印日期：</label></td>
+                    <td style="width:13%;"><span id="printDate"></span></td>
+                </tr>
+                <tr>
+                    <td colspan="6" style="text-align: center;">
+                        <a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()" data-options="iconCls:'e-icon fa fa-print'" style="width:10%;">打印</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 用于打印的 --><!-- 多加一层，防止局部渲染导致区域之外的数据失效 -->
+        <div><div id="printDiv"></div></div>
+       <!-- <table id="printxf" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+            <tr>
+                <td colspan="6" style="text-align: center;">
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()" data-options="iconCls:'e-icon fa fa-print'" style="width:10%;">打印</a>
+                </td>
+            </tr>
+        </table>-->
+    </div>
+</div>
+</body>
+<script th:src="@{/js/updataEasyUIDataGridTableStyle.js}"></script>
+<script>
+    $(function(){
+        initData();
+        $('#dg').datagrid({
+            striped: true  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false
+            ,method: 'post'
+            ,fitColumns: true //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            ,singleSelect: true //设置为 true，则只允许选中一行。 默认false
+            ,nowrap: false
+            /**
+             * field: 列的字段名
+             * width: 列的宽度。如果未定义，则宽度会自动扩展以适应它的内容。没有定义宽度将会降低性能。
+             * align： 指示如何对齐该列的数据，可以用 'left'、'right'、'center'。 默认undefined
+             * halign：指示如何对齐该列的头部，可能的值：'left'、'right'、'center'。如果没有分配值，则头部对齐方式将与通过 'align' 属性定义的数据对齐方式一致。该属性自版本 1.3.2 起可用。
+             * sortable： 设置为 true，则允许该列被排序。
+             * order：默认的排序顺序，只能用 'asc' 或 'desc'。该属性自版本 1.3.2 起可用。
+             * resizable：设置为 true，则允许该列可调整尺寸。
+             * fixed: 设置为 true，则当 'fitColumns' 设置为 true 时放置调整宽度。
+             * hidden: 设置为 true，则隐藏该列。
+             * checkbox: 设置为 true，则显示复选框。复选框有固定宽度。
+             * formatter: 单元格的格式化函数，需要三个参数：value：字段的值。rowData：行的记录数据。rowIndex：行的索引。
+             */
+            ,columns: [
+                /*[
+                    {field:'...',"title":"&nbsp;&nbsp;科目："+$("#detaiItemName").text()+"("+$("#detaiDirectionIdx").text()+")","colspan":6,halign:'left'},
+                    {field:'...',"title":"日期："+$("#dateText").text()+"&nbsp;&nbsp;","colspan":4,halign:'right'}
+                ],*/
+                [
+                    {field:'voucherDate',title:'日期',width:'8%',halign:'center',align:'center'},
+                    {field:'voucherNo',title:'凭证号',width:'7%',halign:'center',align:'center'},
+                    {field:'remark',title:'摘要',width:'20%',halign:'center',align:'left'},
+                    {field:'unitPrice',title:'单价',width:'9%',halign:'center',align:'right'},
+                    {field:'amount',title:'数量',width:'10%',halign:'center',align:'right'},
+                    {field:'debitDest',title:'借方金额',width:'12%',halign:'center',align:'right',formatter: function(value,row,index){return formate(value);}},
+                    {field:'creditDest',title:'贷方金额',width:'12%',halign:'center',align:'right',formatter: function(value,row,index){return formate(value);}},
+                    {field:'balanceFX',title:'方向',width:'4%',halign:'center',align:'center'},
+                    {field:'balanceDest',title:'余额',width:'12%',halign:'center',align:'right',formatter: function(value,row,index){return formate(value);}},
+                    {field:'flag',title:'两清标志',width:'6%',halign:'center',align:'center'}
+                ]
+            ],
+            onClickRow: function (rowIndex, rowData) {
+                $(this).datagrid('unselectRow', rowIndex);
+            },
+            loadMsg:'加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        });
+
+        searchF();
+    });
+
+    //初始化页面数据
+    function initData() {
+        //科目名称
+        $("#itemName").html($("#detaiItemName").text());
+        $("#directionIdx").html($("#detaiDirectionIdx").text());
+        //开始时间、截止日期
+        var beginDate = $("#detaiYearMonth").text()
+        $('#beginDate').combobox('setValue',beginDate);
+        $('#beginDate').combobox('setText',beginDate.substring(0,4)+'.'+beginDate.substring(4));
+        $('#endDate').datebox('setValue',$("#detaiEndDate").text());
+        //日期
+        changeDateText();
+        //财务主管
+        $("#leader").html('');
+        //打印日期
+        var curr_time = new Date();
+        $("#printDate").html(myformatter(curr_time));
+    }
+
+    //修改日期
+    function changeDateText() {
+        var beginDate = $("#beginDate").combobox('getText');
+        var endDate = $("#endDate").datebox('getValue');
+        var dateText = '';
+        //判断结束日期是否小于开始日期
+        if(beginDate.substring(0,4) > endDate.substring(0,4)){
+            $.messager.alert('提示', '结束日期不能小于开始日期！', 'warning'); return false;
+        }else if(beginDate.substring(0,4) == endDate.substring(0,4)){
+            if(beginDate.substring(beginDate.length-2)=="JS")
+                beginDate = beginDate.substring(0,4)+".12";
+            if(beginDate.substring(5) > endDate.substring(5,7)){
+                $.messager.alert('提示', '结束日期不能小于开始日期！', 'warning'); return false;
+            }
+        }
+        if (beginDate.substring(beginDate.length-2)=="JS") {
+            beginDate = beginDate.substring(0, 4) + '.12.31';
+            //replace(/JS/g,".12.31");
+            if (!endDate) {
+                dateText = beginDate + $("#dateText").text().substring(10);
+            } else {
+                dateText = beginDate + '-' + endDate.substring(0, 4) + '.' + endDate.substring(5, 7) + '.' + endDate.substring(8, 10);
+            }
+        } else {
+            if (beginDate && !endDate && (beginDate.substring(beginDate.length-2)!="JS")) {
+                dateText = beginDate + $("#dateText").text().substring(10);
+            } else if (endDate && !beginDate) {
+                dateText = $("#dateText").text().substring(0, 11) + endDate.substring(0, 4) + '.' + endDate.substring(5, 7) + '.' + endDate.substring(8, 10);
+            } else if (beginDate && endDate && (beginDate.substring(beginDate.length-2)!="JS")) {
+                dateText = beginDate + '.01' + '-' + endDate.substring(0, 4) + '.' + endDate.substring(5, 7) + '.' + endDate.substring(8, 10);
+            }
+        }
+        $("#dateText").html(dateText);
+    }
+
+    //搜索
+    function searchF(){
+        var params = {};
+        params['yearMonth'] = $("#detaiYearMonth").text();//当前会计期间
+        params['beginDate'] = $("#beginDate").combobox('getValue');//开始时间
+        params['endDate'] = $("#endDate").datebox('getValue');//截止日期
+        params['directionIdx'] = $("#directionIdx").text();//科目方向段
+        params['specialNameP'] = $("#detaiSpecialNameP").text();//专项是否全称显示(0:否，1:是；可为空)
+        $("#dg").datagrid({
+            url: '/querydetailaccount/detailist',
+            queryParams: params,    //查询条件
+            onLoadSuccess: function(data){
+                if(data.total<=0) {
+                    $.messager.show({
+                        title: '提示'
+                        ,msg:'未查询到相关数据'
+                        ,showType:'slide'
+                    });
+                }else{
+                    var panel = $(this).datagrid('getPanel');
+                    //修改样式
+                    updata_easyUI_dataGrid_table_style(panel);
+                    //处理打印的Div区域
+                    creatPrintContent();
+                    //隐藏打印区域
+                    //$('#printDiv').hide();
+
+                    $('#searchDiv').hide();
+                    $('#printDiv').show();
+                }
+            }
+        });
+    }
+
+    //打印
+    function printF() {
+        $('#searchDiv').hide();
+        $('#printDiv').show();
+       // $('#printxf').show();
+        window.print();
+        $('#printDiv').hide();
+        $('#searchDiv').show();
+        /*$('.easyui-linkbutton').css({'display':'none'});
+        //打印当前网页
+        window.print();
+        //无论是打印还是取消打印，均自动关闭当前网页
+        window.close();*/
+    }
+
+    function creatPrintContent() {
+        //获得DIV
+        var parentDiv = $('#printDiv');
+        //获得dg数据
+        var rows = $('#dg').datagrid('getRows');
+        //每页数据量
+        var pageRowNum = 18;
+        //得到分页数
+        var pages = rows.length/pageRowNum;
+        //每页的开始行
+        var rowNum = 0;
+        for (var i=0;i<pages;i++) {
+            //追加分页标志
+            if (i!=0) {
+                parentDiv.append('<div style="page-break-after:always">');
+            }
+            parentDiv.append(printTableHeader());
+          /*  for (var j=0;j<pageRowNum;j++) {
+                if (rowNum < rows.length) {
+                    var row = rows[rowNum];*/
+                    parentDiv.append('<table id = "print_dg_'+i+'" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"></table>');
+              /*      rowNum += 1;
+                } else {
+                    break;
+                }
+            }*/
+            parentDiv.append(printTableFooter());
+            if (i!=0) {
+                parentDiv.append('</div>');
+            }
+        }
+
+        //局部渲染
+        $.parser.parse($('#printDiv').parent());
+        //打印区域赋值
+        setPrintContentValue(pageRowNum,pages);
+    }
+    function printTableHeader() {
+        var headerHtml = '<table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"><div align="center"><span align="center" style="font-size:18px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bolder">'+$('#currentManageBranchName').text()+'</span><br/><span align="center" style="font-size:20px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bold">联查明细账</span></div></table>' + '<table cellpadding="2" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0"><tr><td style="text-align: left; padding-left: 10px"><label>科目：<span>'+$("#detaiItemName").text()+'</span><span>(</span><span>'+$("#detaiDirectionIdx").text()+'</span><span>)</span></label></td><td style="text-align: right; padding-right: 20px"><label>日期:<span>'+$("#dateText").text()+'</span></label></td></tr></table>';
+        return headerHtml;
+    }
+    function printTableFooter() {
+        var footer = '<table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"><tr><td style="width:10%;text-align: right;" ><label>财务主管：</label></td><td style="width:13%;"><span name="leaderPrint">'+$("#leader").text()+'</span></td><td style="width:10%;text-align: right;" ><label>操作员：</label></td><td style="width:13%;"><span name="operationUserPrint">'+$("#operationUser").text()+'</span></td><td style="width:10%;text-align: right;" ><label>打印日期：</label></td><td style="width:13%;"><span name="printDatePrint">'+$("#printDate").text()+'</span></td></tr></table>';
+        return footer;
+    }
+    function setPrintContentValue(pageRowNum, pages) {
+        var rowNum = 0;
+        var rows = $('#dg').datagrid('getRows');
+        for (var i=0;i<pages;i++) {
+            //设置中心表格区域
+            $('#print_dg_'+i).datagrid({
+                striped: true
+                ,method: 'post'
+                ,fitColumns: true
+                ,singleSelect: true
+                ,nowrap: false
+                ,columns: [
+                    [
+                        {field:'voucherDate',title:'日期',width:'8%',halign:'center',align:'center'},
+                        {field:'voucherNo',title:'凭证号',width:'7%',halign:'center',align:'center'},
+                        {field:'remark',title:'摘要',width:'20%',halign:'center',align:'left'},
+                        {field:'unitPrice',title:'单价',width:'9%',halign:'center',align:'right'},
+                        {field:'amount',title:'数量',width:'10%',halign:'center',align:'right'},
+                        {field:'debitDest',title:'借方金额',width:'12%',halign:'center',align:'right',formatter: function(value,row,index){return formate(value);}},
+                        {field:'creditDest',title:'贷方金额',width:'12%',halign:'center',align:'right',formatter: function(value,row,index){return formate(value);}},
+                        {field:'balanceFX',title:'方向',width:'4%',halign:'center',align:'center'},
+                        {field:'balanceDest',title:'余额',width:'12%',halign:'center',align:'right',formatter: function(value,row,index){return formate(value);}},
+                        {field:'flag',title:'两清标志',width:'6%',halign:'center',align:'center'}
+                    ]
+                ]
+            });
+            for (var j=0;j<pageRowNum;j++) {
+                if (rowNum < rows.length) {
+                    $('#print_dg_'+i).datagrid('appendRow', rows[rowNum]);
+                    rowNum++;
+                } else {
+                    break;
+                }
+            }
+            //修改样式
+            var panel = $('#print_dg_'+i).datagrid('getPanel');
+            updata_easyUI_dataGrid_table_style(panel);
+        }
+    }
+
+    function appointPrintContent(doc) {
+        //这里可以自定义样式
+        //doc.write("<LINK rel="stylesheet" type="text/css" href="css/print.css">");
+        doc.write('<div>' + el.innerHTML + '</div>');
+    }
+
+    function myformatter(date){
+        var y = date.getFullYear();
+        var m = date.getMonth()+1;
+        var d = date.getDate();
+        return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+    }
+
+    function formate(data) {
+        if (data || (data+'')=='0') {
+            return formatNumber(data*1, 2, 1);
+        }
+        return data;
+    }
+</script>
+</html>

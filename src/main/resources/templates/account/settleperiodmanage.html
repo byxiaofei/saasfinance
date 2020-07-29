@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('结算期管理','','')">
+</head>
+<body>
+<!--搜索模块-->
+
+    <div class="easyui-panel"
+         style="height: auto; width:100%;padding: 8px 0px 0px 0px;overflow: hidden;">
+        <form id="serachFrom" method="post" style="margin-bottom:0;">
+            <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+                <tr>
+                    <td style="width:8%;text-align: right;" ><label>结算期范围:</label></td>
+                    <td  id="s" style="width:42%;text-align: left;">
+                        <input style="width:20%;" id="settlePeriod1" name="settlePeriod1" class="easyui-textbox" data-options="prompt: '开始年月'">&nbsp;--&nbsp;
+                        <input style="width:20%;" id="settlePeriod2" name="settlePeriod2" class="easyui-textbox" data-options="prompt: '结束年月'">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: right; padding-right: 20px;">
+                        <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-search'" style="width: 8%;" onclick="searchF()" >查询</a>
+                        <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-refresh'" style="width: 8%;" onclick="reset()">重置</a>
+                    </td>
+                </tr>
+            </table>
+        </form>
+
+        <!-- 展示搜索结果 -->
+        <table id = "sg"></table>
+    </div>
+<!--追加会计期间-->
+<div id="add"  class="easyui-dialog" style="width: 600px; padding: 10px 20px" align="center"
+     data-options="modal:true,closed:true,resizable:true,maximizable:true"  buttons="#dlg-buttons">
+    <form id="fm" method="post" style="margin-bottom: 0;">
+        <table cellpadding="5" style="width: 100%;overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="width:20%;text-align: right;" ><label>当前可追加的会计期间:</label></td>
+                <td style="width:20%;text-align: left;" ><label id="add_span"></label></td>
+            </tr>
+
+        </table>
+    </form>
+    <div id="dlg-buttons">
+        <a href="#" id="saveButton" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-check'" onclick="save()">确认</a>
+        <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-remove'" onclick="cancel()">取消</a>
+    </div>
+</div>
+
+<div id="waitMenu" class="easyui-dialog"
+     style="width: 300px; height: 100px; padding: 10px 20px;" closed="true"
+     align="center"
+     data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+    <div id="msg"></div>
+</div>
+<script type="text/javascript">
+    $(function () {
+        $('#sg').datagrid({
+            url: '/settleperiodmanage/list',
+            striped: true,  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false,
+            method: 'post', //默认为 post
+            // pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。默认false
+            fitColumns: true,//设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            singleSelect: true,//设置为 true，则只允许选中一行。 默认false
+            checkOnSelect: true, //如果设置为 true，当用户点击某一行时，则会选中/取消选中复选框。
+            pagePosition: 'bottom', //定义分页栏的位置。可用的值有：'top'、'bottom'、'both'。 默认 bottom
+            // pageList: [10, 20, 30, 40, 50], //当设置了 pagination 属性时，初始化页面尺寸的选择列表。
+            nowrap: true,
+            columns: [
+                [
+                    {field: '', checkbox: true, align: 'center'}
+                    , {field: 'yearMonthDate', title: '会计期间', width: '50%', align: 'center', sortable: 'true', order: 'asc'}
+                    , {field: 'accMonthStat', title: '状态', width: '25%', align: 'center'}
+                    , {field: 'createByName', title: '操作人', width: '24%', align: 'center'}
+                ]
+            ],
+            /*,toolbar: '#tbar'*/    //通过id选择器引用
+            toolbar: [{
+                text: '追加',
+                iconCls: 'e-icon fa fa-newspaper-o',
+                plain: true,
+                handler: addTo
+            }, '-'
+            , {
+                text: '结转',
+                iconCls: 'e-icon fa fa-mail-reply-all',
+                plain: true,
+                handler: settle
+            }, '-'
+            , {
+                text: '反结转',
+                iconCls: 'e-icon fa fa-mail-reply-all',
+                plain: true,
+                handler: unSettle
+            }],
+            loadMsg: '加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        })
+    })
+
+    var addInfo;//用于存放追加信息
+
+    //追加
+    function addTo() {
+        $.post('/settleperiodmanage/addTo',function(data){
+            $('#add').dialog('open').dialog('setTitle','追加会计期间');
+            if(data.yearMonthDate.indexOf("JS") != -1){
+                var yearMonthDate = parseInt(data.yearMonthDate.substring(0,4))+1 + "01";
+                $('#add_span').html(data.yearMonthDate +"、"+ yearMonthDate);
+            }else{
+                $('#add_span').html(data.yearMonthDate);
+            }
+            addInfo = data;
+        },'json')
+
+
+
+
+    }
+
+    //结转
+    function settle() {
+        var rows = $('#sg').datagrid('getSelections');
+        if(rows.length==0){$.messager.alert('消息提示','请选择要结转的会计期间!','warning');return ;}
+        if(rows[0].accMonthStat == "已结转"){
+            $.messager.alert('提示',rows[0].yearMonthDate+"为已结转状态，不允许进行重复结转！",'warning');
+            return;
+        }
+        if(rows[0].yearMonthDate.indexOf("JS") != -1){
+            $.messager.alert('提示',rows[0].yearMonthDate+"决算月，请在决算页面进行决算操作！",'warning');
+            return;
+        }
+        // var data =[{name:'yearMonthDate',value:rows[0].yearMonthDate }];
+        var data = rows[0];
+        $.messager.confirm('结转','确认要结转选中的会计期间吗?',function(r){
+            if (r){
+                $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+                $.post('/settleperiodmanage/settle',data,function(result){
+                    if (result.success){
+                        $('#waitMenu').dialog('close');//关闭等待窗口
+                                $('#sg').datagrid('reload');	// reload the user data
+                                $.messager.show({	// show error message
+                                    title: '提示',
+                                    msg: "操作成功"
+                                });
+                    } else {
+                        $('#waitMenu').dialog('close');
+                        $.messager.show({	// show error message
+                            title: '提示',
+                            msg: result.errorMsg
+                        });
+                    }
+                },'json');
+            }
+        })
+    }
+
+    //反结转
+    function unSettle() {
+        var rows = $('#sg').datagrid('getSelections');
+        if(rows.length==0){$.messager.alert('消息提示','请选择要反结转的会计期间!','warning');return ;}
+        if(rows[0].accMonthStat == "未结转"){
+            $.messager.alert('提示',rows[0].yearMonthDate+"已为未结转状态！",'warning');
+            return;
+        }
+        if(rows[0].yearMonthDate.indexOf("JS") != -1){
+            $.messager.alert('提示',rows[0].yearMonthDate+"决算月，请在决算页面进行反决算操作！",'warning');
+            return;
+        }
+        // var data =[{name:'yearMonthDate',value:rows[0].yearMonthDate }];
+        var data = rows[0];
+        $.messager.confirm('反结转','确认要反结转选中的会计期间吗?',function(r){
+            if (r){
+                $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+                $.post('/settleperiodmanage/unSettle',data,function(result){
+                    if (result.success){
+                        $('#waitMenu').dialog('close');//关闭等待窗口
+                        $('#sg').datagrid('reload');	// reload the user data
+                        $.messager.show({	// show error message
+                            title: '提示',
+                            msg: "操作成功"
+                        });
+                    } else {
+                        $('#waitMenu').dialog('close');
+                        $.messager.show({	// show error message
+                            title: '提示',
+                            msg: result.errorMsg
+                        });
+                    }
+                },'json');
+            }
+        })
+    }
+
+    //查询
+    function searchF() {
+        var params = {};
+        $('#serachFrom').find('input').each(function(){
+            var obj = $(this);
+            var name = obj.attr('name');
+            if(name){
+                params[name] = obj.val();
+            }
+        });
+        $('#sg').datagrid("load", params);
+    }
+
+    //重置
+    function reset() {
+        $('#serachFrom').form('clear');
+    }
+
+    //保存追加内容
+    function save() {
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        $.post('/settleperiodmanage/save',addInfo,function(result){
+            if (result.success){
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                $('#sg').datagrid('reload');	// reload the user data
+                $.messager.show({	// show error message
+                    title: '提示',
+                    msg: "操作成功"
+                });
+            } else {
+                $.messager.show({	// show error message
+                    title: '提示',
+                    msg: result.errorMsg
+                });
+            }
+        },'json');
+        $('#add').dialog('close');
+    }
+
+    //取消追加
+    function cancel() {
+        $('#add').dialog('close');
+    }
+    //等待
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+
+    var ii = 2;
+    function showalert() {
+        var text = "";
+        var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+
+    function onClose() {
+        clearInterval(loading);
+    }
+</script>
+</body>
+</html>

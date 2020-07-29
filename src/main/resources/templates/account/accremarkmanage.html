@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('摘要设置','','')">
+
+</head>
+<body>
+<!-- 搜索模块 -->
+
+<div class="easyui-panel"
+     style="height: auto; width:100%;padding: 8px 0px 0px 0px;overflow: hidden;">
+    <form id="searchFrom" method="post" style="margin-bottom:0;">
+        <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="width:8%;text-align: right;" >
+                    <label>摘要代码:</label>
+                </td>
+                <td style="width:13%;">
+                    <input style="width:100%;" id="RemarkCode" name="remarkCode" class="easyui-textbox" data-options="prompt: '摘要代码'">
+                </td>
+                <td style="width:10%;text-align: right;" >
+                    <label>摘要名称:</label>
+                </td>
+                <td style="width:13%;">
+                    <input style="width:100%;" id="RemarkName" name="remarkName" class="easyui-textbox" data-options="prompt: '摘要名称'">
+                </td>
+
+                <td colspan="4" style="text-align: right; padding-right: 20px;">
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-search'" style="width: 16%;" onclick="searchAcc()" >查询</a>
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-refresh'" style="width: 16%;" onclick="reset()">重置</a>
+                </td>
+            </tr>
+        </table>
+    </form>
+    <!-- 展示搜索结果 -->
+    <table id = "sg"></table>
+</div>
+
+<!-- 新增/编辑弹框 -->
+<div id="dlg"  class="easyui-dialog" style="width: 600px; padding: 10px 20px" align="center"
+     data-options="modal:true,closed:true,resizable:true,maximizable:true"  buttons="#dlg-buttons">
+    <form id="fm" method="post">
+        <table cellpadding="4" >
+
+            <tr>
+                <td style="text-align: right; width: 15%"><label>摘要代码<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd" style="width: 30%">
+                    <input  class="easyui-textbox" id="RemarkCode1" name="remarkCode" required="true" data-options="prompt:'摘要代码(最多4个字符)'">
+                </td>
+
+                <td style="text-align: right;width: 15%"><label>摘要名称<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd" style="width: 30%">
+                    <input class="easyui-textbox" id="RemarkName1" name="remarkName" required="true" data-options="prompt:'摘要名称'">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" ><label>科目代码<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd" >
+                    <input  class="easyui-textbox" id="ItemCode1" name="itemCode" required="true" editable="false" data-options="prompt:'科目代码'">
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>使用状态<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd" >
+                    <input  class="easyui-combobox" id="Flag1" name="flag" required="true" editable="false" data-options="prompt:'使用状态'">
+                </td>
+            </tr>
+            <tr id="ModifyFlag">
+                <td style="width:20%;  text-align: right;"><label>修改原因<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd"  style="width: 80%" colspan="3">
+                    <input class="easyui-textbox" id="ModifyReason1" name="modifyReason" style="width: 98%;height: 80px" multiline="true" data-options="prompt:'修改原因'">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:20%; text-align: right;"><label>备注</label></td>
+                <td class="ttd rtd" style="width: 80%" colspan="3">
+                    <input class="easyui-textbox" id="temp1" name="temp" style="width: 98%;height: 100px" multiline="true" data-options="prompt:'备注'">
+                </td>
+            </tr>
+        </table>
+        <input type='Hidden' name="springmvc.token" value="">
+
+    </form>
+
+    <div id="dlg-buttons">
+        <a href="#" id="saveButton" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-check'" onclick="saveAbstract()">保存</a>
+        <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-remove'" onclick="cancel()">取消</a>
+    </div>
+</div>
+<!--加载树状专项代码-->
+<div id="ItemGrid" class="easyui-dialog" style="width: 450px; top: 25%;padding:10px 10px 10px 10px;" data-options="modal:true,closed:true,resizable:false,collapsible:false,minimizable:false,maximizable:true" buttons="#item-buttons">
+    <div class="easyui-panel" style="width: 100%;height: 300px;">
+        <ul id="ItemTree" class="easyui-tree"  data-options="method:'get',animate:true,checkbox:true,onlyLeafCheck:true,cascadeCheck:false"></ul>
+    </div>
+    <div id="item-buttons">
+        <a href="#" class="easyui-linkbutton" iconCls="icon-ok icon-large" onclick="getItemCode()">保存</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove icon-large" onclick="javascript:$('#ItemGrid').dialog('close')">取消</a>
+
+    </div>
+</div>
+
+<div id="waitMenu" class="easyui-dialog"
+     style="width: 300px; height: 100px; padding: 10px 20px;" closed="true"
+     align="center"
+     data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+    <div id="msg"></div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        $('#sg').datagrid({
+            url: '/accremarkmanage/list',
+            striped: true,  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false,
+            method: 'post', //默认为 post
+            pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。默认false
+            fitColumns: true,//设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            singleSelect: true,//设置为 true，则只允许选中一行。 默认false
+            checkOnSelect: true, //如果设置为 true，当用户点击某一行时，则会选中/取消选中复选框。
+            pagePosition: 'bottom', //定义分页栏的位置。可用的值有：'top'、'bottom'、'both'。 默认 bottom
+            pageNumber:1,
+            pageList: [10, 20, 30, 40, 50], //当设置了 pagination 属性时，初始化页面尺寸的选择列表。
+            nowrap: true,
+            columns: [
+                [
+                    {field: '', checkbox: true, align: 'center'}
+                    , {field: 'remarkCode', title: '摘要代码', width: '14%', align: 'center', sortable: 'true', order: 'asc'}
+                    , {field: 'remarkName', title: '摘要名称', width: '15%', align: 'left', halign: 'center'}
+                    , {field: 'itemCode', title: '科目代码', width: '25%', align: 'left', halign: 'center'}
+                    , {field: 'itemName', title: '科目名称', width: '45%', align: 'left', halign: 'center'}
+                ]
+            ],
+            /*,toolbar: '#tbar'*/    //通过id选择器引用
+            toolbar: [{
+                    text: '新增',
+                    iconCls: 'e-icon fa fa-plus',
+                    plain: true,
+                    handler: addThat
+                }, '-'
+                , {
+                    text: '编辑',
+                    iconCls: 'e-icon fa fa-edit',
+                    plain: true,
+                    handler: editThat
+                }, '-'
+                , {
+                    text: '删除',
+                    iconCls: 'e-icon fa fa-remove',
+                    plain: true,
+                    handler: deleteThat
+                }],
+            loadMsg: '加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        });
+        //双击弹出树状下拉框窗口
+        $("input",$("#ItemCode1").next("span")).dblclick(function () {
+            //  $('#specialGrid').dialog('clear');
+            var value = $("#ItemCode1").textbox('getText');
+            $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+            $('#ItemTree').tree({
+                url:'/accremarkmanage/subjectList?value='+value,
+                onSelect:function (node) {
+                    var cknodes = $('#ItemTree').tree("getChecked");
+                    for (var i=0;i<cknodes.length;i++){
+                        if(cknodes[i].id != node.id){
+                            $('#ItemTree').tree('uncheck',cknodes[i].target);
+                        }
+                    }
+                    if(node.checked){
+                        $('#ItemTree').tree('uncheck',node.target);
+                    }else {
+                        $('#ItemTree').tree('check',node.target);
+                    }
+                },
+                onDblClick: function (node) {
+                    getItemCode();
+                },
+                onLoadSuccess:function (node,data) {
+                    $('#waitMenu').dialog('close');//关闭等待窗口
+                    $('#ItemGrid').dialog('open').dialog('setTitle','科目代码');
+                    $(this).find('span.tree-checkbox').unbind().click(function () {
+                        $('#ItemTree').tree('select',$(this).parent());
+                        return false;
+                    });
+                }
+            });
+        });
+        $('#RemarkCode').combobox({
+            valueField:'value',
+            textField:'text',
+            url: '/accremarkmanage/codelist?type=RemarkCode',
+            method:'GET'
+        })
+        $('#Flag1').combobox({
+            valueField:'value',
+            textField:'text',
+            url: '/codeSelect?type=useFlag',
+            method:'GET'
+        })
+    })
+    //获取树状下拉框中选中的专项代码
+    function getItemCode() {
+        //  var code = "" ;
+        var nodes = $('#ItemTree').tree('getChecked');//获取选中
+        //  code = nodes[0];
+        if (nodes.length!=0) {
+            console.log("code:"+nodes[0].sid);
+            $('#ItemCode1').textbox('setValue',nodes[0].sid);
+            $('#ItemGrid').dialog('close');
+        } else {
+            $('#ItemCode1').textbox('setValue',"");
+          //  $.messager.alert('提示','请重新选择，不允许选择非末级科目','warning');
+        }
+        $('#ItemGrid').dialog('close');
+    }
+
+
+    //重置
+function reset() {
+    $('#searchFrom').form('clear');
+}
+function cancel() {
+    $('#dlg').dialog('close');
+}
+//搜索
+function searchAcc() {
+    if ($('#searchFrom').form('validate')) {
+        var params = {};
+        $('#searchFrom').find('input').each(function(){
+            var obj = $(this);
+            var id =obj.attr('name');
+            if(id){
+                if(obj.val()!=""){
+                    params[id]=obj.val();
+                }
+            }
+        });
+        //使用参数执行一次查询
+        $("#sg").datagrid({
+            queryParams: params,
+            onLoadSuccess: function(data){
+                if(data.total<=0)
+                    $.messager.alert("提示","未查询到相关数据","info");
+            }
+        });
+    }
+}
+function addThat() {
+    $('#ModifyFlag').hide();
+    $('#ModifyReason1').textbox({required:false});
+    $('#dlg').dialog('open').dialog('setTitle','新增摘要');
+    $('#fm').form('clear');
+    url='/accremarkmanage/save';
+}
+function saveAbstract() {
+    if($('#fm').form('validate')) {
+        var remarkCode = $('#RemarkCode1').textbox('getValue');
+        if(remarkCode.length > 4){$.messager.alert('提示', '摘要代码长度不可超过4个字符！', 'warning'); return false;}
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        var data = $('#fm').serialize();
+        $.post(url, data, function (result) {
+            if (result.success) {
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                $.messager.alert('提示', '保存成功！', 'info');
+                $('#dlg').dialog('close');
+                $('#sg').datagrid('reload');
+            } else {
+                $.messager.alert('提示', result.errorMsg, 'error');
+            }
+        });
+    }else {
+       // $.messager.alert('提示', '请完整填写表单！', 'warning');
+        return false;
+    }
+}
+
+function editThat() {
+    var rows = $('#sg').datagrid('getSelections');
+    if(rows.length!=0) {
+        var row = $('#sg').datagrid('getSelected');
+        $('#ModifyReason1').textbox({required:true});
+        //先清空表格
+        $('#fm').form('clear');
+        //加载行数据
+        $('#fm').form('load',row);
+    }else{
+        $.messager.alert('提示','请先选择要编辑的摘要信息！','warning'); return false;
+    }
+    $('#ModifyFlag').show();
+    $('#ModifyReason1').textbox('setValue','');
+    $('#dlg').dialog('open').dialog('setTitle','编辑摘要');
+    url='/accremarkmanage/edit?id='+row.id;
+}
+
+function deleteThat() {
+    var rows = $('#sg').datagrid('getSelections');
+    if(rows.length!=0) {
+        $.messager.confirm('删除', '确认删除该摘要吗?', function (r){
+            if (r) {
+                $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+                var row = $('#sg').datagrid('getSelected');
+                $.ajax({
+                    url: '/accremarkmanage/delete?AccBookType='+row.accBookType+'&AccBookCode='+row.accBookCode+'&RemarkCode='+row.remarkCode,
+                    type: 'POST',  //提交方式
+                    async: false, //是否异步
+                    success: function (data) {//这是个回调函数  data表示从action中传过来的json数据
+                        //弹出从action层传过来的json格式的数据(用来显示是否更新成功)
+                        $('#waitMenu').dialog('close');//关闭等待窗口
+                        if(data.success){
+                            $('#sg').datagrid('reload');
+                            $.messager.alert('提示','删除成功！','info');
+                        }else{
+                            $.messager.alert('提示', data.errorMsg, 'error');
+                        }
+                    }
+                });
+            }
+        })
+
+    }else {
+        $.messager.alert('提示','请先选择要删除的摘要信息！','warning'); return false;
+    }
+}
+    //等待
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+    var ii = 2;
+    function showalert() {
+        var text = "";
+        var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+    function onClose() {
+        clearInterval(loading);
+    }
+</script>
+</body>
+</html>

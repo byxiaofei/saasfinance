@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('专项科目明细账','','')">
+
+</head>
+<body>
+
+<div class="easyui-panel" style="height: auto; width:100%;padding: 8px 0px 0px 0px;overflow: hidden;">
+    <form id="searchForm" method="post" style="margin-bottom:0;">
+        <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="width:12%;text-align: right;" ><label>科目代码:</label></td>
+                <td colspan="2">
+                    <input style="width:100%;" id="subjectCode" name="subjectCode" class="easyui-textbox" data-options="prompt: '科目代码'">
+                </td>
+                <td style="width:12%;text-align: right;" ><label>会计期间:</label></td>
+                <td style="width:18%;">
+                    <input style="width:42%;" id="yearMonth" name="yearMonth" class="easyui-combobox" data-options="prompt: '会计期间',required:true,editable:false">&nbsp;--&nbsp;
+                    <input style="width:42%;" id="yearMonthDate" name="yearMonthDate" class="easyui-combobox" data-options="prompt: '会计期间',required:true,editable:false">
+                </td>
+                <td style="width:12%;text-align: right;" ><label>包含未记账凭证:</label></td>
+                <td style="width:18%;">
+                    <input style="width:90%;" id="voucherGene" name="voucherGene" class="easyui-combobox" data-options="prompt: '包含未记账凭证',editable:false">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:12%;text-align: right;" ><label>明细对象:</label></td>
+                <td colspan="2">
+                <input style="width:100%;" id="specialName" name="specialName" class="easyui-textbox" data-options="prompt: '明细对象'">
+                </td>
+                <td style="width:12%;text-align: right;" ><label>金额:</label></td>
+                <td style="width:18%;">
+                    <input style="width:42%;" id="moneyStart" name="moneyStart" class="easyui-textbox" data-options="prompt: '起始金额'">&nbsp;--&nbsp;
+                    <input style="width:42%;" id="moneyEnd" name="moneyEnd" class="easyui-textbox" data-options="prompt: '终止金额'">
+                </td>
+                <td style="width:12%;text-align: right;" ><label>专项名称全级显示:</label></td>
+                <td style="width:18%;">
+                    <input style="width:90%;" id="specialNameP" name="specialNameP" class="easyui-combobox" data-options="prompt: '专项名称全级显示',editable:false">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:12%;text-align: right;" ><label>摘要:</label></td>
+                <td colspan="2">
+                    <input style="width:100%;" id="remarkName" name="remarkName" class="easyui-textbox" data-options="prompt: '摘要'">
+                </td>
+                <td style="width:12%;text-align: right;" ><label>金额方向:</label></td>
+                <td style="width:18%;">
+                    <input style="width:97%;" id="sourceDirection" name="sourceDirection" class="easyui-combobox" data-options="prompt: '金额方向',editable:false">
+                </td>
+                <td style="width:12%;text-align: right;" ><label>科目名称全级显示:</label></td>
+                <td style="width:18%;">
+                    <input style="width:90%;" id="subjectNameP" name="subjectNameP" class="easyui-combobox" data-options="prompt: '科目名称全级显示',editable:false">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:12%;text-align: right;" ><label>核算规则:</label></td>
+                <td style="width:18%;">
+                    <input style="width:100%;" id="accounRules" name="accounRules" class="easyui-combobox" data-options="prompt: '核算规则',editable:false">
+                </td>
+                <td colspan="5" style="text-align: right; padding-right: 20px;">
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-search'" style="width: 10%;" onclick="searchF()" >查询</a>
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-table'" style="width: 10%;" onclick="exportF()">导出</a>
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-print'" style="width: 10%;" onclick="printF()">打印</a>
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-refresh'" style="width: 10%;" onclick="reset()">重置</a>
+                </td>
+            </tr>
+        </table>
+        <!-- 明细对象（专项代码） -->
+        <input id="specialCode" name="specialCode" type="hidden">
+        <!-- 明细对象（专项ID） -->
+        <input id="specialId" name="specialId" type="hidden">
+    </form>
+    <!-- 表头信息 -->
+    <div id="headerDiv" hidden>
+        <br/>
+        <table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+            <div align="center">
+                <span align="center" style="font-size:18px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bolder" th:text="${session.currentUser.currentManageBranchName}"/s>
+                <br/>
+                <span align="center" style="font-size:20px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bold">专项科目明细账</span>
+            </div>
+        </table>
+        <table cellpadding="2" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="text-align: left; padding-left: 10px"><label>核算单位：<span id="centerCode"></span></label></td>
+                <td style="text-align: center;"><label>期间：自&nbsp;<span id="yearMonth1"></span>&nbsp;至&nbsp;<span id="yearMonthDate1"></span></label></td>
+                <td style="text-align: right; padding-right: 10px"><label>单位：<span>人民币元</span></label></td>
+            </tr>
+        </table>
+    </div>
+    <!-- 展示搜索结果 -->
+    <div id="accounRules1"><table id = "dg"></table></div>
+    <div id="accounRules2"><table id = "dg2"></table></div>
+    <!-- 表尾信息 -->
+    <div id="footerDiv" hidden>
+        <table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+            <tr>
+                <td style="width:10%;text-align: right;" ><label>财务主管：</label></td>
+                <td style="width:13%;"><span id="leader"></span></td>
+                <td style="width:10%;text-align: right;" ><label>操作员：</label></td>
+                <td style="width:13%;"><span id="operationUser" th:text="${session.currentUser.userName}"></span></td>
+                <td style="width:10%;text-align: right;" ><label>打印日期：</label></td>
+                <td style="width:13%;"><span id="printDate"></span></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<!-- 科目树弹框 -->
+<div id="subjectGrid" class="easyui-dialog" style="width: 40%;top: 15%;padding:10px 10px 10px 10px;" data-options="modal:true,closed:true,resizable:false,collapsible:false,minimizable:false,maximizable:true" buttons="#roleData-buttons">
+    <div class="easyui-panel" style="width: 100%;height: 350px;">
+        <ul id="subjectTree" class="easyui-tree"  data-options="method:'get',animate:true,checkbox:true,cascadeCheck:false"></ul>
+    </div>
+    <div id="roleData-buttons">
+        <table cellpadding="2" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="width: 11%; text-align: right;" ><label>科目名称:</label></td>
+                <td style="width: 60%; text-align: left;">
+                    <input style="width:99%;" id="subjectCodeSubjectGrid" name="subjectName" class="easyui-textbox" data-options="prompt: '科目名称'">
+                </td>
+            </tr>
+        </table>
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-search" onclick="searchSubjectGrid()" >查询</a>
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-refresh" onclick="resetSubjectGrid()">重置</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-ok icon-large" onclick="saveSubject()">保存</a>
+        <a href="#" style="margin-right: 5px" class="easyui-linkbutton" iconCls="icon-remove icon-large" onclick="javascript:$('#subjectGrid').dialog('close')">取消</a>
+    </div>
+</div>
+
+<!-- 专项树弹框 -->
+<div id="specialGrid" class="easyui-dialog" style="width: 40%;top: 15%;padding:10px 10px 10px 10px;" data-options="modal:true,closed:true,resizable:false,collapsible:false,minimizable:false,maximizable:true" buttons="#special-buttons">
+    <div class="easyui-panel" style="width: 100%;height: 350px;">
+        <ul id="specialTree" class="easyui-tree"  data-options="method:'get',animate:true,checkbox:true,cascadeCheck:true"></ul>
+    </div>
+    <div id="special-buttons">
+        <a href="#" class="easyui-linkbutton" iconCls="icon-ok icon-large" onclick="saveSpecial()">保存</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove icon-large" onclick="javascript:$('#specialGrid').dialog('close')">取消</a>
+    </div>
+</div>
+
+<!-- 等待提示框 -->
+<div id="waitMenu" class="easyui-dialog" style="width: 300px; height: 100px; padding: 10px 20px;" closed="true" align="center" data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+    <div id="msg"></div>
+</div>
+
+</body>
+<script th:src="@{/js/windowOpenNewPage.js}"></script>
+<script th:src="@{/js/printByAssignContent.js}"></script>
+<script>
+    var isAndNo = [{'value':'0','text':'否'},{'value':'1','text':'是'}];
+    var specialCodeAll = "";//明细对象编码
+    var specialNameAll = "";//明细对象名称（简称）
+    var specialIdAll = "";//明细对象ID
+    $(function () {
+        $('#yearMonth').combobox({
+            url:'/codeSelect?type=yearMonthAllAndNotJS',
+            method:'GET',
+            valueField:'value',
+            textField:'text',
+            onLoadSuccess:function () {
+                var data = $('#yearMonth').combobox('getData');
+                if (data.length>0) {
+                    var currentYear = getCurrentYear();
+                    var starMonth = '';
+                    for (var i=0;i<data.length;i++) {
+                        if (data[i].value.substring(0,4)==currentYear) {
+                            starMonth = data[i].value;
+                        } else if (starMonth) {
+                            break;
+                        }
+                    }
+                    if (starMonth) {
+                        $('#yearMonth').combobox('setValue',starMonth);
+                    } else {
+                        $('#yearMonth').combobox('setValue',getCurrentYear()+"01");
+                    }
+                }
+            },
+            onChange:function (newValue) {
+                var data = $('#yearMonthDate').combobox('getValue');
+                if (!compareYearMonth(newValue, data)) {
+                    $.messager.alert('提示','会计期间有误，请重新选择','warning');
+                    $('#yearMonth').combobox('setValue', '');
+                    return false;
+                }
+            }
+        });
+        $('#yearMonthDate').combobox({
+            url:'/codeSelect?type=yearMonthAllAndNotJS',
+            method:'GET',
+            valueField:'value',
+            textField:'text',
+            onLoadSuccess:function () {
+                var data = $('#yearMonthDate').combobox('getData');
+                if (data.length>0) {
+                    $('#yearMonthDate').combobox('setValue',data[0].value);
+                }
+            },
+            onChange:function (newValue) {
+                var data = $('#yearMonth').combobox('getValue');
+                if (!compareYearMonth(data, newValue)) {
+                    $.messager.alert('提示','会计期间有误，请重新选择','warning');
+                    $('#yearMonthDate').combobox('setValue', '');
+                    return false;
+                }
+            }
+        });
+        //起始金额
+        $('#moneyStart').textbox({
+            onChange:function (newValue) {
+                if (newValue && isNaN(Number(newValue))) {
+                    $.messager.alert('提示','请输入合法的起始金额','warning');
+                    $('#moneyStart').textbox('setValue', '');
+                    return false;
+                }
+                var data = $('#moneyEnd').textbox('getText');
+                if (newValue && data && (newValue*1-data*1)>0) {
+                    $.messager.alert('提示','起始金额有误，请重新输入','warning');
+                    $('#moneyStart').textbox('setValue', '');
+                    return false;
+                }
+            }
+        });
+        //终止发生额
+        $('#moneyEnd').textbox({
+            onChange:function (newValue) {
+                if (newValue && isNaN(Number(newValue))) {
+                    $.messager.alert('提示','请输入合法的终止金额','warning');
+                    $('#moneyEnd').textbox('setValue', '');
+                    return false;
+                }
+                var data = $('#moneyStart').textbox('getText');
+                if (newValue && data && (data*1-newValue*1)>0) {
+                    $.messager.alert('提示','终止金额有误，请重新输入','warning');
+                    $('#moneyEnd').textbox('setValue', '');
+                    return false;
+                }
+            }
+        });
+        //金额方向
+        $('#sourceDirection').combobox({
+            url:'/codeSelect?type=sourceDirection',
+            method:'GET',
+            valueField:'value',
+            textField:'text',
+            panelHeight:'50'
+        });
+        //核算规则
+        $('#accounRules').combobox({
+            url:'/codeSelect?type=accounRules',
+            method:'GET',
+            valueField:'value',
+            textField:'text',
+            panelHeight:'50'
+        });
+        //科目名称全级显示
+        $('#subjectNameP').combobox({
+            valueField:'value',
+            textField:'text',
+            data:isAndNo,
+            panelHeight:'50'
+        });
+        //专项名称全级显示
+        $('#specialNameP').combobox({
+            valueField:'value',
+            textField:'text',
+            data:isAndNo,
+            panelHeight:'50'
+        });
+        //是否含未记账凭证
+        $('#voucherGene').combobox({
+            valueField:'value',
+            textField:'text',
+            data:isAndNo,
+            panelHeight:'50'
+        });
+
+        $('#dg').datagrid({
+            striped: true  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false
+            ,method: 'post'  //默认为 post
+            ,fitColumns: true //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            ,singleSelect: true //设置为 true，则只允许选中一行。 默认false
+            ,nowrap: true
+            /**
+             * field: 列的字段名
+             * width: 列的宽度。如果未定义，则宽度会自动扩展以适应它的内容。没有定义宽度将会降低性能。
+             * align： 指示如何对齐该列的数据，可以用 'left'、'right'、'center'。 默认undefined
+             * halign：指示如何对齐该列的头部，可能的值：'left'、'right'、'center'。如果没有分配值，则头部对齐方式将与通过 'align' 属性定义的数据对齐方式一致。该属性自版本 1.3.2 起可用。
+             * sortable： 设置为 true，则允许该列被排序。
+             * order：默认的排序顺序，只能用 'asc' 或 'desc'。该属性自版本 1.3.2 起可用。
+             * resizable：设置为 true，则允许该列可调整尺寸。
+             * fixed: 设置为 true，则当 'fitColumns' 设置为 true 时放置调整宽度。
+             * hidden: 设置为 true，则隐藏该列。
+             * checkbox: 设置为 true，则显示复选框。复选框有固定宽度。
+             * formatter: 单元格的格式化函数，需要三个参数：value：字段的值。rowData：行的记录数据。rowIndex：行的索引。
+             */
+            ,columns: [
+                [
+                    {field:'voucherDate',title:'日期',width:'8%',halign:'center',align:'center',rowspan:2,formatter: function(value,row,index){
+                            if (value && value.length==6 && value.indexOf("JS")!=-1) {
+                                //当凭证日期为会计期间时并且为JS月，则应显示为当年12月
+                                return value.substring(0,4)+'12';
+                            }
+                            return value
+                        }},
+                    {field:'voucherNo',title:'凭证号',width:'7%',halign:'center',align:'center',rowspan:2,formatter: function(value,row,index){
+                            if (value) {
+                                return "<span style='color: blue; cursor: pointer;' onclick='lookVoucher("+JSON.stringify(row)+")'>" + value + "</span>";
+                            }
+                            return value;
+                        }},
+                    {field:'subject',title:'科目',width:'20%',halign:'center',align:'center',colspan:2},
+                    {field:'special',title:'专项',width:'20%',halign:'center',align:'center',colspan:2},
+                    {field:'remarkName',title:'摘要',width:'10%',halign:'center',align:'left',rowspan:2},
+                    {field:'debitDest',title:'借方',width:'11%',halign:'center',align:'right',rowspan:2,formatter: function(value,row,index){if (value) {return formatNumber(value*1,2,1);} else {return value;}}},
+                    {field:'creditDest',title:'贷方',width:'11%',halign:'center',align:'right',rowspan:2,formatter: function(value,row,index){if (value) {return formatNumber(value*1,2,1);} else {return value;}}},
+                    {field:'balanceFX',title:'方向',width:'3%',halign:'center',align:'center',rowspan:2},
+                    {field:'balanceDest',title:'余额',width:'11%',halign:'center',align:'right',rowspan:2,formatter: function(value,row,index){if (value) {return formatNumber(value*1,2,1);} else {return value;}}},
+                ],
+                [
+                    {field:'subjectCode',title:'编码',width:'10%',halign:'center',align:'center'},
+                    {field:'subjectName',title:'名称',width:'10%',halign:'center',align:'left'},
+                    {field:'specialCode',title:'编码',width:'10%',halign:'center',align:'center'},
+                    {field:'specialName',title:'名称',width:'10%',halign:'center',align:'left'},
+                ]
+            ],
+            onClickRow: function (rowIndex, rowData) {
+                $(this).datagrid('unselectRow', rowIndex);
+            },
+            onLoadSuccess:function(data){
+                if (data.total>0) {
+                    $('#yearMonth1').html($('#yearMonth').combobox('getValue'));
+                    $('#yearMonthDate1').html($('#yearMonthDate').combobox('getValue'));
+                    $('#centerCode').html(data.rows[0].centerCode);
+                    $('#printDate').html(getCurrentData());
+                    $('#headerDiv').show();
+                    $('#footerDiv').show();
+                } else {
+                    $('#headerDiv').hide();
+                    $('#footerDiv').hide();
+                }
+            },
+            loadMsg:'加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        });
+
+        $('#dg2').datagrid({
+            striped: true  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false
+            ,method: 'post'  //默认为 post
+            ,fitColumns: true //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            ,singleSelect: true //设置为 true，则只允许选中一行。 默认false
+            ,nowrap: true
+            /**
+             * field: 列的字段名
+             * width: 列的宽度。如果未定义，则宽度会自动扩展以适应它的内容。没有定义宽度将会降低性能。
+             * align： 指示如何对齐该列的数据，可以用 'left'、'right'、'center'。 默认undefined
+             * halign：指示如何对齐该列的头部，可能的值：'left'、'right'、'center'。如果没有分配值，则头部对齐方式将与通过 'align' 属性定义的数据对齐方式一致。该属性自版本 1.3.2 起可用。
+             * sortable： 设置为 true，则允许该列被排序。
+             * order：默认的排序顺序，只能用 'asc' 或 'desc'。该属性自版本 1.3.2 起可用。
+             * resizable：设置为 true，则允许该列可调整尺寸。
+             * fixed: 设置为 true，则当 'fitColumns' 设置为 true 时放置调整宽度。
+             * hidden: 设置为 true，则隐藏该列。
+             * checkbox: 设置为 true，则显示复选框。复选框有固定宽度。
+             * formatter: 单元格的格式化函数，需要三个参数：value：字段的值。rowData：行的记录数据。rowIndex：行的索引。
+             */
+            ,columns: [
+                [
+                    {field:'voucherDate',title:'日期',width:'8%',halign:'center',align:'center',rowspan:2,formatter: function(value,row,index){
+                            if (value && value.length==6 && value.indexOf("JS")!=-1) {
+                                //当凭证日期为会计期间时并且为JS月，则应显示为当年12月
+                                return value.substring(0,4)+'12';
+                            }
+                            return value
+                        }},
+                    {field:'voucherNo',title:'凭证号',width:'7%',halign:'center',align:'center',rowspan:2,formatter: function(value,row,index){
+                            if (value) {
+                                return "<span style='color: blue; cursor: pointer;' onclick='lookVoucher("+JSON.stringify(row)+")'>" + value + "</span>";
+                            }
+                            return value;
+                        }},
+                    {field:'special',title:'专项',width:'20%',halign:'center',align:'center',colspan:2},
+                    {field:'subject',title:'科目',width:'20%',halign:'center',align:'center',colspan:2},
+                    {field:'remarkName',title:'摘要',width:'10%',halign:'center',align:'left',rowspan:2},
+                    {field:'debitDest',title:'借方',width:'11%',halign:'center',align:'right',rowspan:2,formatter: function(value,row,index){if (value) {return formatNumber(value*1,2,1);} else {return value;}}},
+                    {field:'creditDest',title:'贷方',width:'11%',halign:'center',align:'right',rowspan:2,formatter: function(value,row,index){if (value) {return formatNumber(value*1,2,1);} else {return value;}}},
+                    {field:'balanceFX',title:'方向',width:'3%',halign:'center',align:'center',rowspan:2},
+                    {field:'balanceDest',title:'余额',width:'11%',halign:'center',align:'right',rowspan:2,formatter: function(value,row,index){if (value) {return formatNumber(value*1,2,1);} else {return value;}}},
+                ],
+                [
+                    {field:'specialCode',title:'编码',width:'10%',halign:'center',align:'center'},
+                    {field:'specialName',title:'名称',width:'10%',halign:'center',align:'left'},
+                    {field:'subjectCode',title:'编码',width:'10%',halign:'center',align:'center'},
+                    {field:'subjectName',title:'名称',width:'10%',halign:'center',align:'left'},
+                ]
+            ],
+            onClickRow: function (rowIndex, rowData) {
+                $(this).datagrid('unselectRow', rowIndex);
+            },
+            onLoadSuccess:function(data){
+                if (data.total>0) {
+                    $('#yearMonth1').html($('#yearMonth').combobox('getValue'));
+                    $('#yearMonthDate1').html($('#yearMonthDate').combobox('getValue'));
+                    $('#centerCode').html(data.rows[0].centerCode);
+                    $('#printDate').html(getCurrentData());
+                    $('#headerDiv').show();
+                    $('#footerDiv').show();
+                } else {
+                    $('#headerDiv').hide();
+                    $('#footerDiv').hide();
+                }
+            },
+            loadMsg:'加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        });
+
+        var subjectCodeReg=/^[0-9]*$/;
+        //如果同时存在双击监听，则此onChange监听要在双击之前初始化，否则可能会失效，暂未知
+        $('#subjectCode').textbox({
+            onChange:function (newValue, oldValue) {
+                if (newValue) {
+                    var subjectCodes = '';
+                    var codes = newValue.split(',');
+                    for (var i=0;i<codes.length;i++) {
+                        var code = codes[i].trim();
+                        if (code && subjectCodeReg.exec(code)) {
+                            $.ajax({
+                                type: 'post',
+                                url: '/subject/getSubjectCodeByNumCode',
+                                data: {'slashFlag': false, 'numberCode': code},
+                                async: false,
+                                success: function(result){
+                                    if (result) {
+                                        if (i==0) {
+                                            subjectCodes = result
+                                        } else {
+                                            subjectCodes += ',' + result;
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    if (subjectCodes) $('#subjectCode').textbox('setValue', subjectCodes);
+                }
+            }
+        });
+
+        //搜索框双击tree选择
+        //科目代码
+        $("input",$("#subjectCode").next("span")).dblclick(function(){
+            subjectTree($('#subjectCode').textbox('getText'));
+        });
+        //明细对象
+        $("input",$("#specialName").next("span")).dblclick(function(){
+            specialTree($('#specialName').textbox('getText'));
+        });
+
+        //设置默认值
+        $('#voucherGene').combobox('setValue','0');
+        $('#specialNameP').combobox('setValue','0');
+        $('#subjectNameP').combobox('setValue','1');
+        $('#accounRules').combobox('setValue','1');
+
+        $('#accounRules2').hide();//初始隐藏
+    });
+
+    function subjectTree(value){
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        var url = '/vouchermanage/super?code='+encodeURI(value)+'&onlyLastStage=N';
+        $('#subjectTree').tree({
+            url:url,
+            onSelect: function (node) {
+                if (node.checked) {
+                    $('#subjectTree').tree('uncheck', node.target);
+                } else {
+                    //如果是选择了，那么其父级如果也选了，则需要取消选择
+                    var parent1= $('#subjectTree').tree('getParent',node.target);
+                    if(parent1==null){
+                    }else{
+                        var parent2= $('#subjectTree').tree('getParent',parent1.target);
+                        if (parent1.checked) {$('#subjectTree').tree('uncheck', parent1.target);}
+                        if(parent2==null){
+                        }else{
+                            var parent3= $('#subjectTree').tree('getParent',parent2.target);
+                            if (parent2.checked) {$('#subjectTree').tree('uncheck', parent2.target);}
+                            if(parent3==null){
+                            }else{
+                                var parent4= $('#subjectTree').tree('getParent',parent3.target);
+                                if (parent3.checked) {$('#subjectTree').tree('uncheck', parent3.target);}
+                                if(parent4==null){
+                                }else{
+                                    var parent5= $('#subjectTree').tree('getParent',parent4.target);
+                                    if (parent4.checked) {$('#subjectTree').tree('uncheck', parent4.target);}
+                                    if(parent5==null){
+                                    }else {
+                                        var parent6= $('#subjectTree').tree('getParent',parent5.target);
+                                        if (parent5.checked) {$('#subjectTree').tree('uncheck', parent5.target);}
+                                        if(parent6==null){
+                                        } else {
+                                            if (parent6.checked) {$('#subjectTree').tree('uncheck', parent6.target);}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    $('#subjectTree').tree('check', node.target);
+                }
+            },
+            onDblClick: function (node) {
+                saveSubject();
+            },
+            onBeforeSelect: function (node){
+                var flag = !(node.text == '资产类' || node.text == '负债类' || node.text == '权益类' || node.text == '损益类');
+                if (flag) {
+                    var children = $('#subjectTree').tree('getChildren',node.target);
+                    if (children.length>0) {
+                        var flag2 = true;//无子级被选中为true，否则为false
+                        for (var i=0;i<children.length;i++) {
+                            if (children[i].checked) {
+                                $('#subjectTree').tree('uncheck', children[i].target);
+                                flag2 = false;
+                            }
+                        }
+                        //return flag2;
+                        return true;
+                    } else {
+                        return true;
+                    }
+                } else {
+                    return false;
+                }
+            },
+            onBeforeCheck: function (node, checked){
+                var flag = !(node.text == '资产类' || node.text == '负债类' || node.text == '权益类' || node.text == '损益类');
+                if (flag) {
+                    return true;
+                } else {
+                    return false;
+                }
+            },
+            onLoadSuccess: function (node, data) {
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                $('#subjectGrid').dialog('open').dialog('setTitle','科目代码');
+                $(this).find('span.tree-checkbox').unbind().click(function () {
+                    $('#subjectTree').tree('select', $(this).parent());
+                    return false;
+                });
+            }
+        });
+    }
+    
+    function searchSubjectGrid() {
+        subjectTree2($('#subjectCodeSubjectGrid').textbox('getText'));
+    }
+    function resetSubjectGrid() {
+        $('#subjectCodeSubjectGrid').textbox('setValue','');
+    }
+
+    function subjectTree2(value){
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        var url = '/vouchermanage/super?code='+encodeURI(value)+'&onlyLastStage=N';
+        $('#subjectTree').tree({
+            url:url,
+            onSelect: function (node) {
+                if (node.checked) {
+                    $('#subjectTree').tree('uncheck', node.target);
+                } else {
+                    //如果是选择了，那么其父级如果也选了，则需要取消选择
+                    var parent1= $('#subjectTree').tree('getParent',node.target);
+                    if(parent1==null){
+                    }else{
+                        var parent2= $('#subjectTree').tree('getParent',parent1.target);
+                        if (parent1.checked) {$('#subjectTree').tree('uncheck', parent1.target);}
+                        if(parent2==null){
+                        }else{
+                            var parent3= $('#subjectTree').tree('getParent',parent2.target);
+                            if (parent2.checked) {$('#subjectTree').tree('uncheck', parent2.target);}
+                            if(parent3==null){
+                            }else{
+                                var parent4= $('#subjectTree').tree('getParent',parent3.target);
+                                if (parent3.checked) {$('#subjectTree').tree('uncheck', parent3.target);}
+                                if(parent4==null){
+                                }else{
+                                    var parent5= $('#subjectTree').tree('getParent',parent4.target);
+                                    if (parent4.checked) {$('#subjectTree').tree('uncheck', parent4.target);}
+                                    if(parent5==null){
+                                    }else {
+                                        var parent6= $('#subjectTree').tree('getParent',parent5.target);
+                                        if (parent5.checked) {$('#subjectTree').tree('uncheck', parent5.target);}
+                                        if(parent6==null){
+                                        } else {
+                                            if (parent6.checked) {$('#subjectTree').tree('uncheck', parent6.target);}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    $('#subjectTree').tree('check', node.target);
+                }
+            },
+            onBeforeSelect: function (node){
+                var flag = !(node.text == '资产类' || node.text == '负债类' || node.text == '权益类' || node.text == '损益类');
+                if (flag) {
+                    var children = $('#subjectTree').tree('getChildren',node.target);
+                    if (children.length>0) {
+                        var flag2 = true;//无子级被选中为true，否则为false
+                        for (var i=0;i<children.length;i++) {
+                            if (children[i].checked) {
+                                $('#subjectTree').tree('uncheck', children[i].target);
+                                flag2 = false;
+                            }
+                        }
+                        //return flag2;
+                        return true;
+                    } else {
+                        return true;
+                    }
+                } else {
+                    return false;
+                }
+            },
+            onBeforeCheck: function (node, checked){
+                var flag = !(node.text == '资产类' || node.text == '负债类' || node.text == '权益类' || node.text == '损益类');
+                if (flag) {
+                    return true;
+                } else {
+                    return false;
+                }
+            },
+            onLoadSuccess: function (node, data) {
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                $(this).find('span.tree-checkbox').unbind().click(function () {
+                    $('#subjectTree').tree('select', $(this).parent());
+                    return false;
+                });
+            }
+        });
+    }
+
+    function specialTree(value) {
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        var url = '/specialsubjectdetailaccount/specialTree?value='+encodeURI(value);
+        $('#specialTree').tree({
+            url:url,
+            onSelect: function (node) {
+                if (node.checked) {
+                    $('#specialTree').tree('uncheck', node.target);
+                } else {
+                    $('#specialTree').tree('check', node.target);
+                }
+            },
+            onLoadSuccess: function (node, data) {
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                $('#specialGrid').dialog('open').dialog('setTitle','明细对象');
+                $(this).find('span.tree-checkbox').unbind().click(function () {
+                    $('#specialTree').tree('select', $(this).parent());
+                    return false;
+                });
+            }
+        });
+    }
+
+    function saveSubject(){
+        var subjectCodeAll = "";
+        var nodes = $('#subjectTree').tree('getChecked');//获取选中科目信息
+        if (nodes.length>0) {
+            for (var i=0;i<nodes.length;i++) {
+                var subjectCode = "";
+                var parent1= $('#subjectTree').tree('getParent',nodes[i].target);
+                if(parent1==null){
+                    subjectCode = nodes[i].id+"/";
+                    $.messager.alert('提示','请重新选择，不允许选择科目分类','warning');
+                    return false;
+                }else{
+                    var parent2= $('#subjectTree').tree('getParent',parent1.target);
+                    if(parent2==null){
+                        subjectCode = parent1.id+"/"+nodes[i].id+"/";
+                    }else{
+                        var parent3= $('#subjectTree').tree('getParent',parent2.target);
+                        if(parent3==null){
+                            subjectCode = parent2.id+"/"+parent1.id+"/"+nodes[i].id+"/";
+                        }else{
+                            var parent4= $('#subjectTree').tree('getParent',parent3.target);
+                            if(parent4==null){
+                                subjectCode = parent3.id+"/"+parent2.id+"/"+parent1.id+"/"+nodes[i].id+"/";
+                            }else{
+                                var parent5= $('#subjectTree').tree('getParent',parent4.target);
+                                if(parent5==null){
+                                    subjectCode = parent4.id+"/"+parent3.id+"/"+parent2.id+"/"+parent1.id+"/"+nodes[i].id+"/";
+                                }else {
+                                    var parent6= $('#subjectTree').tree('getParent',parent5.target);
+                                    if(parent6==null){
+                                        subjectCode = parent5.id+"/"+parent4.id+"/"+parent3.id+"/"+parent2.id+"/"+parent1.id+"/"+nodes[i].id+"/";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                //去除一级（科目分类：资产、负债、权益、损益）
+                var subjectCodeArr = subjectCode.split("/");
+                if (subjectCodeArr.length>2) {//最后一个是空的，因此为2
+                    subjectCode = subjectCode.substring(subjectCode.indexOf("/")+1);
+                }
+                if (subjectCode) {
+                    subjectCode = subjectCode.substring(0,subjectCode.length-1);
+                    subjectCodeAll += subjectCode + ',';
+                }
+            }
+            if (subjectCodeAll) {
+                subjectCodeAll = subjectCodeAll.substring(0,subjectCodeAll.length-1);
+            }
+            $('#subjectCode').textbox('setValue',subjectCodeAll);
+
+            $('#subjectGrid').dialog('close');
+        }
+    }
+
+    function saveSpecial(){
+        var nodes = $('#specialTree').tree('getChecked');//获取所有选中专项信息
+        if (nodes.length!=0) {
+            specialCodeAll = "";
+            specialNameAll = "";
+            for (var i=0;i<nodes.length;i++) {
+                specialCodeAll += nodes[i].code+',';
+                specialNameAll += nodes[i].name+',';
+                specialIdAll += nodes[i].id+',';
+            }
+            specialCodeAll = specialCodeAll.substring(0,specialCodeAll.length-1);
+            specialNameAll = specialNameAll.substring(0,specialNameAll.length-1);
+            specialIdAll = specialIdAll.substring(0,specialIdAll.length-1);
+
+            $('#specialCode').val(specialCodeAll);
+            $('#specialId').val(specialIdAll);
+            $('#specialName').textbox('setValue',specialNameAll);
+            $('#specialGrid').dialog('close');
+        } else {
+
+        }
+    }
+
+    function compareYearMonth(start, end) {
+        if (start && end) {
+            if (start.indexOf('JS')==-1 && end.indexOf('JS')==-1) {
+                if (parseInt(start)>parseInt(end)) {//开始大于结束
+                    return false;
+                }
+                return true;
+            } else if (start.indexOf('JS')!=-1 && end.indexOf('JS')==-1) {
+                if (parseInt(start.substring(0,4))>=parseInt(end.substring(0,4))) {//开始大于结束
+                    return false;
+                }
+                return true;
+            } else {
+                if (parseInt(start.substring(0,4))>parseInt(end.substring(0,4))) {//开始大于结束
+                    return false;
+                }
+                return true;
+            }
+        } else {
+            return true;
+        }
+    }
+    
+    function searchF() {
+        //先校验科目代码和明细对象
+        var subjectCode = $('#subjectCode').textbox('getText');
+        var specialName = $('#specialName').textbox('getText');
+        if (!subjectCode && !specialName) {
+            $.messager.alert('提示','科目代码和明细对象不能同时为空！','warning');
+            return false;
+        }
+        var specialCode = $('#specialCode').val();
+        if (specialName &&(specialCode!=specialCodeAll || specialName!=specialNameAll)) {
+            $.messager.alert('提示','请双击选择明细对象','warning');
+            return false;
+        }
+        //再校验必填项
+        if(!$('#searchForm').form('validate')){
+            $.messager.alert('提示','请录入必填项','warning');
+            return false;
+        }
+
+        if (subjectCode) {
+            $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+            $.post('/specialsubjectdetailaccount/checkSpecialSubject', {'subjectCode':encodeURI(subjectCode)}, function (result) {
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                if (result.success) {
+                    searchDG();
+                } else {
+                    $.messager.alert('提示',result.errorMsg,'warning');
+                }
+            });
+        } else {
+            searchDG();
+        }
+    }
+    
+    function searchDG() {
+        var params = {};
+        $('#searchForm').find('input').each(function(){
+            var obj = $(this);
+            var name = obj.attr('name');
+            if(name){
+                params[name] = obj.val();
+            }
+        });
+        /*$('#dg').datagrid({
+            url:'/specialsubjectdetailaccount/list',
+            queryParams:params
+        });*/
+        var accounRules = $('#accounRules').combobox('getValue');
+        if (!accounRules || accounRules=='1') {//按科目汇总
+            $('#accounRules1').show();
+            $('#accounRules2').hide();
+            $('#dg').datagrid({
+                url:'/specialsubjectdetailaccount/list',
+                queryParams:params
+            });
+        } else {//按专项汇总
+            $('#accounRules2').show();
+            $('#accounRules1').hide();
+            $('#dg2').datagrid({
+                url:'/specialsubjectdetailaccount/list',
+                queryParams:params
+            });
+        }
+    }
+
+    function reset() {
+        $('#searchForm').form('clear');
+        //设置默认值
+        var data = $('#yearMonth').combobox('getData');
+        if (data.length>0) {
+            var currentYear = getCurrentYear();
+            var starMonth = '';
+            for (var i=0;i<data.length;i++) {
+                if (data[i].value.substring(0,4)==currentYear) {
+                    starMonth = data[i].value;
+                } else if (starMonth) {
+                    break;
+                }
+            }
+            if (starMonth) {
+                $('#yearMonth').combobox('setValue',starMonth);
+            } else {
+                $('#yearMonth').combobox('setValue',getCurrentYear()+"01");
+            }
+        }
+        data = $('#yearMonthDate').combobox('getData');
+        if (data.length>0) {
+            $('#yearMonthDate').combobox('setValue',data[0].value);
+        }
+        $('#voucherGene').combobox('setValue','0');
+        $('#specialNameP').combobox('setValue','0');
+        $('#subjectNameP').combobox('setValue','1');
+        $('#accounRules').combobox('setValue','1');
+    }
+
+    //打印
+    function printF() {
+        //先校验科目代码和明细对象
+        var subjectCode = $('#subjectCode').textbox('getText');
+        var specialName = $('#specialName').textbox('getText');
+        if (!subjectCode && !specialName) {
+            $.messager.alert('提示','科目代码和明细对象不能同时为空！','warning');
+            return false;
+        }
+        var specialCode = $('#specialCode').val();
+        if (specialName &&(specialCode!=specialCodeAll || specialName!=specialNameAll)) {
+            $.messager.alert('提示','请双击选择明细对象','warning');
+            return false;
+        }
+        //再校验必填项
+        if(!$('#searchForm').form('validate')){
+            $.messager.alert('提示','请录入必填项','warning');
+            return false;
+        }
+
+        var rows = $('#dg').datagrid('getRows');
+        var rows2 = $('#dg2').datagrid('getRows');
+        if (rows.length < 2&&rows2.length < 2) {
+            $.messager.alert('提示', '请先查询或没有可打印的数据！', 'warning'); return false;
+        }
+        var params = {};
+        $('#searchForm').find('input').each(function(){
+            var obj = $(this);
+            var name = obj.attr('name');
+            if(name){
+                params[name] = obj.val();
+            }
+        });
+        params['centerCode']=$('#centerCode').text();
+        windowOpenNewPage('/specialsubjectdetailaccount/print',params);
+    }
+
+    //导出
+    function exportF() {
+        //先校验科目代码和明细对象
+        var subjectCode = $('#subjectCode').textbox('getText');
+        var specialName = $('#specialName').textbox('getText');
+        if (!subjectCode && !specialName) {
+            $.messager.alert('提示','科目代码和明细对象不能同时为空！','warning');
+            return false;
+        }
+        var specialCode = $('#specialCode').val();
+        if (specialName &&(specialCode!=specialCodeAll || specialName!=specialNameAll)) {
+            $.messager.alert('提示','请双击选择明细对象','warning');
+            return false;
+        }
+        //再校验必填项
+        if(!$('#searchForm').form('validate')){
+            $.messager.alert('提示','请录入必填项','warning');
+            return false;
+        }
+        var params = {};
+        $('#searchForm').find('input').each(function(){
+            var obj = $(this);
+            var name = obj.attr('name');
+            if(name){
+                params[name] = obj.val();
+            }
+        });
+
+        if (subjectCode) {
+            $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+            $.post('/specialsubjectdetailaccount/checkSpecialSubject', {'subjectCode':encodeURI(subjectCode)}, function (result) {
+                if (result.success) {
+                    $.ajax({
+                        url:'/specialsubjectdetailaccount/ishasdata',
+                        type:'post',
+                        dataType:'json',
+                        data:params,
+                        success:function (result) {
+                            $('#waitMenu').dialog('close');//关闭等待窗口
+                            if (result.success){
+                                jsutil.core.download("/specialsubjectdetailaccount/export",params);
+                            } else {
+                                $.messager.alert('提示',result.errorMsg,'warning');
+                            }
+                        }
+                    });
+                } else {
+                    $('#waitMenu').dialog('close');//关闭等待窗口
+                    $.messager.alert('提示',result.errorMsg,'warning');
+                }
+            });
+        } else {
+            $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+            $.ajax({
+                url:'/specialsubjectdetailaccount/ishasdata',
+                type:'post',
+                dataType:'json',
+                data:params,
+                success:function (result) {
+                    $('#waitMenu').dialog('close');//关闭等待窗口
+                    if (result.success){
+                        jsutil.core.download("/specialsubjectdetailaccount/export",params);
+                    } else {
+                        $.messager.alert('提示',result.errorMsg,'warning');
+                    }
+                }
+            });
+        }
+    }
+
+    function lookVoucher(row) {
+        if(row) {
+            //CM代表调用凭证详情页面的是凭证管理(CertificateManage)
+            addTab(row.voucherNo+'查看', '/voucher/look?voucherNo='+row.voucherNo+'&yearMonth='+row.yearMonthDate+'&specialNameP='+$('#specialNameP').combobox('getValue')+'&type=CM'+'&suffixNo='+row.suffixNo);
+        }
+    }
+    function addTab(subtitle, url) {
+        if (!parent.$('#tabs').tabs('exists', subtitle)) {
+            parent.$('#tabs').tabs(
+                'add',
+                {
+                    title: subtitle,
+                    content: createFrame(url),
+                    closable: true,
+                    width: parent.$('#mainPanle').width() - 10,
+                    height: parent.$('#mainPanle').height() - 26
+                });
+        } else {
+            parent.$('#tabs').tabs('select', subtitle);
+        }
+    }
+    function createFrame(url) {
+        var s = '<iframe name="mainFrame" fit="true" scrolling="auto" frameborder="0"  overflow-y:"hidden" src="'
+            + url + '" style="width:100%;height:100%;"></iframe>';
+        return s;
+    }
+
+    //等待
+    function onOpen() {loading = setInterval(showalert, 500);}
+    var ii = 2;
+    function showalert() {
+        var text = ""; var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+    function onClose() {clearInterval(loading);}
+</script>
+</html>

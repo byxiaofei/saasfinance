@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('科目总账查询','','')">
+
+</head>
+<body>
+
+<div class="easyui-panel" style="height: auto; width:100%;padding: 8px 0px 0px 0px;overflow: hidden;">
+    <form id="searchForm" method="post" style="margin-bottom:0;">
+        <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="width:12%;text-align: right;" ><label>会计期间:</label></td>
+                <td colspan="2">
+                    <input style="width:40%;" id="yearMonth" name="yearMonth" class="easyui-combobox" data-options="prompt: '会计期间',required:true,editable:false">&nbsp;--&nbsp;
+                    <input style="width:40%;" id="yearMonthDate" name="yearMonthDate" class="easyui-combobox" data-options="prompt: '会计期间',required:true,editable:false">
+                </td>
+                <td style="width:12%;text-align: right;" ><label>科目代码:</label></td>
+                <td colspan="2">
+                    <input style="width:40%;" id="itemCode1" name="itemCode1" class="easyui-textbox" data-options="prompt: '科目代码',required:true">&nbsp;--&nbsp;
+                    <input style="width:40%;" id="itemCode2" name="itemCode2" class="easyui-textbox" data-options="prompt: '科目代码',required:true">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:12%;text-align: right;" ><label>科目层级:</label></td>
+                <td colspan="2">
+                    <input style="width:40%;" id="level" name="level" class="easyui-combobox" data-options="prompt: '起始层级',required:true,editable:false">&nbsp;--&nbsp;
+                    <input style="width:40%;" id="levelEnd" name="levelEnd" class="easyui-combobox" data-options="prompt: '终止层级',required:true,editable:false">
+                </td>
+                <td style="width:12%;text-align: right;" ><label>是否含未记账凭证:</label></td>
+                <td style="width:20%;">
+                    <input style="width:85%;" id="voucherGene" name="voucherGene" class="easyui-combobox" data-options="prompt: '是否含未记账凭证',required:true,editable:false">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:12%;text-align: right;" ><label>总账科目:</label></td>
+                <td colspan="2">
+                    <input style="width:85%;" id="subjectPage" name="subjectPage" class="easyui-combobox" data-options="prompt: '总账科目',required:true,disabled:true,editable:false">
+                </td>
+                <td colspan="3" style="text-align: right; padding-right: 20px;">
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-search'" style="width: 15%;" onclick="searchF()" >查询</a>
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-table'" style="width: 15%;" onclick="exportF('科目总账信息表')">导出</a>
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-print'" style="width: 15%;" onclick="printF()">打印</a>
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-refresh'" style="width: 15%;" onclick="reset()">重置</a>
+                </td>
+            </tr>
+        </table>
+    </form>
+    <!-- 表头信息 -->
+    <div id="headerDiv" hidden>
+        <br/>
+        <table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+            <div align="center">
+                <span align="center" style="font-size:18px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bolder" th:text="${session.currentUser.currentManageBranchName}"></span>
+                <br/>
+                <span align="center" style="font-size:20px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bold"><span id="accsumName" style="font-size:20px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bold"></span>总账</span>
+                <br/>
+                <span align="center" style="font-size:18px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bolder">科目：<span id="subjectName" style="font-size:18px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bolder"></span></span>
+            </div>
+        </table>
+        <!-- 不带页码 -->
+        <table cellpadding="2" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="text-align: left; padding-left: 10px"><label>核算单位：<span id="centerCode"></span></label></td>
+                <td style="text-align: right; padding-right: 20px"><label>期间：自&nbsp;<span id="yearMonth1"></span>&nbsp;至&nbsp;<span id="yearMonthDate1"></span></label></td>
+            </tr>
+        </table>
+        <!-- 带页码 -->
+        <!--<table cellpadding="3" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="text-align: left; padding-left: 10px"><label>核算单位：<span id="centerCode"></span></label></td>
+                <td style="text-align: center; padding-right: 20px"><label>期间：自&nbsp;<span id="yearMonth1"></span>&nbsp;至&nbsp;<span id="yearMonthDate1"></span></label></td>
+                <td style="text-align: right; padding-right: 20px"><label>页码：<span id="pageNum"></span></label></td>
+            </tr>
+        </table>-->
+    </div>
+    <!-- 展示搜索结果 -->
+    <table id = "dg"></table>
+    <!-- 表尾信息 -->
+    <div id="footerDiv" hidden>
+        <table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+            <tr>
+                <td style="width:10%;text-align: right;" ><label>财务主管：</label></td>
+                <td style="width:13%;"><span id="leader"></span></td>
+                <td style="width:10%;text-align: right;" ><label>操作员：</label></td>
+                <td style="width:13%;"><span id="operationUser" th:text="${session.currentUser.userName}"></span></td>
+                <td style="width:10%;text-align: right;" ><label>打印日期：</label></td>
+                <td style="width:13%;"><span id="printDate"></span></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<!-- 科目树弹框 -->
+<div id="subjectGrid" class="easyui-dialog" style="width: 40%;top: 15%;padding:10px 10px 10px 10px;" data-options="modal:true,closed:true,resizable:false,collapsible:false,minimizable:false,maximizable:true" buttons="#roleData-buttons">
+    <div class="easyui-panel" style="width: 100%;height: 350px;">
+        <ul id="subjectTree" class="easyui-tree"  data-options="method:'get',animate:true,checkbox:true,cascadeCheck:false"></ul>
+    </div>
+    <div id="roleData-buttons">
+        <a href="#" class="easyui-linkbutton" iconCls="icon-ok icon-large" onclick="saveSubject()">保存</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove icon-large" onclick="javascript:$('#subjectGrid').dialog('close')">取消</a>
+    </div>
+</div>
+
+<!-- 等待提示框 -->
+<div id="waitMenu" class="easyui-dialog" style="width: 300px; height: 100px; padding: 10px 20px;" closed="true" align="center" data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+    <div id="msg"></div>
+</div>
+
+</body>
+<script th:src="@{/js/windowOpenNewPage.js}"></script>
+<script th:src="@{/js/printByAssignContent.js}"></script>
+<script>
+    var itemCodeOneOrTwo = 0;
+    var subjectDataAll = null;
+    var isAndNo = [{'value':'0','text':'否'},{'value':'1','text':'是'}];
+    $(function () {
+        $('#yearMonth').combobox({
+            url:'/codeSelect?type=yearMonthAllAndNotJS',
+            method:'GET',
+            valueField:'value',
+            textField:'text',
+            onLoadSuccess:function () {
+                var data = $('#yearMonth').combobox('getData');
+                if (data.length>0) {
+                    var currentYear = getCurrentYear();
+                    var starMonth = '';
+                    for (var i=0;i<data.length;i++) {
+                        if (data[i].value.substring(0,4)==currentYear) {
+                            starMonth = data[i].value;
+                        } else if (starMonth) {
+                            break;
+                        }
+                    }
+                    if (starMonth) {
+                        $('#yearMonth').combobox('setValue',starMonth);
+                    } else {
+                        $('#yearMonth').combobox('setValue',getCurrentYear()+"01");
+                    }
+                }
+            },
+            onChange:function (newValue) {
+                var data = $('#yearMonthDate').combobox('getValue');
+                if (newValue && data && newValue.substring(0,4) != data.substring(0,4)) {
+                    $.messager.alert('提示','会计期间不允许跨年，请重新选择','warning');
+                    $('#yearMonth').combobox('setValue', '');
+                    return false;
+                }
+                if (!compareYearMonth(newValue, data)) {
+                    $.messager.alert('提示','会计期间选择有误，请重新选择','warning');
+                    $('#yearMonth').combobox('setValue', '');
+                    return false;
+                }
+            }
+        });
+        $('#yearMonthDate').combobox({
+            url:'/codeSelect?type=yearMonthAllAndNotJS',
+            method:'GET',
+            valueField:'value',
+            textField:'text',
+            onLoadSuccess:function () {
+                var data = $('#yearMonthDate').combobox('getData');
+                if (data.length>0) {
+                    var year = getCurrentYear();
+                    for (var i=0;i<data.length;i++) {
+                        if ((data[i].value).substring(0,4)==year) {//倒序的
+                            $('#yearMonthDate').combobox('setValue',data[i].value);
+                            break;
+                        }
+                    }
+                }
+            },
+            onChange:function (newValue) {
+                var data = $('#yearMonth').combobox('getValue');
+                if (newValue && data && newValue.substring(0,4) != data.substring(0,4)) {
+                    $.messager.alert('提示','会计期间不允许跨年，请重新选择','warning');
+                    $('#yearMonthDate').combobox('setValue', '');
+                    return false;
+                }
+                if (!compareYearMonth(data, newValue)) {
+                    $.messager.alert('提示','会计期间选择有误，请重新选择','warning');
+                    $('#yearMonthDate').combobox('setValue', '');
+                    return false;
+                }
+            }
+        });
+        //起始科目层级
+        $('#level').combobox({
+            url:'/codeSelect?type=SubjectsLevel',
+            method:'GET',
+            valueField:'value',
+            textField:'text',
+            panelHeight:'150',
+            onLoadSuccess:function () {
+                var data = $('#level').combobox('getData');
+                if (data.length>0) {
+                    $('#level').combobox('setValue',data[0].value);
+                }
+            },
+            onChange:function (newValue) {
+                var data = $('#levelEnd').combobox('getValue');
+                if (newValue && data && (newValue*1-data*1)>0) {
+                    $.messager.alert('提示','起始科目层级有误，请重新选择','warning');
+                    $('#level').combobox('setValue', '');
+                    return false;
+                }
+            }
+        });
+        //终止科目层级
+        $('#levelEnd').combobox({
+            url:'/codeSelect?type=SubjectsLevel',
+            method:'GET',
+            valueField:'value',
+            textField:'text',
+            panelHeight:'150',
+            onLoadSuccess:function () {
+                var data = $('#levelEnd').combobox('getData');
+                if (data.length>0) {
+                    $('#levelEnd').combobox('setValue',data[data.length-1].value);
+                }
+            },
+            onChange:function (newValue) {
+                var data = $('#level').combobox('getValue');
+                if (newValue && data && (data*1-newValue*1)>0) {
+                    $.messager.alert('提示','终止科目层级有误，请重新选择','warning');
+                    $('#levelEnd').combobox('setValue', '');
+                    return false;
+                }
+            }
+        });
+        //是否含未记账凭证
+        $('#voucherGene').combobox({
+            valueField:'value',
+            textField:'text',
+            data:isAndNo,
+            panelHeight:'50'
+        });
+
+        $('#dg').datagrid({
+            striped: true  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false
+            ,method: 'post'  //默认为 post
+            ,fitColumns: true //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            ,singleSelect: true //设置为 true，则只允许选中一行。 默认false
+            ,nowrap: true
+            /**
+             * field: 列的字段名
+             * width: 列的宽度。如果未定义，则宽度会自动扩展以适应它的内容。没有定义宽度将会降低性能。
+             * align： 指示如何对齐该列的数据，可以用 'left'、'right'、'center'。 默认undefined
+             * halign：指示如何对齐该列的头部，可能的值：'left'、'right'、'center'。如果没有分配值，则头部对齐方式将与通过 'align' 属性定义的数据对齐方式一致。该属性自版本 1.3.2 起可用。
+             * sortable： 设置为 true，则允许该列被排序。
+             * order：默认的排序顺序，只能用 'asc' 或 'desc'。该属性自版本 1.3.2 起可用。
+             * resizable：设置为 true，则允许该列可调整尺寸。
+             * fixed: 设置为 true，则当 'fitColumns' 设置为 true 时放置调整宽度。
+             * hidden: 设置为 true，则隐藏该列。
+             * checkbox: 设置为 true，则显示复选框。复选框有固定宽度。
+             * formatter: 单元格的格式化函数，需要三个参数：value：字段的值。rowData：行的记录数据。rowIndex：行的索引。
+             */
+            ,columns: [
+                [
+                    {field:'yearMonthDate',title:'会计期间',width:'15%',halign:'center',align:'center'},
+                    {field:'remarkName',title:'摘要',width:'30%',halign:'center',align:'left'},
+                    {field:'debitDest',title:'借方发生额',width:'15%',halign:'center',align:'right',formatter: function(value,row,index){return formatNumber(value*1,2,1);}},
+                    {field:'creditDest',title:'贷方发生额',width:'15%',halign:'center',align:'right',formatter: function(value,row,index){return formatNumber(value*1,2,1);}},
+                    {field:'balanceFX',title:'方向',width:'10%',halign:'center',align:'center'},
+                    {field:'balanceDest',title:'余额',width:'15%',halign:'center',align:'right',formatter: function(value,row,index){return formatNumber(value*1,2,1);}}
+                ]
+            ],
+            onClickRow: function (rowIndex, rowData) {
+                $(this).datagrid('unselectRow', rowIndex);
+            },
+            onLoadSuccess:function(data){
+                if (data.total>0) {
+                    $('#headerDiv').show();
+                    $('#footerDiv').show();
+                } else {
+                    $('#headerDiv').hide();
+                    $('#footerDiv').hide();
+                }
+            },
+            loadMsg:'加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        });
+
+        var subjectCodeReg=/^[0-9]*$/;
+        //如果同时存在双击监听，则此onChange监听要在双击之前初始化，否则可能会失效，暂未知
+        $('#itemCode1').textbox({
+            onChange:function (newValue, oldValue) {
+                if (newValue && subjectCodeReg.exec(newValue)) {
+                    $.ajax({
+                        type: 'post',
+                        url: '/subject/getSubjectCodeByNumCode',
+                        data: {'slashFlag': false, 'numberCode': newValue},
+                        async: true,
+                        success: function(result){
+                            if(result){ $('#itemCode1').textbox('setValue', result); }
+                        }
+                    });
+                }
+            }
+        });
+        //如果同时存在双击监听，则此onChange监听要在双击之前初始化，否则可能会失效，暂未知
+        $('#itemCode2').textbox({
+            onChange:function (newValue, oldValue) {
+                if (newValue && subjectCodeReg.exec(newValue)) {
+                    $.ajax({
+                        type: 'post',
+                        url: '/subject/getSubjectCodeByNumCode',
+                        data: {'slashFlag': false, 'numberCode': newValue},
+                        async: true,
+                        success: function(result){
+                            if(result){ $('#itemCode2').textbox('setValue', result); }
+                        }
+                    });
+                }
+            }
+        });
+
+        //搜索框双击tree选择
+        $("input",$("#itemCode1").next("span")).dblclick(function(){
+            itemCodeOneOrTwo = 1;
+            subjectTree($('#itemCode1').textbox('getText'));
+        });
+        $("input",$("#itemCode2").next("span")).dblclick(function(){
+            itemCodeOneOrTwo = 2;
+            subjectTree($('#itemCode2').textbox('getText'));
+        });
+
+        //设置默认值
+        $('#voucherGene').combobox('setValue','0');
+    });
+
+    function subjectTree(value){
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        var url = '/vouchermanage/super?code='+encodeURI(value)+'&onlyLastStage=N';
+        $('#subjectTree').tree({
+            url:url,
+            onSelect: function (node) {
+                var cknodes = $('#subjectTree').tree("getChecked");
+                for (var i = 0; i < cknodes.length; i++) {
+                    if (cknodes[i].id != node.id) {
+                        $('#subjectTree').tree("uncheck", cknodes[i].target);
+                    }
+                }
+                if (node.checked) {
+                    $('#subjectTree').tree('uncheck', node.target);
+                } else {
+                    $('#subjectTree').tree('check', node.target);
+                }
+            },
+            onDblClick: function (node) {
+                saveSubject();
+            },
+            onBeforeSelect: function (node){
+                var flag = !(node.text == '资产类' || node.text == '负债类' || node.text == '权益类' || node.text == '损益类');
+                if (flag) {
+                    return true;
+                } else {
+                    return false;
+                }
+            },
+            onBeforeCheck: function (node, checked){
+                var flag = !(node.text == '资产类' || node.text == '负债类' || node.text == '权益类' || node.text == '损益类');
+                if (flag) {
+                    return true;
+                } else {
+                    return false;
+                }
+            },
+            onLoadSuccess: function (node, data) {
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                if (itemCodeOneOrTwo == 1) {
+                    $('#subjectGrid').dialog('open').dialog('setTitle','起始科目代码');
+                } else if (itemCodeOneOrTwo == 2) {
+                    $('#subjectGrid').dialog('open').dialog('setTitle','终止科目代码');
+                }
+                $(this).find('span.tree-checkbox').unbind().click(function () {
+                    $('#subjectTree').tree('select', $(this).parent());
+                    return false;
+                });
+            }
+        });
+    }
+
+    function saveSubject(){
+        var subjectCode="";
+        var nodes = $('#subjectTree').tree('getChecked');//获取选中科目信息
+        if (nodes.length > 0){
+            var parent1= $('#subjectTree').tree('getParent',nodes[0].target);
+            if(parent1==null){
+                subjectCode = nodes[0].id+"/";
+                $.messager.alert('提示','请重新选择，不允许选择科目分类','warning');
+                return false;
+            }else{
+                var parent2= $('#subjectTree').tree('getParent',parent1.target);
+                if(parent2==null){
+                    subjectCode = parent1.id+"/"+nodes[0].id+"/";
+                }else{
+                    var parent3= $('#subjectTree').tree('getParent',parent2.target);
+                    if(parent3==null){
+                        subjectCode = parent2.id+"/"+parent1.id+"/"+nodes[0].id+"/";
+                    }else{
+                        var parent4= $('#subjectTree').tree('getParent',parent3.target);
+                        if(parent4==null){
+                            subjectCode = parent3.id+"/"+parent2.id+"/"+parent1.id+"/"+nodes[0].id+"/";
+                        }else{
+                            var parent5= $('#subjectTree').tree('getParent',parent4.target);
+                            if(parent5==null){
+                                subjectCode = parent4.id+"/"+parent3.id+"/"+parent2.id+"/"+parent1.id+"/"+nodes[0].id+"/";
+                            }else {
+                                var parent6= $('#subjectTree').tree('getParent',parent5.target);
+                                if(parent6==null){
+                                    subjectCode = parent5.id+"/"+parent4.id+"/"+parent3.id+"/"+parent2.id+"/"+parent1.id+"/"+nodes[0].id+"/";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            //去除一级（科目分类：资产、负债、权益、损益）
+            var subjectCodeArr = subjectCode.split("/");
+            if (subjectCodeArr.length>2) {//最后一个是空的，因此为2
+                subjectCode = subjectCode.substring(subjectCode.indexOf("/")+1);
+            }
+            subjectCode = subjectCode.substring(0,subjectCode.length-1);
+            if(itemCodeOneOrTwo == 1){
+                $('#itemCode1').textbox('setValue',subjectCode);
+            }else if(itemCodeOneOrTwo == 2){
+                $('#itemCode2').textbox('setValue',subjectCode);
+            }
+        }else {
+            if(itemCodeOneOrTwo == 1){
+                $('#itemCode1').textbox('setValue',"");
+            }else if(itemCodeOneOrTwo == 2){
+                $('#itemCode2').textbox('setValue',"");
+            }
+        }
+
+
+        $('#subjectGrid').dialog('close');
+    }
+
+    function compareYearMonth(start, end) {
+        if (start && end) {
+            if (start.indexOf('JS')==-1 && end.indexOf('JS')==-1) {
+                if (parseInt(start)>parseInt(end)) {//开始大于结束
+                    return false;
+                }
+                return true;
+            } else if (start.indexOf('JS')!=-1 && end.indexOf('JS')==-1) {
+                if (parseInt(start.substring(0,4))>=parseInt(end.substring(0,4))) {//开始大于结束
+                    return false;
+                }
+                return true;
+            } else {
+                if (parseInt(start.substring(0,4))>parseInt(end.substring(0,4))) {//开始大于结束
+                    return false;
+                }
+                return true;
+            }
+        } else {
+            return true;
+        }
+    }
+
+    function setDataGridData(index) {
+        if (subjectDataAll) {
+            $('#accsumName').html(subjectDataAll[index][1]);
+            $('#subjectName').html(subjectDataAll[index][2]+'('+subjectDataAll[index][0]+')');
+            $('#centerCode').html(subjectDataAll[index][3]);
+            $('#pageNum').html(index+1+'/'+subjectDataAll.length);
+            $('#dg').datagrid('loadData', subjectDataAll[index][4]);
+        }
+    }
+
+    function searchF() {
+        $('#subjectPage').combobox({
+            valueField:'value',
+            textField:'text',
+            data:[],
+            disabled:true
+        });
+
+        if(!$('#searchForm').form('validate')){
+            $.messager.alert('提示','请录入必填项','warning');
+            return false;
+        }
+
+        var params = {};
+        $('#searchForm').find('input').each(function(){
+            var obj = $(this);
+            var name = obj.attr('name');
+            if(name){
+                params[name] = obj.val();
+            }
+        });
+
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        subjectDataAll = null;
+        $.ajax({
+            url:'/queryaccsum/list',
+            type:'post',
+            data: params,
+            async: true,
+            success: function(result){
+                if(result.length>0){
+                    console.log(result);
+                    subjectDataAll = result;
+                    var subjectPage = [];
+                    for (var i=0;i<result.length;i++) {
+                        var data = {}; data["value"] = i; data["text"] = result[i][0]+' ('+result[i][2]+')';
+                        subjectPage[i] = data;
+                    }
+                    $('#subjectPage').combobox({disabled: false});
+                    $('#subjectPage').combobox({
+                        valueField:'value',
+                        textField:'text',
+                        data:subjectPage,
+                        onSelect:function (record) {
+                            setDataGridData(record.value)
+                        }
+                    });
+                    $('#waitMenu').dialog('close');//关闭等待窗口
+
+                    //设置表头表尾信息
+                    $('#accsumName').html(result[0][1]);
+                    $('#subjectName').html(result[0][2]+'('+subjectDataAll[0][0]+')');
+                    $('#centerCode').html(result[0][3]);
+                    $('#pageNum').html('1/'+result.length);
+                    $('#yearMonth1').html($('#yearMonth').combobox('getValue'));
+                    $('#yearMonthDate1').html($('#yearMonthDate').combobox('getValue'));
+                    $('#printDate').html(getCurrentData());
+
+                    $('#dg').datagrid('loadData', result[0][4]);
+                } else {
+                    $('#waitMenu').dialog('close');//关闭等待窗口
+                    $.messager.alert('提示','无当前科目范围查询数据','warning');
+                    $('#dg').datagrid('loadData', []);
+                }
+            }
+        });
+    }
+
+    function reset() {
+        $('#searchForm').form('clear');
+        //设置默认值
+        var data = $('#yearMonth').combobox('getData');
+        if (data.length>0) {
+            var currentYear = getCurrentYear();
+            var starMonth = '';
+            for (var i=0;i<data.length;i++) {
+                if (data[i].value.substring(0,4)==currentYear) {
+                    starMonth = data[i].value;
+                } else if (starMonth) {
+                    break;
+                }
+            }
+            if (starMonth) {
+                $('#yearMonth').combobox('setValue',starMonth);
+            } else {
+                $('#yearMonth').combobox('setValue',getCurrentYear()+"01");
+            }
+        }
+        data = $('#yearMonthDate').combobox('getData');
+        if (data.length>0) {
+            var year = getCurrentYear();
+            for (var i=0;i<data.length;i++) {
+                if ((data[i].value).substring(0,4)==year) {//倒序的
+                    $('#yearMonthDate').combobox('setValue',data[i].value);
+                    break;
+                }
+            }
+        }
+        var level = $('#level').combobox('getData');
+        if (level.length>0) {
+            $('#level').combobox('setValue',level[0].value);
+        }
+        level = $('#levelEnd').combobox('getData');
+        if (level.length>0) {
+            $('#levelEnd').combobox('setValue',level[level.length-1].value);
+        }
+        $('#voucherGene').combobox('setValue','0');
+        $('#subjectPage').combobox({
+            valueField:'value',
+            textField:'text',
+            data:[],
+            disabled:true
+        });
+
+        var row = $('#dg').datagrid('getRows');
+        if (row.length>0) {
+            for (var i=row.length-1;i>=0;i--){
+                $('#dg').datagrid("deleteRow",i);
+            }
+        }
+        $('#headerDiv').hide();
+        $('#footerDiv').hide();
+    }
+
+    //打印
+    function printF() {
+        if(!$('#searchForm').form('validate')){
+            $.messager.alert('提示','请录入必填项','warning');
+            return false;
+        }
+
+        var rows = $('#dg').datagrid('getRows');
+        if (rows.length < 2) {
+            $.messager.alert('提示', '请先查询或没有可打印的数据！', 'warning'); return false;
+        }
+        var params = {};
+        $('#searchForm').find('input').each(function(){
+            var obj = $(this);
+            var name = obj.attr('name');
+            if(name){
+                params[name] = obj.val();
+            }
+        });
+        params['centerCode']=$('#centerCode').text();
+        windowOpenNewPage('/queryaccsum/print',params);
+    }
+
+    //导出
+    function exportF(xlsName) {
+        if(!$('#searchForm').form('validate')){
+            $.messager.alert('提示','请录入必填项','warning');
+            return false;
+        }
+        var params = {};
+        $('#searchForm').find('input').each(function(){
+            var obj = $(this);
+            var name = obj.attr('name');
+            if(name){
+                params[name] = obj.val();
+            }
+        });
+
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        $.ajax({
+            url:"/queryaccsum/ishasdata",
+            type:'post',
+            dataType:'json',
+            data:params,
+            success:function (result){
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                if(result.success){
+                    var res = prepareParam(xlsName);
+                    jsutil.core.download('export',res);
+                }else {
+                    $.messager.alert('提示',result.errorMsg,'warning');
+                }
+            }
+        });
+    }
+    //准备参数
+    function prepareParam(xlsName) {
+        var param = {
+            name : xlsName,
+            queryConditions:{}
+        };
+        $('#searchForm').find('input').each(
+            function(){
+                var obj = $(this);
+                var name = obj.attr('name');
+                if(name && name != "subjectPage"){
+                    param.queryConditions[name] = obj.val();
+                }
+            });
+        return param;
+    }
+
+    //等待
+    function onOpen() {loading = setInterval(showalert, 500);}
+    var ii = 2;
+    function showalert() {
+        var text = ""; var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+    function onClose() {clearInterval(loading);}
+</script>
+</html>

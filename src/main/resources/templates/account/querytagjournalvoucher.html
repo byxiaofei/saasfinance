@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('标注分录查询','','')">
+</head>
+<body>
+<!--搜索模块-->
+    <div class="easyui-panel"
+         style="height: auto; width:100%;padding: 8px 0px 0px 0px;overflow: hidden;">
+        <form id="serachFrom" method="post" style="margin-bottom:0;">
+            <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+                <tr>
+                    <td style="width:8%;text-align: right;" ><label>会计期间:</label></td>
+                    <td style="width:25%;text-align: left;">
+                        <input style="width:40%;" id="yearMonthDate1" name="yearMonthDateBegin" class="easyui-combobox" data-options="prompt: '开始期间',onSelect:onSelect1">&nbsp;--&nbsp;
+                        <input style="width:40%;" id="yearMonthDate2" name="yearMonthDateEnd" class="easyui-combobox" data-options="prompt: '结束期间',onSelect:onSelect1">
+                    </td>
+                    <td style="width:5%;text-align: right;" ><label>日期:</label></td>
+                    <td  style="width:25%;text-align: left;">
+                        <input style="width:40%;" id="beginDate" name="DateStart" class="easyui-datebox" editable="false" data-options="prompt: '开始时间',onSelect:onSelect">&nbsp;--&nbsp;
+                        <input style="width:40%;" id="endDate" name="DateStop" class="easyui-datebox" editable="false" data-options="prompt: '结束时间',onSelect:onSelect">
+                    </td>
+                    <td style="width:8%;text-align: right;" ><label>标注代码:</label></td>
+                    <td  style="width:20%;text-align: left;">
+                        <input id="tagCode" name="tagCode" class="easyui-textbox" data-options="prompt: '标注代码'">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="6" style="text-align: right; padding-right: 20px;">
+                        <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-search'" style="width: 8%;" onclick="searchF()" >查询</a>
+                        <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-refresh'" style="width: 8%;" onclick="reset()">重置</a>
+                    </td>
+                </tr>
+            </table>
+        </form>
+
+        <!-- 展示搜索结果 -->
+        <table id = "sg" data-show-footer="true"></table>
+    </div>
+<!--加载树状标注代码-->
+<div id="TagGrid" class="easyui-dialog" style="width: 40%; top: 25%;padding:5px 5px 5px 5px;" data-options="modal:true,closed:true,resizable:false,collapsible:false,minimizable:false,maximizable:true" buttons="#item-buttons">
+    <div class="easyui-panel" style="width: 100%;">
+        <ul id="TagTree" class="easyui-tree"  data-options="method:'get',animate:true,checkbox:true,onlyLeafCheck:false,cascadeCheck:true"></ul>
+    </div>
+    <div id="item-buttons">
+        <a href="#" class="easyui-linkbutton" iconCls="icon-ok icon-large" onclick="getTagCode()">保存</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove icon-large" onclick="javascript:$('#TagGrid').dialog('close')">取消</a>
+
+    </div>
+</div>
+<div id="waitMenu" class="easyui-dialog"
+     style="width: 300px; height: 100px; padding: 10px 20px;" closed="true"
+     align="center"
+     data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+    <div id="msg"></div>
+</div>
+<script type="text/javascript">
+    var dbClickValue ="";
+    $(function () {
+        $('#yearMonthDate1').combobox({
+            url:'/codeSelect/group?type=yearMonthGroup',
+            method:'GET',
+            valueField:'value',
+            textField:'text',
+            groupField:'group',
+            onLoadSuccess:function () {
+                var data = $('#yearMonthDate1').combobox('getData');
+                for (var i=0;i<data.length;i++) {
+                    if (data[i].group == '已结转') {
+                        if (i!=0) {
+                            $('#yearMonthDate1').combobox('setValue',data[i-1].value);
+                        }
+                        return;
+                    } else if (i==data.length-1) {
+                        $('#yearMonthDate1').combobox('setValue',data[i].value);
+                    }
+                }
+            }
+        });
+        $('#yearMonthDate2').combobox({
+            url:'/codeSelect/group?type=yearMonthGroup',
+            method:'GET',
+            valueField:'value',
+            textField:'text',
+            groupField:'group',
+            onLoadSuccess:function () {
+                var data = $('#yearMonthDate2').combobox('getData');
+                for (var i=0;i<data.length;i++) {
+                    if (data[i].group == '已结转') {
+                        if (i!=0) {
+                            $('#yearMonthDate2').combobox('setValue',data[i-1].value);
+                        }
+                        searchF();
+                        return;
+                    } else if (i==data.length-1) {
+                        $('#yearMonthDate2').combobox('setValue',data[i].value);
+                        searchF();
+                    }
+                }
+            }
+        });
+        /*$('#yearMonthDate2').combobox({
+            valueField:'value',
+            textField:'text',
+            url:'/querydetailaccount/begindatelist',
+            method:'GET'
+        });*/
+        $('#sg').datagrid({
+          //  url: '/querytagjournal/VoucherTagList',
+            striped: true,  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false,
+            method: 'post', //默认为 post
+            rownumbers: false,
+            showFooter:true,//开启列计算函数
+            // pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。默认false
+            fitColumns: true,//设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            //pagePosition: 'bottom', //定义分页栏的位置。可用的值有：'top'、'bottom'、'both'。 默认 bottom
+            // pageList: [10, 20, 30, 40, 50], //当设置了 pagination 属性时，初始化页面尺寸的选择列表。
+            nowrap: true,
+            columns: [
+                [
+                    {field: 'voucherDate', title: '凭证日期', width: '8%', align: 'center', sortable: 'true', order: 'asc'}
+                    , {field: 'voucherNo', title: '凭证号', width: '8%', align: 'center',formatter: function(value,row,index){
+                        if (value) {
+                            return "<span style='color: blue; cursor: pointer;' onclick='lookInfo("+JSON.stringify(row)+")'>" + value + "</span>";
+                        }
+                        return value;
+                    }}
+                    , {field: 'tagCode', title: '标注代码', width: '10%', align: 'center'}
+                    , {field: 'tagName', title: '标注名称', width: '15%', align: 'center'}
+                    , {field: 'remark', title: '凭证摘要', width: '34%', align: 'center'}
+                    , {field: 'debitDest', title: '借方金额', width: '13%', align: 'right', halign: 'center', formatter:function (value) {return formatNumber(value*1, 2, 1);}}
+                    , {field: 'creditDest', title: '贷方金额', width: '13%', align: 'right', halign: 'center', formatter:function (value) {return formatNumber(value*1, 2, 1);}}
+                ]
+            ],
+            onClickRow: function (rowIndex, rowData) {
+                $(this).datagrid('unselectRow', rowIndex);
+            },
+            loadMsg: '加载中...' , //当从远程站点加载数据时，显示的提示消息。
+        });
+        //双击弹出树状下拉框窗口
+        $("input",$("#tagCode").next("span")).dblclick(function () {
+            var tagCodeValue = $('#tagCode').textbox('getText');
+            $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+            $('#TagTree').tree({
+                url:'/querytagjournal/TagJouralList?value='+encodeURI(tagCodeValue),
+                onSelect:function (node) {
+                    var cknodes = $('#TagTree').tree("getChecked");
+                    for (var i=0;i<cknodes.length;i++){
+                        if(cknodes[i].id != node.id){
+                            $('#TagTree').tree('uncheck',cknodes[i].target);
+                        }
+                    }
+                    if(node.checked){
+                        $('#TagTree').tree('uncheck',node.target);
+                    }else {
+                        $('#TagTree').tree('check',node.target);
+                    }
+                },
+                onLoadSuccess:function (node,data) {
+                    $('#waitMenu').dialog('close');//关闭等待窗口
+                    $('#TagGrid').dialog('open').dialog('setTitle','标注代码');
+                    $(this).find('span.tree-checkbox').unbind().click(function () {
+                        $('#TagTree').tree('select',$(this).parent());
+                        return false;
+                    });
+                }
+            });
+        });
+    });
+
+
+    //查询
+    function searchF() {
+        var handValue = $('#tagCode').textbox('getValue');
+        if (handValue != null && handValue != "" ){
+            if (dbClickValue == ""|| dbClickValue == null){
+                //文本框中有值，未双击选择
+                $.messager.alert('提示', "请双击选择标注代码！",'warning');
+                return false;
+            } else if (dbClickValue != "" && dbClickValue != handValue){
+                //文本框中有值，双击选择后又修改了文本框中的值
+                $.messager.alert('提示', "请重新双击选择标注代码！",'warning');
+                return false;
+            }
+
+        }
+        var params = {};
+        $('#serachFrom').find('input').each(function(){
+            var obj = $(this);
+            var name = obj.attr('name');
+            if(name){
+                params[name] = obj.val();
+            }
+        });
+        $('#sg').datagrid({
+            url: '/querytagjournal/VoucherTagList',
+            queryParams:params
+        });
+    }
+    //重置
+    function reset() {
+        $('#serachFrom').form('clear');
+    }
+    //保存所选的树状标注信息
+    function getTagCode() {
+        var nodes = $('#TagTree').tree('getChecked');//获取选中
+        //  code = nodes[0];判断选了几个节点，多个节点之间用逗号隔开
+        if(nodes.length > 0){
+            var str =nodes[0].value;
+            for ( var index = 1;index < nodes.length;index++){
+                str = str +","+ nodes[index].value;
+            }
+        }
+
+        console.log("str:"+str);
+        dbClickValue = str;
+        $('#tagCode').textbox('setValue',str);
+        $('#TagGrid').dialog('close');
+    }
+
+    function lookInfo(row) {
+        console.log(row.voucherNo+"+"+row.yearMonthDate);
+        //  alert(voucherNo+"+"+yearMonthDate);
+        //type指调用查看页面的是凭证复核页面
+        addTab(row.voucherNo+'查看', '/voucher/look?voucherNo='+row.voucherNo+'&yearMonth='+row.yearMonthDate+'&type='+'account'+'&suffixNo='+row.suffixNo);
+    }
+    function addTab(subtitle, url) {
+        if (!parent.$('#tabs').tabs('exists', subtitle)) {
+            parent.$('#tabs').tabs(
+                'add',
+                {
+                    title: subtitle,
+                    content: createFrame(url),
+                    closable: true,
+                    width: parent.$('#mainPanle').width() - 10,
+                    height: parent.$('#mainPanle').height() - 26
+                });
+        } else {
+            parent.$('#tabs').tabs('select', subtitle);
+        }
+    }
+    function createFrame(url) {
+        var s = '<iframe name="mainFrame" fit="true" scrolling="auto" frameborder="0"  overflow-y:"hidden" src="'
+            + url + '" style="width:100%;height:100%;"></iframe>';
+        return s;
+    }
+    //等待
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+    var ii = 2;
+    function showalert() {
+        var text = "";
+        var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+    function onClose() {
+        clearInterval(loading);
+    }
+    //校验时间
+    function onSelect(d) {
+        var beginDate = $('#beginDate').datebox('getValue');
+        var endDate = $('#endDate').datebox('getValue');
+        if (beginDate != "" && endDate != "" && endDate < beginDate) {
+            $.messager.alert({title: '提示', msg: "开始日期不能大于结束日期！"});
+            $('#endDate').datebox('setValue', '').datebox('showPanel');
+        }
+    }
+    //校验会计期间
+    function onSelect1() {
+        var begin = $('#yearMonthDate1').datebox('getValue');
+        var end = $('#yearMonthDate2').datebox('getValue');
+        if (begin != "" && end != "" && end < begin) {
+            $.messager.alert({title: '提示', msg: "开始会计期间不能大于结束会计期间！"});
+            $('#end').datebox('setValue', '').datebox('showPanel');
+        }
+    }
+
+</script>
+</body>
+</html>

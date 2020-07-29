@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('固定资产类别编码','','')">
+
+</head>
+<body>
+
+<!-- 搜索模块 -->
+
+    <div class="easyui-panel"
+         style="height: auto; width:100%;padding: 8px 0px 0px 0px;overflow: hidden;">
+        <form id="serachFrom" method="post" style="margin-bottom:0;">
+            <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+
+                <tr>
+                    <td style="width:8%;text-align: right;" >
+                        <label>代码类别:</label>
+                    </td>
+                    <td style="width:13%;">
+                        <input style="width:100%;"  id="codeType" name="codeType" readonly class="easyui-textbox" data-options="prompt: '代码类别'">
+                    </td>
+                    <td style="width:10%;text-align: right;" >
+                        <label>固定资产类别编码:</label>
+                    </td>
+                    <td style="width:13%;">
+                        <input style="width:100%;" id="assetType1" name="assetType" class="easyui-textbox" data-options="prompt: '固定资产类别编码'">
+                    </td>
+                    <td style="width:6%;text-align: right;" >
+                        <label>简称:</label>
+                    </td>
+                    <td style="width:13%;">
+                        <input style="width:100%;" id="assetSimpleName" name="assetSimpleName" class="easyui-textbox" data-options="prompt: '简称'">
+                    </td>
+                    <td style="width:6%;text-align: right;" >
+                        <label>全称:</label>
+                    </td>
+                    <td style="width:13%;">
+                        <input style="width:100%;" id="assetComplexName1" name="assetComplexName" class="easyui-textbox" data-options="prompt: '全称'">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:8%;text-align: right;" >
+                        <label>层次:</label>
+                    </td>
+                    <td style="width:13%;">
+                        <input style="width:100%;" id="level" name="level" class="easyui-numberbox" data-options="prompt: '层次'">
+                    </td>
+                    <td style="width:10%;text-align: right;" >
+                        <label>使用标志:</label>
+                    </td>
+                    <td style="width:13%;">
+                        <input style="width:100%;" id="useFlag" name="useFlag" editable="false" class="easyui-comcobox" data-options="prompt: '使用标志'">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="8" style="text-align: right; padding-right: 20px;">
+                        <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-search'" style="width: 8%;" onclick="serachF()" >查询</a>
+                        <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-refresh'" style="width: 8%;" onclick="reset()">重置</a>
+                        <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-download'" style="width: 8%;" onclick="export_('固定资产类别信息表')">导出</a>
+                        <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-print'" style="width: 8%;" onclick="printF()">打印</a>
+                    </td>
+                </tr>
+            </table>
+
+        </form>
+        <!--搜索结果-->
+        <table id = "sg" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"></table>
+    </div>
+
+
+<!-- 新增弹框 -->
+<div id="dlg"  class="easyui-dialog" style="width: 600px; padding: 10px 20px" align="center"
+     data-options="shadow:false,modal:true,closed:true,resizable:true,maximizable:true"  buttons="#dlg-buttons">
+    <form id="fm" method="post">
+        <table cellpadding="4" class="tt">
+            <tr>
+                <td style="width: 15%; text-align: right;" class="ttd ltd"><label>固定资产类别编码<span style="color: red">*</span>:</label>
+                </td>
+                <td class="ttd rtd">
+                    <input style="width: 85%" class="easyui-textbox"  id="assetType" name="assetType" data-options="prompt:'固定资产类别编码',required:true,missingMessage:'请输入固定资产类别编码'">
+                </td>
+                <td style="width: 15%; text-align: right;" class="ttd ltd"><label>上级固定资产类别编码:</label></td>
+                <td class="ttd rtd">
+                    <input style="width: 85%" class="easyui-textbox" id="superCode" name="superCode" data-options="prompt:'上级固定资产类别编码',missingMessage:'请选择上级固定资产类别编码'">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>简称<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id="assetSimpleName1" name="assetSimpleName"  data-options="prompt:'简称',required:true,missingMessage:'请输入简称'">
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>层次<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-numberbox" id="level1"  name="level"data-options="prompt:'层次',required:true,missingMessage:'请输入层次',min:0,precision:0">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;" class="ttd ltd"><label>全称:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-textbox" id ="assetComplexName" name="assetComplexName"   data-options="prompt:'全称',required:false,missingMessage:'请输入全称'" >
+
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>末级标志<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd">
+                     <input class="easyui-combobox" id="endFlag" name="endFlag" editable="false" data-options="prompt:'末级标志',required:true,missingMessage:'请选择末级标志'">
+                </td>
+            </tr>
+            <tr id="ifendFlag">
+                <td style="text-align: right;" class="ttd ltd"><label>净残值率<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-numberbox" id="netSurplusRate" name="netSurplusRate" data-options="prompt:'净残值率',required:true,missingMessage:'请输入净残值率',min:0,precision:4" />
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>折旧方法<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-combobox" id="depType" editable="false" name="depType" data-options="prompt:'折旧方法',required:true,missingMessage:'请选择折旧方法'" />
+                </td>
+            </tr>
+            <tr id="ifendFlag1">
+                <td style="text-align: right;" class="ttd ltd"><label>使用年限(月)<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-numberbox" id="depYears" name="depYears" data-options="prompt:'使用年限(月)',required:true,missingMessage:'请输入使用年限(月)',min:0,precision:0" />
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>使用标志:</label></td>
+                <td class="ttd rtd">
+                    <input class="easyui-combobox" id="useFlag2" name="useFlag" editable="false" data-options="prompt:'使用标志',required:true,missingMessage:'请选择使用标志'" />
+                </td>
+            </tr>
+            <tr id="ifendFlag2">
+                <td style="text-align: right;" class="ttd ltd"><label>资产科目代码<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd" ondblclick="subjectCode('itemCode1')" onchange="clearCode('articleCode1')">
+                    <input class="easyui-textbox" id="itemCode1" name="itemCode1" data-options="prompt:'资产科目代码',required:true,missingMessage:'请输入资产科目代码'" />
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>资产专项:</label></td>
+                <td class="ttd rtd" ondblclick="treeValue(originalValue1,'articleCode1')">
+                    <input class="easyui-textbox articleclass" id="articleCode1" name="articleCode1" data-options="prompt:'资产专项',missingMessage:'请选择资产专项'" />
+                </td>
+            </tr>
+            <tr id="ifendFlag3">
+                <td style="text-align: right;" class="ttd ltd"><label>折旧贷方科目代码<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd" ondblclick="subjectCode('itemCode2')" onchange="clearCode('articleCode2')">
+                    <input class="easyui-textbox" id="itemCode2" name="itemCode2" data-options="prompt:'折旧贷方科目代码',required:true,missingMessage:'请输入折旧贷方科目代码'" />
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>折旧贷方科目专项:</label></td>
+                <td class="ttd rtd" ondblclick="treeValue(originalValue2,'articleCode2')">
+                    <input class="easyui-textbox articleclass" id="articleCode2" name="articleCode2" type="text" data-options="prompt:'折旧贷方科目专项',missingMessage:'请选择折旧贷方科目专项'" />
+                </td>
+            </tr>
+            <tr id="ifendFlag4">
+                <td style="text-align: right;" class="ttd ltd"><label>折旧借方科目代码<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd" ondblclick="subjectCode('itemCode3')" onchange="clearCode('articleCode3')">
+                    <input class="easyui-textbox" id="itemCode3" name="itemCode3" data-options="prompt:'折旧借方科目代码',required:true,missingMessage:'请输入折旧借方科目代码'" />
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>折旧借方科目专项:</label></td>
+                <td class="ttd rtd" ondblclick="treeValue(originalValue3,'articleCode3')">
+                    <input class="easyui-textbox articleclass" id="articleCode3" name="articleCode3" type="text" data-options="prompt:'折旧借方科目专项',missingMessage:'请选择折旧借方科目专项'" />
+                </td>
+            </tr>
+            <tr id="ifendFlag5">
+                <td style="text-align: right;" class="ttd ltd"><label>进项税科目代码<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd" ondblclick="subjectCode('itemCode4')" onchange="clearCode('articleCode4')">
+                    <input class="easyui-textbox" id="itemCode4" name="itemCode4" data-options="prompt:'进项税科目代码',required:true,missingMessage:'请输入进项税科目代码'" />
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>进项税科目专项:</label></td>
+                <td class="ttd rtd" ondblclick="treeValue(originalValue4,'articleCode4')">
+                    <input class="easyui-textbox articleclass" id="articleCode4" name="articleCode4" data-options="prompt:'进项税科目专项',missingMessage:'请选择进项税科目专项'" />
+                </td>
+            </tr>
+            <tr id="ifendFlag6">
+                <td style="text-align: right;" class="ttd ltd"><label>资产清理科目代码<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd" ondblclick="subjectCode('itemCode5')" onchange="clearCode('articleCode5')">
+                    <input class="easyui-textbox" id="itemCode5" name="itemCode5" data-options="prompt:'资产清理科目代码',required:true,missingMessage:'请输入资产清理科目代码'" />
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>资产清理科目专项:</label></td>
+                <td class="ttd rtd" ondblclick="treeValue(originalValue5,'articleCode5')">
+                    <input class="easyui-textbox articleclass" id="articleCode5" name="articleCode5" data-options="prompt:'资产清理科目专项',missingMessage:'请选择资产清理科目专项'" />
+                </td>
+            </tr>
+            <tr id="ifendFlag7">
+                <td style="text-align: right;" class="ttd ltd"><label>减值准备科目代码<span style="color: red">*</span>:</label></td>
+                <td class="ttd rtd" ondblclick="subjectCode('itemCode6')" onchange="clearCode('articleCode6')">
+                    <input class="easyui-textbox" id="itemCode6" name="itemCode6" data-options="prompt:'减值准备科目代码',required:true,missingMessage:'请输入减值准备科目代码'" />
+                </td>
+                <td style="text-align: right;" class="ttd ltd"><label>减值准备科目专项:</label></td>
+                <td class="ttd rtd" ondblclick="treeValue(originalValue6,'articleCode6')">
+                    <input class="easyui-textbox articleclass" id="articleCode6" name="articleCode6" data-options="prompt:'减值准备科目专项',missingMessage:'请选择减值准备科目专项'" />
+                </td>
+            </tr>
+        </table>
+        <input type='Hidden' name="springmvc.token" value="">
+
+    </form>
+
+    <div id="dlg-buttons">
+        <a href="#" id="saveButton" class="easyui-linkbutton" iconCls="icon-ok icon-large" onclick="saveSpecial()">保存</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove icon-large" onclick="cancel()">取消</a>
+    </div>
+</div>
+
+<div id="specialGrid" class="easyui-dialog" style="width: 40%;top: 15%;padding:10px 10px 10px 10px;" data-options="modal:true,closed:true,resizable:false,collapsible:false,minimizable:false,maximizable:true" buttons="#special-buttons">
+    <div class="easyui-panel" style="width: 100%;height: 300px;">
+        <ul id="specialTree" class="easyui-tree"  data-options="method:'get',animate:true,checkbox:true,onlyLeafCheck:true,cascadeCheck:false"></ul>
+    </div>
+    <div id="special-buttons">
+        <a href="#" class="easyui-linkbutton" iconCls="icon-ok icon-large" onclick="saveSpecialGrid()">确定</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove icon-large" onclick="javascript:$('#specialGrid').dialog('close')">取消</a>
+    </div>
+</div>
+
+<div id="subjectGrid" class="easyui-dialog" style="width: 40%;top: 15%;padding:10px 10px 10px 10px;" data-options="modal:true,closed:true,resizable:false,collapsible:false,minimizable:false,maximizable:true" buttons="#roleData-buttons">
+    <div class="easyui-panel" style="width: 100%;height: 300px;">
+        <ul id="subjectTree" class="easyui-tree"  data-options="method:'get',animate:true,checkbox:true,onlyLeafCheck:true,cascadeCheck:false"></ul>
+    </div>
+    <div id="roleData-buttons">
+        <a href="#" class="easyui-linkbutton" iconCls="icon-ok icon-large" onclick="saveSuperSubject()">确定</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove icon-large" onclick="javascript:$('#subjectGrid').dialog('close')">取消</a>
+
+    </div>
+</div>
+
+<div id="waitMenu" class="easyui-dialog"
+     style="width: 300px; height: 100px; padding: 10px 20px;" closed="true"
+     align="center"
+     data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+    <div id="msg"></div>
+</div>
+<script th:src="@{/js/assettypeExport.js}"></script>
+<script th:src="@{/js/windowOpenNewPage.js}"></script>
+<script type="text/javascript">
+
+    var specialCodeInputId = null;//专项信息栏中当前活动input标签ID（专项代码）
+    var subjectCodeInputId = null;//科目代码
+    // var originalValue = null;//
+    var originalValue1 = "";//资产专项
+    var originalValue2 = "";//折旧贷方科目专项默认值
+    var originalValue3 = "";//折旧借方科目专项默认值
+    var originalValue4 = "";//进项税科目专项默认值
+    var originalValue5 = "";//资产清理科目专项默认值
+    var originalValue6 = "";//减值准备科目专项
+
+    $(function () {
+
+        $('#sg').datagrid({
+            url: '/categoryCoding/list',
+            striped: true,  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false,
+            method: 'post', //默认为 post
+            pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。默认false
+            fitColumns: true,//设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            singleSelect: true,//设置为 true，则只允许选中一行。 默认false
+            checkOnSelect: true, //如果设置为 true，当用户点击某一行时，则会选中/取消选中复选框。
+            pagePosition: 'bottom', //定义分页栏的位置。可用的值有：'top'、'bottom'、'both'。 默认 bottom
+            pageList: [10, 20, 30, 40, 50], //当设置了 pagination 属性时，初始化页面尺寸的选择列表。
+            nowrap: true,
+            columns: [
+                [
+                    {field: 'ck', checkbox: true, halign: 'center', align: 'center'}
+                    , {field: 'codeType', title: '代码类别', width: '6%', align: 'center', sortable: 'true', order: 'asc'}
+                    , {field: 'assetType', title: '固定资产类别编码', width: '10%', halign: 'center', align: 'left',formatter:function(value,row){
+                            return "<span onclick='checkThat("+JSON.stringify(row)+")' style='cursor:pointer;color:blue;'>"+row.assetType+"</span>";
+                    }}
+                    , {field: 'assetSimpleName', title: '简称', width: '10%', halign: 'center', align: 'left'}
+                    , {field: 'assetComplexName', title: '全称', width: '10%', halign: 'center', align: 'left'}
+                    , {field: 'netSurplusRate', title: '净残值率', width: '8%', halign: 'center', align: 'right'}
+                    , {field: 'depYears', title: '折旧年限', width: '8%', halign: 'center', align: 'center'}
+                    , {field: 'level', title: '层次', width: '5%', halign: 'center', align: 'center'}
+                    , {field: 'endFlag', title: '是否末级', width: '8%', halign: 'center', align: 'center'}
+                    , {field: 'depType', title: '折旧方法', width: '9%', halign: 'center', align: 'center'}
+                    , {field: 'articleCode11', title: '资产专项', width: '10%', halign: 'center', align: 'center'}
+                    , {field: 'id',title:'操作',width:'15%',align:'center',formatter: function(value,row,index){
+            var btn = '';
+            var btn1 = '';
+            var btn2 = '';
+            if(row.endFlag == '末级'){
+                btn = '<button class="sino-btn sino-btn-disabled sino-btn-xs" disabled="value">新增下级</button>';
+                if(row.counts>0){
+                    //已被卡片使用
+                    btn1 = '<button class="sino-btn sino-btn-disabled sino-btn-xs" disabled="value">编辑</button>';
+                    btn2 = '<button class="sino-btn sino-btn-disabled sino-btn-xs" disabled="value">删除</button>';
+                }else{
+                    btn1 = "<button class='sino-btn sino sino-btn-xs' onclick='editThat("+JSON.stringify(row)+")'>编辑</button>";
+                    btn2 = '<button class="sino-btn sino-btn-danger sino-btn-xs" onclick="deleteThat('+value+')">删除</button>';
+                }
+
+            }else{
+                //有下一级
+                if (row.hasNext >0){
+                    btn = "<button class='sino-btn sino sino-btn-xs' onclick='addLowerLevel("+JSON.stringify(row)+")'>新增下级</button>";
+                    btn1 = '<button class="sino-btn sino-btn-disabled sino-btn-xs" disabled="value">编辑</button>';
+                    btn2 = '<button class="sino-btn sino-btn-disabled sino-btn-xs" disabled="value">删除</button>';
+                } else {
+                    //无下一级的非末级也可以进行编辑和删除
+                    btn = "<button class='sino-btn sino sino-btn-xs' onclick='addLowerLevel("+JSON.stringify(row)+")'>新增下级</button>";
+                    btn1 = "<button class='sino-btn sino sino-btn-xs' onclick='editThat("+JSON.stringify(row)+")'>编辑</button>";
+                    btn2 = '<button class="sino-btn sino-btn-danger sino-btn-xs" onclick="deleteThat('+value+')">删除</button>';
+                }
+
+                // btn2 = '<button class="sino-btn sino-btn-danger sino-btn-xs" onclick="deleteThat('+value+')">删除</button>';
+            }
+
+            //格式：单引号必须在外，单双引号保持一致。不然脚本执行异常
+            var changeResult =  btn + "&nbsp;&nbsp;" + btn1 + "&nbsp;&nbsp;" + btn2;
+            return changeResult;
+        }}
+                ]
+            ],
+            /*,toolbar: '#tbar'*/    //通过id选择器引用
+            toolbar: [{
+            text: '新增',
+                iconCls: 'e-icon fa fa-plus',
+                plain: true,
+                handler: addThat
+        }],
+            loadMsg: '加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        });
+        $('#useFlag2').combobox({
+            valueField:'value',
+            textField:'text',
+            url: '/codeSelect?type=useFlag',
+            method:'GET',
+            panelHeight:'60'
+
+        })
+        $('#endFlag').combobox({
+            valueField:'value',
+            textField:'text',
+            url: '/codeSelect?type=endFlag',
+            method:'GET',
+            panelHeight:'60',
+            onSelect:function (rec) {
+                if(rec.value == 0){//末级
+                    $('#ifendFlag').show();
+                    $('#ifendFlag1').show();
+                    $('#ifendFlag2').show();
+                    $('#ifendFlag3').show();
+                    $('#ifendFlag4').show();
+                    $('#ifendFlag5').show();
+                    $('#ifendFlag6').show();
+                    $('#ifendFlag7').show();
+                }else {
+                    $('#ifendFlag').hide();
+                    $('#ifendFlag1').hide();
+                    $('#ifendFlag2').hide();
+                    $('#ifendFlag3').hide();
+                    $('#ifendFlag4').hide();
+                    $('#ifendFlag5').hide();
+                    $('#ifendFlag6').hide();
+                    $('#ifendFlag7').hide();
+                }
+            }
+        })
+        $('#depType').combobox({
+            valueField:'value',
+            textField:'text',
+            url: '/codeSelect?type=deprMethod',
+            method:'GET',
+            panelHeight:'60'
+        })
+        $('#useFlag').combobox({
+            valueField:'value',
+            textField:'text',
+            url: '/codeSelect?type=useFlag',
+            method:'GET',
+            panelHeight:'60'
+        })
+        $('#superCode1').combobox({
+            url: '/assettype/supercode'
+        });
+
+        $('#codeType').textbox('setValue', '21');
+    });
+    //查看（详情）
+    function checkThat(row) {
+        //console.log(row);
+            $('#fm').form('clear');
+        if(row.endFlag == '末级'){//末级
+            $('#ifendFlag').show();
+            $('#ifendFlag1').show();
+            $('#ifendFlag2').show();
+            $('#ifendFlag3').show();
+            $('#ifendFlag4').show();
+            $('#ifendFlag5').show();
+            $('#ifendFlag6').show();
+            $('#ifendFlag7').show();
+        }else {
+            $('#ifendFlag').hide();
+            $('#ifendFlag1').hide();
+            $('#ifendFlag2').hide();
+            $('#ifendFlag3').hide();
+            $('#ifendFlag4').hide();
+            $('#ifendFlag5').hide();
+            $('#ifendFlag6').hide();
+            $('#ifendFlag7').hide();
+        }
+            //详情页面赋值
+            $('#fm').find(".easyui-combobox").combobox({readonly:true});
+            $('#fm').find(".articleclass").textbox({disabled:false});
+            $('#fm').find(".easyui-textbox").textbox({readonly:true});
+            $('#fm').find(".easyui-combotree").combotree({readonly:true});
+            // $('#fm').find(".articleclass").textbox({readonly:false});
+
+            $('#fm').form('load',row);
+
+            document.getElementById('saveButton').style.display='none';
+        $('#dlg').dialog('open').dialog('setTitle','固定资产编码详情展示');
+    }
+    //新增
+    function addThat() {
+        $('#fm').form('clear');
+        $('#fm').find(".easyui-combobox").combobox({readonly:false});
+        $('#fm').find(".easyui-textbox").textbox({readonly:false});
+        $('#fm').find(".articleclass").textbox({disabled:false});
+        $('#fm').find(".easyui-combotree").combotree({readonly:false});
+        $('#level1').textbox({readonly:false});
+        $("#superCode").textbox({disabled:true});
+        $('#superCode').textbox({readonly:true});//设置固定资产类别编码 为非只读
+        $('#assetType').textbox({readonly:false});//设置固定资产类别编码 为非只读
+        $('#assetType').textbox({disabled:false});//设置固定资产类别编码 为非只读
+        $("#itemCode1").textbox({onChange:function(){getSpecialDate($("#itemCode1").textbox('getValue'),"itemCode1");}});
+        $("#itemCode2").textbox({onChange:function(){getSpecialDate($("#itemCode2").textbox('getValue'),"itemCode2");}});
+        $("#itemCode3").textbox({onChange:function(){getSpecialDate($("#itemCode3").textbox('getValue'),"itemCode3");}});
+        $("#itemCode4").textbox({onChange:function(){getSpecialDate($("#itemCode4").textbox('getValue'),"itemCode4");}});
+        $("#itemCode5").textbox({onChange:function(){getSpecialDate($("#itemCode5").textbox('getValue'),"itemCode5");}});
+        $("#itemCode6").textbox({onChange:function(){getSpecialDate($("#itemCode6").textbox('getValue'),"itemCode6");}});
+        $("#itemCode1").textbox("setValue", "1601/");
+        $("#itemCode2").textbox("setValue", "1607/");
+        $("#itemCode3").textbox("setValue", "6601/55/");
+        $("#itemCode4").textbox("setValue", "2221/09/01/");
+        $("#itemCode5").textbox("setValue", "1606/");
+        $("#itemCode6").textbox("setValue", "1603/");
+        document.getElementById("saveButton").style.display='';
+        // $("#articleCode1").textbox("setValue", "ZC");
+
+        $('#ifendFlag').hide();
+        $('#ifendFlag1').hide();
+        $('#ifendFlag2').hide();
+        $('#ifendFlag3').hide();
+        $('#ifendFlag4').hide();
+        $('#ifendFlag5').hide();
+        $('#ifendFlag6').hide();
+        $('#ifendFlag7').hide();
+
+        $('#superCode1').combobox({
+            url: '/assettype/supercode'
+        });
+        $('#dlg').dialog('open').dialog('setTitle','新增固定资产编码');
+        url='/categoryCoding/add';
+    }
+    //修改或编辑
+    function editThat(row) {
+        $('#fm').find(".easyui-combobox").combobox({readonly:false});
+        $('#fm').find(".easyui-textbox").textbox({readonly:false});
+        $('#fm').find(".articleclass").textbox({disabled:false});
+        $('#fm').find(".easyui-combotree").combotree({readonly:false});
+       /* $('#superCode').textbox({disabled:false});//设置上级固定资产类别编码 为只读
+        $('#assetType').textbox({disabled:false});//设置固定资产类别编码 为只读*/
+        $('#superCode').textbox({readonly:true});//设置上级固定资产类别编码 为只读
+        $('#assetType').textbox({readonly:true});//设置固定资产类别编码 为只读
+        $('#level1').textbox({readonly:true});//设置固定资产
+
+        // var rows = $('#sg').datagrid('getSelections');
+        // if(rows.length!=0) {
+        //     var row = $('#sg').datagrid('getSelected');
+            $('#fm').form('clear');
+            if(row.endFlag == '末级'){
+                $('#ifendFlag').show();
+                $('#ifendFlag1').show();
+                $('#ifendFlag2').show();
+                $('#ifendFlag3').show();
+                $('#ifendFlag4').show();
+                $('#ifendFlag5').show();
+                $('#ifendFlag6').show();
+                $('#ifendFlag7').show();
+                $('#superCode').textbox({disabled:false});
+                $("#itemCode1").textbox({onChange:function(){getSpecialDate($("#itemCode1").textbox('getValue'),"itemCode1");}});
+                $("#itemCode2").textbox({onChange:function(){getSpecialDate($("#itemCode2").textbox('getValue'),"itemCode2");}});
+                $("#itemCode3").textbox({onChange:function(){getSpecialDate($("#itemCode3").textbox('getValue'),"itemCode3");}});
+                $("#itemCode4").textbox({onChange:function(){getSpecialDate($("#itemCode4").textbox('getValue'),"itemCode4");}});
+                $("#itemCode5").textbox({onChange:function(){getSpecialDate($("#itemCode5").textbox('getValue'),"itemCode5");}});
+                $("#itemCode6").textbox({onChange:function(){getSpecialDate($("#itemCode6").textbox('getValue'),"itemCode6");}});
+            }else{
+                $('#ifendFlag').hide();
+                $('#ifendFlag1').hide();
+                $('#ifendFlag2').hide();
+                $('#ifendFlag3').hide();
+                $('#ifendFlag4').hide();
+                $('#ifendFlag5').hide();
+                $('#ifendFlag6').hide();
+                $('#ifendFlag7').hide();
+            }
+            $('#superCode1').combobox({
+                url: '/categoryCoding/supercode'
+            });
+            $('#fm').form('load',row);
+
+            document.getElementById("saveButton").style.display='';
+            $('#dlg').dialog('open').dialog('setTitle','修改固定资产编码');
+        // }else{
+        //     $.messager.alert('提示','请先选择要修改的编码！','warning'); return false;
+        // }
+        url='/categoryCoding/update';
+    }
+    //删除
+    var count=''
+    function deleteThat(value) {
+        var rows = $('#sg').datagrid('getSelections');
+        if(rows.length!=0) {
+            $.messager.confirm('删除','确认删除该类别编码吗?',function(r) {
+                if (r) {
+                    $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+
+                    var row = $('#sg').datagrid('getSelected');
+                    if(row.endFlag=='1'||row.endFlag=='非末级'){
+                        //判断该类别编码是否有下级编码
+                        lowerlevel(row)
+
+                        if(parseInt(count)>0){
+                            $('#waitMenu').dialog('close');//关闭等待窗口
+                            $.messager.alert('提示','该固定资产类别为非末级，请先删除其下级固定资产类别编码！','error'); return false;
+                        }
+                    }
+
+                    //先判断该类别是否有卡片生成，有对应卡片则不允许删除
+                    $.ajax({
+                        url: '/categoryCoding/isUse',
+                        data: row,
+                        type: 'POST',
+                        // async: false,
+                        success: function(data){
+                            if(data.success){
+                                $.ajax({
+                                    url: '/categoryCoding/delete',//这里写上你的action路径
+                                    //data: {"centerCode" : row.centerCode, "branch_code" :  row.branch_code, "accBookType" : row.accBookType, "accBookCode" : row.accBookCode, "codeType" : row.codeType, "assetType" : row.assettypeCode},
+                                    data: row,
+                                    type: 'POST',  //提交方式
+                                    // async: false, //是否异步
+                                    success: function (data) {//这是个回调函数  data表示从action中传过来的json数据
+                                        $('#waitMenu').dialog('close');//关闭等待窗口
+                                        //弹出从action层传过来的json格式的数据(用来显示是否更新成功)
+                                        if (data.success) {
+                                            $('#sg').datagrid('reload');
+                                            $.messager.show({
+                                                title: '消息',
+                                                msg: '删除成功！'
+                                            });
+                                        } else {
+                                            $.messager.show({
+                                                title: '消息',
+                                                msg: data.errorMsg
+                                            });
+                                        }
+                                    },
+                                    fail: function (data) {
+                                        $.messager.show({
+                                            title: '消息',
+                                            msg: '删除失败！'
+                                        });
+                                    }
+                                });
+                            }else{
+                                $('#waitMenu').dialog('close');//关闭等待窗口
+                                $.messager.alert('提示','该类别已有卡片使用，不允许删除！','error'); return false;
+                            }
+                        }
+                    });
+                }
+            })
+        } else {
+            $.messager.alert('提示','请选择一条要删除的类别编码！','warning'); return false;
+        }
+    }
+
+    function saveSpecial() {
+        //$("form[name='form1']").children().not($('input[type="hidden"]')).serialize()
+       // var data = $('#fm').children().not($('input[type="hidden"]')).serialize();
+       // var res=parseFloat($('#residualValueRate1').value);
+        var assetType= $('#assetType').textbox('getValue');
+        var level1=$('#level1').textbox("getValue");
+        var assetSimpleName1=$('#assetSimpleName1').textbox("getValue");
+        var endFlag=$('#endFlag').combobox("getValue");
+        var data= $('#fm').serialize();
+        //校验必填项是否为空
+        var arr = $('#fm').serializeArray();
+        if(!assetType|| !level1|| !assetSimpleName1|| !endFlag){//
+            $.messager.alert('提示','请填写带*信息栏', 'warning'); return false;
+        }
+        var flags=false;
+        if(endFlag=="1"||endFlag=='非末级'){
+            //非末级
+            if(!assetType|| !level1|| !assetSimpleName1){
+                $.messager.alert('提示','请填写带*信息栏', 'warning'); return false;
+            }
+        }else if(endFlag=="0"||endFlag=="末级"){
+            //末级
+            var flag=$('#fm').form('validate');
+            if(!flag){
+                $.messager.alert('提示','请填写带*信息栏', 'warning');
+                return flag;
+            }
+            var formData = {};
+            $.each(arr, function() {
+                formData[this.name] = this.value;
+            });
+            if(formData.assetType == null || formData.assetType == ""){
+                $.messager.alert('提示','固定资产类别编码不能为空！','error');
+                return;
+            }
+            if(formData.assetSimpleName == null || formData.assetSimpleName == ""){
+                $.messager.alert('提示','固定资产类别简称不能为空！','error');
+                return;
+            }
+            if(formData.level == null || formData.level == ""){
+                $.messager.alert('提示','固定资产类别层级不能为空！','error');
+                return;
+            }
+            if(formData.endFlag == null || formData.endFlag == ""){
+                $.messager.alert('提示','末级标志不能为空！','error');
+                return;
+            }else{
+                if(formData.endFlag == '末级' || formData.endFlag == '0'){//末级
+                    if(formData.netSurplusRate == null || formData.netSurplusRate == ""){
+                        $.messager.alert('提示','净残值率不能为空！','error');
+                        return;
+                    }
+                    if(formData.depType == null || formData.depType == ""){
+                        $.messager.alert('提示','折旧方法不能为空！','error');
+                        return;
+                    }
+                    if(formData.depYears == null || formData.depYears == ""){
+                        $.messager.alert('提示','折旧年限不能为空！','error');
+                        return;
+                    }
+                    if(formData.useFlag == null || formData.useFlag == ""){
+                        $.messager.alert('提示','使用标志不能为空！','error');
+                        return;
+                    }
+                    if(formData.itemCode1 == null || formData.itemCode1 == ""){
+                        $.messager.alert('提示','资产科目代码不能为空！','error');
+                        return;
+                    }
+                    var articleCodes="";
+                    if(formData.articleCode1 != null || formData.articleCode1 != ""){
+                        articleCodes=formData.articleCode1+",";
+                    }
+                    if(formData.itemCode2 == null || formData.itemCode2 == ""){
+                        $.messager.alert('提示','折旧贷方科目代码不能为空！','error');
+                        return;
+                    }
+                    if(formData.articleCode2 != null || formData.articleCode2 != ""){
+                        articleCodes=articleCodes+formData.articleCode2+","
+                    }
+                    if(formData.itemCode3 == null || formData.itemCode3 == ""){
+                        $.messager.alert('提示','折旧借方科目代码不能为空！','error');
+                        return;
+                    }
+                    if(formData.articleCode3 != null || formData.articleCode3 != ""){
+                        articleCodes=articleCodes+formData.articleCode3+","
+                    }
+                    if(formData.itemCode4 == null || formData.itemCode4 == ""){
+                        $.messager.alert('提示','进项税科目代码不能为空！','error');
+                        return;
+                    }
+                    if(formData.articleCode4 != null || formData.articleCode4 != ""){
+                        articleCodes=articleCodes+formData.articleCode4+","
+                    }
+                    if(formData.itemCode5 == null || formData.itemCode5 == ""){
+                        $.messager.alert('提示','资产清理科目代码不能为空！','error');
+                        return;
+                    }
+                    if(formData.articleCode5 != null || formData.articleCode5 != ""){
+                        articleCodes=articleCodes+formData.articleCode5+","
+                    }
+                    if(formData.itemCode6 == null || formData.itemCode6 == ""){
+                        $.messager.alert('提示','固定资产减值准备科目代码不能为空！','error');
+                        return;
+                    }
+                    if(formData.articleCode6 != null || formData.articleCode6 != ""){
+                        articleCodes=articleCodes+formData.articleCode6
+                    }
+                }
+            }
+            var itemCodes=formData.itemCode1+","+formData.itemCode2+","+formData.itemCode3+","+formData.itemCode4+","+formData.itemCode5+","+formData.itemCode6;
+            //获取所有科目专项信息判断
+            $.ajax({
+                type:"post",
+                url:'/categoryCoding/judgesubject',
+                data:{"itemCodes":itemCodes,"articleCodes":articleCodes,},
+                //async:false,
+                success:function (result){
+                    if(result.success){
+
+                    }else{
+                        $.messager.alert('提示',result.errorMsg,'error');
+                        flags=true;
+                    }
+                }
+
+            });
+        }
+
+         if(flags){
+             return;
+         }
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        // var num1Val = document.getElementById("assettypeCode1").value;
+        // alert("num1Val"+num1Val);
+        $.post(url, data, function(result){
+            $('#waitMenu').dialog('close');//关闭等待窗口
+            if(result.success){
+                $.messager.alert('提示','操作成功！', 'info');
+                $('#dlg').dialog('close');
+                $('#sg').datagrid('reload');
+            }else if(result.error){
+                $.messager.alert('提示',result.errorMsg,'error');
+            }
+            else{
+                $.messager.alert('提示',result.errorMsg,'error');
+            }
+        });
+    }
+    //返回或关闭
+    function cancel() {
+        $('#dlg').dialog('close');
+    }
+
+    //查询
+    function serachF() {
+        var params = {};
+        $('#serachFrom').find('input').each(function(){
+            var obj = $(this);
+            var name = obj.attr('name');
+            if(name){
+                params[name] = obj.val();
+            }
+        });
+        $('#sg').datagrid("load", params);
+    }
+    //重置
+    function reset() {
+        $('#serachFrom').form('clear');
+        $('#codeType').textbox('setValue', '21');
+    }
+
+
+    //导出
+    function export_(xlsName){
+        //准备参数
+        var result = prepareParam(xlsName);
+        if (result == "false") {
+            return false;
+        }
+        //使用参数执行一次查询，且将查询数据导出
+        jsutil.core.download(
+            'categorydownload',
+            result);
+    }
+
+    //准备参数
+    function prepareParam(xlsName) {
+        var param = {
+            name : xlsName,
+            queryConditions : {},
+            cols : assetTypeExportXls
+        };
+        var grid = $("#sg");
+        var datas = grid.datagrid("getRows");
+        if (datas.length > 0) {
+            //查询之前验证
+            $('#serachFrom').find('input').each(
+                function() {
+                    var obj = $(this);
+                    var name = obj.attr('name');
+                    if (name) {
+                        param.queryConditions[name] = obj.val();
+                    }
+                });
+            return param;
+        } else {
+            $.messager.alert("提示", "请先查询或者没有要导出的数据", "warning");
+            return "false";
+        }
+    }
+
+    //新增下级
+    function addLowerLevel(row){
+        originalValue1 = "ZC";//资产专项
+        originalValue2 = "ZC";//折旧贷方科目专项默认值
+        originalValue3 = "BM";//折旧借方科目专项默认值
+        originalValue4 = "";//进项税科目专项默认值
+        originalValue5 = "";//资产清理科目专项默认值
+        originalValue6 = "ZC";//减值准备科目专项
+        $('#fm').find(".easyui-combobox").combobox({readonly:false});
+        $('#fm').find(".easyui-textbox").textbox({readonly:false});
+        $('#fm').find(".articleclass").textbox({disabled:false});
+        $('#fm').find(".easyui-combotree").combotree({readonly:false});
+        $('#superCode').textbox({disabled:false});//设置上级固定资产类别编码 为非只读
+        $('#superCode').textbox({readonly:true});//设置固定资产类别编码 为非只读
+        $('#assetType').textbox({readonly:false});//设置固定资产类别编码 为非只读
+        $('#assetType').textbox({disabled:false});//设置固定资产类别编码 为非只读
+        $('#level1').textbox({readonly:false});//设置固定资产层级 为非只读
+        $('#fm').form('clear');
+        $("#superCode").textbox("setValue", row.assetType);//设置固定资产类别编码
+        $("#level1").textbox("setValue", parseInt(row.level)+1);//层次+1
+
+        $("#itemCode1").textbox({onChange:function(){getSpecialDate($("#itemCode1").textbox('getValue'),"itemCode1");}});
+        $("#itemCode2").textbox({onChange:function(){getSpecialDate($("#itemCode2").textbox('getValue'),"itemCode2");}});
+        $("#itemCode3").textbox({onChange:function(){getSpecialDate($("#itemCode3").textbox('getValue'),"itemCode3");}});
+        $("#itemCode4").textbox({onChange:function(){getSpecialDate($("#itemCode4").textbox('getValue'),"itemCode4");}});
+        $("#itemCode5").textbox({onChange:function(){getSpecialDate($("#itemCode5").textbox('getValue'),"itemCode5");}});
+        $("#itemCode6").textbox({onChange:function(){getSpecialDate($("#itemCode6").textbox('getValue'),"itemCode6");}});
+        $("#itemCode1").textbox("setValue", "1601/");
+        $("#itemCode2").textbox("setValue", "1607/");
+        $("#itemCode3").textbox("setValue", "6601/55/");
+        $("#itemCode4").textbox("setValue", "2221/09/01/");
+        $("#itemCode5").textbox("setValue", "1606/");
+        $("#itemCode6").textbox("setValue", "1603/");
+        // $("#articleCode1").textbox("setValue", "ZC");
+        document.getElementById("saveButton").style.display='';
+
+        $('#ifendFlag').hide();
+        $('#ifendFlag1').hide();
+        $('#ifendFlag2').hide();
+        $('#ifendFlag3').hide();
+        $('#ifendFlag4').hide();
+        $('#ifendFlag5').hide();
+        $('#ifendFlag6').hide();
+        $('#ifendFlag7').hide();
+
+        // $('#superCode1').combobox({
+        //     url: '/assettype/supercode'
+        // });
+        $('#dlg').dialog('open').dialog('setTitle','新增固定资产编码');
+        url='/categoryCoding/addLowerLevel';
+    }
+
+    //   双击(dbclick) 进行修改时调用的在这个地方方法
+    function treeValue(originalValue,id){
+        specialCodeInputId = id;
+        var inputValue = $('#'+specialCodeInputId).textbox('getText');
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        $('#specialTree').tree({
+            //   双击进行修改时调用的在这个地方
+            url:'/voucher/specialTreeUseFlogOne?originalValue='+originalValue+'&inputValue='+encodeURI(inputValue),
+            onSelect: function (node) {
+                var cknodes = $('#specialTree').tree("getChecked");
+                for (var i = 0; i < cknodes.length; i++) {
+                    if (cknodes[i].id != node.id) {
+                        $('#specialTree').tree("uncheck", cknodes[i].target);
+                    }
+                }
+                if (node.checked) {
+                    $('#specialTree').tree('uncheck', node.target);
+                } else {
+                    $('#specialTree').tree('check', node.target);
+                }
+            },
+            /*onDblClick: function (node) {
+                saveSuperSubject();
+            },*/
+            onLoadSuccess: function (node, data) {
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                $('#specialGrid').dialog('open').dialog('setTitle','专项信息');
+                $(this).find('span.tree-checkbox').unbind().click(function () {
+                    $('#specialTree').tree('select', $(this).parent());
+                    return false;
+                });
+            }
+        });
+    }
+
+    //保存专项树状选择信息
+    function saveSpecialGrid(){
+        var nodes = $('#specialTree').tree('getChecked');//获取选中专项信息
+        if(nodes.length!=0){
+            $('#'+specialCodeInputId).textbox("setValue", nodes[0].id);
+            $('#specialGrid').dialog('close');
+        } else {
+            $.messager.alert('提示','请选择专项信息','warning');
+        }
+    }
+
+
+
+
+    //双击获取科目代码树
+    function subjectCode(id){
+        subjectCodeInputId = id;
+        // var codeValue;
+        var codeValue = $('#'+id).textbox('getText');
+        if(codeValue==undefined){
+            codeValue="";
+        }
+        // indexRow=rowIndex;
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        $('#subjectTree').tree({
+            url:'/voucher/subjectList?value='+encodeURI(codeValue)+'&onlyLastStage=N',
+            onSelect: function (node) {
+                var cknodes = $('#subjectTree').tree("getChecked");
+                for (var i = 0; i < cknodes.length; i++) {
+                    if (cknodes[i].id != node.id) {
+                        $('#subjectTree').tree("uncheck", cknodes[i].target);
+                    }
+                }
+                if (node.checked) {
+                    $('#subjectTree').tree('uncheck', node.target);
+                } else {
+                    $('#subjectTree').tree('check', node.target);
+                }
+            },
+            onDblClick: function (node) {
+                saveSuperSubject();
+            },
+            onLoadSuccess: function (node, data) {
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                $('#subjectGrid').dialog('open').dialog('setTitle','科目信息');
+                $(this).find('span.tree-checkbox').unbind().click(function () {
+                    $('#subjectTree').tree('select', $(this).parent());
+                    return false;
+                });
+            }
+        });
+    }
+
+    //等待
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+
+    var i = 2;
+
+    function showalert() {
+        var text = "";
+        var text1 = "";
+        if (i == 1) {
+            text = '正在操作，请稍后.';
+        } else if (i == 2) {
+            text = '正在操作，请稍后..';
+        } else if (i == 3) {
+            text = '正在操作，请稍后...';
+            i = 0;
+        }
+        i++;
+        $('#msg').text(text);
+    }
+
+    function onClose() {
+        clearInterval(loading);
+    }
+
+
+    //保存树状选择信息
+    function saveSuperSubject(){
+        var superCode="";
+        var superName="";
+        var nodes = $('#subjectTree').tree('getChecked');//获取选中科目信息
+        var parent1= $('#subjectTree').tree('getParent',nodes[0].target);
+        if(parent1==null){
+            $.messager.alert('提示','请重新选择，不允许选择科目分类','warning');
+            return false;
+            superCode = nodes[0].id+"/";
+            superName = nodes[0].text+"/";
+        }else{
+            var parent2= $('#subjectTree').tree('getParent',parent1.target);
+            if(parent2==null){
+                superCode = parent1.id+"/"+nodes[0].id+"/";
+                superName = parent1.text+"/"+nodes[0].text+"/";
+            }else{
+                var parent3= $('#subjectTree').tree('getParent',parent2.target);
+                if(parent3==null){
+                    superCode = parent2.id+"/"+parent1.id+"/"+nodes[0].id+"/";
+                    superName = parent2.text+"/"+parent1.text+"/"+nodes[0].text+"/";
+                }else{
+                    var parent4= $('#subjectTree').tree('getParent',parent3.target);
+                    if(parent4==null){
+                        superCode = parent3.id+"/"+parent2.id+"/"+parent1.id+"/"+nodes[0].id+"/";
+                        superName = parent3.text+"/"+parent2.text+"/"+parent1.text+"/"+nodes[0].text+"/";
+                    }else{
+                        var parent5= $('#subjectTree').tree('getParent',parent4.target);
+                        if(parent5==null){
+                            superCode = parent4.id+"/"+parent3.id+"/"+parent2.id+"/"+parent1.id+"/"+nodes[0].id+"/";
+                            superName = parent4.text+"/"+parent3.text+"/"+parent2.text+"/"+parent1.text+"/"+nodes[0].text+"/";
+                        }else{
+                            var parent6= $('#subjectTree').tree('getParent',parent5.target);
+                            if(parent6==null){
+                                superCode = parent5.id+"/"+parent4.id+"/"+parent3.id+"/"+parent2.id+"/"+parent1.id+"/"+nodes[0].id+"/";
+                                superName = parent5.text+"/"+parent4.text+"/"+parent3.text+"/"+parent2.text+"/"+parent1.text+"/"+nodes[0].text+"/";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        //去除一级（科目分类：资产、负债、权益、损益）
+        if ((superCode.split("/")).length>2) {//最后一个是空的，因此为2
+            superCode = superCode.substring(superCode.indexOf("/")+1);
+            superName = superName.substring(superName.indexOf("/")+1);
+        }
+        $("#" + subjectCodeInputId).textbox("setValue", superCode);
+        //获取科目关联的专项信息
+        getSpecialDate(superCode,subjectCodeInputId);
+        $('#subjectGrid').dialog('close');
+    }
+    //获取科目关联的专项信息
+    function getSpecialDate(superCode,subjectCodeInputId){
+        if(superCode!='' && superCode!=null){
+            $.get('/voucher/getSpecialDate?subjectCode='+superCode,
+                function(data) {
+                //判断是否是多个专项
+                    if(data.length>1){
+                        //判断多个专项中是否有资产 ZC 有只显示ZC ，没有默认第一个
+                            for(var i=0;i<data.length;i++){
+                                if(data[i].specialCode=='ZC'){
+                                    data[0].specialCode='ZC';
+                                }
+                            }
+                    }
+                    if(subjectCodeInputId == "itemCode1"){
+                        if(data.length!=""&&data.length!=null){
+                            originalValue1=data[0].specialCode;//
+                        }else{
+                            originalValue1="error";//
+                        }
+                        treeValueSetStyle(originalValue1,"articleCode1");
+                    }else if(subjectCodeInputId == "itemCode2"){
+                        if(data.length!=""&&data.length!=null){
+                            originalValue2=data[0].specialCode;//
+                        }else{
+                            originalValue2="error";//
+                        }
+                        treeValueSetStyle(originalValue2,"articleCode2");
+                    }else if(subjectCodeInputId == "itemCode3"){
+                        if(data.length!=""&&data.length!=null){
+                            originalValue3=data[0].specialCode;//
+                        }else{
+                            originalValue3="error";
+                        }
+                        treeValueSetStyle(originalValue3,"articleCode3");
+                    }else if(subjectCodeInputId == "itemCode4"){
+                        if(data.length!=""&&data.length!=null){
+                            originalValue4=data[0].specialCode;//
+                        }else{
+                            originalValue4="error";
+                        }
+                        treeValueSetStyle(originalValue4,"articleCode4");
+                    }else if(subjectCodeInputId == "itemCode5"){
+                        if(data.length!=""&&data.length!=null){
+                            originalValue5=data[0].specialCode;//
+                        }else{
+                            originalValue5="error";
+                        }
+                        treeValueSetStyle(originalValue5,"articleCode5");
+                    }else if(subjectCodeInputId == "itemCode6"){
+                        if(data.length!=""&&data.length!=null){
+                            originalValue6=data[0].specialCode;//
+                        }else{
+                            originalValue6="error";
+                        }
+                        treeValueSetStyle(originalValue6,"articleCode6");
+                    }
+
+                })
+        }
+
+    }
+
+    //清空专项
+    function clearCode(id){
+        $('#'+id).textbox("setValue", "");//清空专项
+    }
+
+    //判断科目下是否有内容，有内容则设置样式（这个部分替换掉了,只显示正在使用的。如果需要显示全部的在替换回来）
+    function treeValueSetStyle(originalValue,id){
+        // $.get('/voucher/specialTree?originalValue='+originalValue,function (data) {
+        $.get('/voucher/specialTreeUseFlogOne?originalValue='+originalValue,function (data) {
+            if(data.length>0){
+                $('#'+id).textbox({readonly:false});
+                $('#'+id).textbox({disabled:false});
+                $('#'+id).textbox({required:true});//将专项设置为必输项
+            }else{
+                $('#'+id).textbox({required:false});
+                $('#'+id).textbox({readonly:false});//将专项设置为只读
+                $('#'+id).textbox({disabled:true});
+
+            }
+        })
+
+    }
+    function lowerlevel(row) {
+        $.ajax({
+            url: '/categoryCoding/lowerlevel',
+            data: row,
+            type: 'POST',
+            async: false,
+            success: function(data){
+                count=data;
+            }
+        });
+
+    }
+
+
+    //打印
+    function printF() {
+        //先查询出数据
+        var params = {};
+        $('#serachFrom').find('input').each(function(){
+            var obj = $(this);
+            var name = obj.attr('name');
+            if(name){
+                params[name] = obj.val();
+            }
+        });
+        params["page"]=1;
+        params["rows"]=10;
+        $.ajax({
+            type:"post",
+            url:'/categoryCoding/list',
+            data:params,
+          //  async:false,
+            success:function (result){
+                if(result.total<= 0){
+
+                    $.messager.alert('提示', '没有可打印的数据！', 'warning');
+                }else{
+                    windowOpenNewPage('/categoryCoding/print',params );
+                }
+            }
+
+        });
+    }
+</script>
+
+</body>
+</html>

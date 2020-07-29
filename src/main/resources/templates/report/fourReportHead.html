@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('四大报表','','')">
+
+</head>
+<body>
+<div class="easyui-panel" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+    <!-- 筛选条件 -->
+    <form id="searchForm" method="post" style="margin-bottom: 0">
+        <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="width:8%;text-align: right;" >
+                    <label>会计期间:</label>
+                </td>
+                <td style="width:13%;">
+                    <input style="width:100%;" id="yearMonthDate" name="yearMonthDate" class="easyui-combobox" data-options="prompt: '会计期间',required:true,editable:false">
+                </td>
+                <td style="width:8%;text-align: right;" >
+                    <label>单位:</label>
+                </td>
+                <td style="width:13%;">
+                    <input style="width:100%;" id="unit" name="unit" class="easyui-combobox" data-options="prompt: '单位',required:true,editable:false">
+                </td>
+                <td style="width:8%;text-align: right;" >
+                    <label>报表名称:</label>
+                </td>
+                <td colspan="2">
+                    <input style="width:50%;" id="JJreportName"  name="reportCode" class="easyui-combobox" data-options="prompt: '报表名称',required:true,disabled:true,editable:false">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7" style="text-align: right; padding-right: 20px" >
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="searchF()"  data-options="iconCls:'e-icon fa fa-search'" style="width:7%;">查询</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="create()" data-options="iconCls:'e-icon fa fa-refresh'" style="width:9%;">单表生成</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="mergeCreate()" data-options="iconCls:'e-icon fa fa-refresh'" style="width:9%;">合并表生成</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="exportFSingle()" data-options="iconCls:'e-icon fa fa-table'" style="width:9%;">单表导出</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="exportF()" data-options="iconCls:'e-icon fa fa-table'" style="width:9%;">整表导出</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="resetF()" data-options="iconCls:'e-icon fa fa-refresh'" style="width:7%;">重置</a>
+                </td>
+            </tr>
+        </table>
+    </form>
+
+    <table id="dynamictDatagridList" class="easyui-datagrid" title="报表数据" style="width:auto;height:auto"
+           data-options="singleSelect:true,autoRowHeight:true,nowrap:false,fitColumns:false,closed:true">
+    </table>
+</div>
+<div id="waitMenu" class="easyui-dialog" style="width: 300px; height: 100px; padding: 10px 20px;" closed="true" align="center" data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+    <div id="msg"></div>
+</div>
+</body>
+<script>
+    $(function() {
+        $('#JJreportName').combobox({
+            disabled: false,
+            url: '/codeSelect/?type=SDBBreportType',
+            method: 'GET',
+            valueField: 'value',
+            textField: 'text'
+        });
+
+        $('#unit').combobox({
+            url:'/codeSelect?type=moneyUnit',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#yearMonthDate').combobox({
+            url:'/codeSelect?type=yearMonthAllAndNotJS',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+    });
+    //搜索
+    function searchF() {
+        if(!$('#searchForm').form('validate')){
+            $.messager.show({
+                title : '提示',
+                msg : '请填写必输项',
+                timeout:2000
+            });
+            return false;
+        }
+
+        $('#dynamictDatagridList').datagrid({
+            closed: true
+        });
+
+        var params = {};
+        $('#searchForm').find('input').each(function () {
+            var obj = $(this);
+            var name = obj.attr('name');
+            if (name) {
+                params[name] = obj.val();
+            }
+        });
+
+        $.ajax({
+            url: "/report/checkSDBB",
+            type: 'post',
+            dataType: 'json',
+            data:params,
+            success: function (result) {
+                if (result.success) {
+                    $('#dynamictDatagridList').datagrid({
+                        closed: false
+                    });
+                    $.ajax({
+                        url: "/report/getSDBBRepotHead", //获取表头
+                        type: 'post',
+                        dataType: 'json',
+                        data:params,
+                        success: function (data) {
+                            var msg = JSON.parse(data.obj);
+                            console.log(msg.title);
+                            $("#dynamictDatagridList").datagrid({
+                                columns: msg.title    //动态取标题
+                            });
+                        }
+                    });
+                    $('#dynamictDatagridList').datagrid({
+                        url: '/report/SDBBlist',
+                        queryParams: params
+                    });
+                } else {
+                    $.messager.alert('提示',result.errorMsg,'warning');
+                }
+            }
+        });
+    }
+
+    //四大报表生成
+    function create(){
+        var  yearMonthDate =$('#yearMonthDate').combobox('getValue');
+        if(!yearMonthDate){
+            $.messager.alert('提示','会计期间不为空','warning');
+            return;
+        }
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        $.ajax({
+            url: "/reportcompute/check",
+            type: 'post',
+            dataType: 'json',
+            data:{
+                'yearMonthDate':yearMonthDate,'type':'JJ',
+            },
+            success: function (res) {
+                if(res.success){
+                    $.ajax({
+                        url: "/reportcompute/fourcomputefund",
+                        type: 'post',
+                        dataType: 'json',
+                        data:{
+                            'yearMonthDate':yearMonthDate,
+                        },
+                        success: function (result) {
+                            $('#waitMenu').dialog('close');//关闭等待窗口
+                            if(result.success){
+                                $.messager.alert('提示','四大报表生成成功！', 'info');
+                            }else{
+                                $.messager.alert('提示',result.errorMsg,'warning');
+                            }
+                        }
+                    });
+                }else{
+                    $('#waitMenu').dialog('close');//关闭等待窗口
+                    $.messager.alert('提示',res.errorMsg,'warning');
+                }
+            }
+        });
+    }
+    //四大报表合并表的生成
+    function mergeCreate(){
+        var  yearMonthDate =$('#yearMonthDate').combobox('getValue');
+        if(!yearMonthDate){
+            $.messager.alert('提示','会计期间不为空','warning');
+            return;
+        }
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        $.ajax({
+            url: "/reportcompute/checkFour",
+            type: 'post',
+            dataType: 'json',
+            data:{
+                'yearMonthDate':yearMonthDate,'type':'JJ',
+            },
+            success: function (res) {
+                if(res.success){
+                    $.ajax({
+                        url: "/reportcompute/fourMergeComputeFund",
+                        type: 'post',
+                        dataType: 'json',
+                        data:{
+                            'yearMonthDate':yearMonthDate,
+                        },
+                        success: function (result) {
+                            $('#waitMenu').dialog('close');//关闭等待窗口
+                            if(result.success){
+                                $.messager.alert('提示','合并报表生成成功！', 'info');
+                            }else{
+                                $.messager.alert('提示',result.errorMsg,'warning');
+                            }
+                        }
+                    });
+                }else{
+                    $('#waitMenu').dialog('close');//关闭等待窗口
+                    $.messager.alert('提示',res.errorMsg,'warning');
+                }
+            }
+        });
+    }
+
+    //重置
+    function resetF(){
+        $('#searchForm').form("clear");
+    }
+
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+    function onClose() {
+        clearInterval(loading);
+    }
+    var ii = 2;
+    function showalert() {
+        var text = "";
+        var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+
+    //导出报表信息列表
+    function exportF(){
+        if($('#yearMonthDate').combobox('getValue')==""){return $.messager.alert('提示',"请选择会计月度！",'warning');}
+        if($('#unit').combobox('getValue')==""){return $.messager.alert('提示',"请选择单位！",'warning');}
+        var params = {yearMonthDate:$('#yearMonthDate').combobox('getValue'),unit:$('#unit').combobox('getValue')};
+        $.ajax({
+            url: "/fourReport/isexist",
+            type: 'post',
+            dataType: 'json',
+            data:{
+                'yearMonthDate':$('#yearMonthDate').combobox('getValue'),
+                'unit':$('#unit').combobox('getValue')
+            },
+            success: function (result) {
+                if(result.success){
+                    jsutil.core.download("/fourReport/download",params);
+                }else {
+                    $.messager.alert('提示',result.errorMsg,'warning');
+                }
+            }
+        });
+
+    }
+    //单个表导出
+    function exportFSingle(){
+        if($('#yearMonthDate').combobox('getValue')==""){return $.messager.alert('提示',"请选择会计月度！",'warning');}
+        if($('#unit').combobox('getValue')==""){return $.messager.alert('提示',"请选择单位！",'warning');}
+        if($('#JJreportName').combobox('getValue')==""){return $.messager.alert('提示',"请选择报表名称！",'warning');}
+
+        var params = {yearMonthDate:$('#yearMonthDate').combobox('getValue'),unit:$('#unit').combobox('getValue'),JJreportName:$('#JJreportName').combobox('getValue')};
+        $.ajax({
+            url: "/fourReport/isexist",
+            type: 'post',
+            dataType: 'json',
+            data:{
+                'yearMonthDate':$('#yearMonthDate').combobox('getValue'),
+                'unit':$('#unit').combobox('getValue')
+            },
+            success: function (result) {
+                if(result.success){
+                    jsutil.core.download("/fourReport/download",params);
+                }else {
+                    $.messager.alert('提示',result.errorMsg,'warning');
+                }
+            }
+        });
+    }
+</script>
+</html>

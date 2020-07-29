@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('凭证记账','','')">
+</head>
+<body>
+<!-- 搜索模块 -->
+<div class="easyui-panel"
+     style="height: auto; width:100%;padding: 8px 0px 0px 0px;overflow: hidden;">
+    <form id="searchForm" method="post" style="margin-bottom:0;">
+        <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="width:12%;text-align: right;" ><label>会计期间:</label></td>
+                <td style="width:18%;">
+                    <input style="width:100%;" id="yearMonth" name="yearMonth" class="easyui-combobox" data-options="prompt: '会计期间',editable:false">
+                </td>
+                <td style="width:12%;text-align: right;" ><label>凭证类型:</label></td>
+                <td style="width:18%;">
+                    <input style="width:100%;" id="voucherType" name="voucherType" class="easyui-combobox" data-options="prompt: '凭证类型',editable:false">
+                </td>
+                <td style="width: 12%; text-align: right;" ><label>凭证号范围:</label></td>
+                <td style="width: 28%">
+                    <input style="width:40%;" id="voucherNoStart" name="voucherNoStart" class="easyui-textbox" data-options="prompt: '开始',disabled:true">&nbsp;--&nbsp;
+                    <input style="width:40%;" id="voucherNoEnd" name="voucherNoEnd" class="easyui-textbox" data-options="prompt: '结束',disabled:true">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:12%;text-align: right;" ><label>凭证状态:</label></td>
+                <td style="width:18%;">
+                    <input style="width:100%;" id="voucherFlag" name="voucherFlag" class="easyui-combobox" data-options="valueField:'value',textField:'text',data:voucherFlagData,panelHeight:90,prompt: '凭证状态',editable:false">
+                </td>
+                <td colspan="6" style="text-align: right; padding-right: 20px;">
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-search'" style="width: 10%;" onclick="searchF()" >查询</a>
+                    <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-refresh'" style="width: 10%;" onclick="reset()">重置</a>
+                </td>
+            </tr>
+        </table>
+    </form>
+    <!-- 展示搜索结果 -->
+    <table id = "sg"></table>
+</div>
+
+<div id="waitMenu" class="easyui-dialog"
+     style="width: 300px; height: 100px; padding: 10px 20px;" closed="true"
+     align="center"
+     data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+    <div id="msg"></div>
+</div>
+<script type="text/javascript">
+    var voucherFlagData = [{'value':'0','text':'-不限-'},{'value':'2','text':'未记账'},{'value':'1','text':'已记账'}];
+    $(function () {
+        //凭证类型
+        $('#voucherType').combobox({
+            url:'/codeSelect/unlimited?type=voucherType',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        //会计期间
+        $('#yearMonth').combobox({
+            url:'/codeSelect?type=yearMonth',
+            method:'GET',
+            valueField:'value',
+            textField:'text',
+            onLoadSuccess:function () {
+                var data = $('#yearMonth').combobox('getData');
+                if (data.length>0) {
+                    $('#yearMonth').combobox('setValue',data[data.length-1].value);
+                }
+                searchF();
+            },
+            onChange:function(newValue,oldValue){
+                if(newValue!=null&&newValue!=""&&newValue!=undefined){
+                    $('#voucherNoStart').textbox({
+                        disabled: false
+                    });
+                    $('#voucherNoEnd').textbox({
+                        disabled: false
+                    });
+                }else{
+                    $('#voucherNoStart').textbox({
+                        disabled: true
+                    });
+                    $('#voucherNoEnd').textbox({
+                        disabled: true
+                    });
+                }
+            }
+        });
+        /*$.get('/voucheraccounting/getDate?',
+            function(data){
+            if(data!=""){
+                $('#yearMonth').combobox('setValue',data.yearMonth);
+            }
+            }
+        );*/
+
+        //凭证号校验
+        $('#voucherNoStart').textbox({
+            onChange:function(newValue, oldValue){
+                var start=$('#voucherNoStart').textbox('getValue');
+                var end=$('#voucherNoEnd').textbox('getValue');
+                if(end!=null&&end!=""&&parseInt(start)>parseInt(end)){
+                    $.messager.alert("提示","开始凭证号不能大于结束凭证号！","info");
+                    $('#voucherNoStart').textbox('setValue','');
+                }
+            }
+        })
+        $('#voucherNoEnd').textbox({
+            onChange:function(newValue, oldValue){
+                var start=$('#voucherNoStart').textbox('getValue');
+                var end=$('#voucherNoEnd').textbox('getValue');
+                if(end!=null&&end!=""&&parseInt(start)>parseInt(end)){
+                    $.messager.alert("提示","结束凭证号不能小于开始凭证号！","info");
+                    $('#voucherNoEnd').textbox('setValue','');
+                }
+            }
+        })
+
+        $('#sg').datagrid({
+            /*url: '/voucheraccounting/list',*/
+            striped: true,  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false,
+            method: 'post', //默认为 post
+            //pagination: true, //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。默认false
+            fitColumns: true,//设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            singleSelect: false,//设置为 true，则只允许选中一行。 默认false
+            checkOnSelect: true, //如果设置为 true，当用户点击某一行时，则会选中/取消选中复选框。
+            pagePosition: 'bottom', //定义分页栏的位置。可用的值有：'top'、'bottom'、'both'。 默认 bottom
+          //  pageList: [10, 20, 30, 40, 50], //当设置了 pagination 属性时，初始化页面尺寸的选择列表。
+            nowrap: true,
+            columns: [
+                [
+                    {field: '', checkbox: true, align: 'center'}
+                    , {field: 'voucherDate', title: '凭证日期', width: '8%', align: 'center', sortable: 'true', order: 'asc'}
+                   , {field:'voucherNo',title:'凭证号',width:'8%',halign:'center',align:'center',formatter: function(value,row,index){
+                            if (value) {
+                                return "<span style='color: blue; cursor: pointer;' onclick='lookInfo(" + JSON.stringify(row)+ ")'>" + value + "</span>";
+                            }
+                            return value;
+                        }}
+                    , {field: 'remarkName', title: '摘要', width: '23%', align: 'left', halign: 'center'}
+                    , {field: 'debit', title: '借方金额', width: '12%', align: 'right', halign: 'center', formatter:function (value,row,index) {
+                        return formatNumber(value*1, 2, 1);
+                    }}
+                    , {field: 'credit', title: '贷方金额', width: '12%',align: 'right', halign: 'center',formatter:function (value,row,index) {
+                        return formatNumber(value*1, 2, 1);
+                    }}
+                    , {field: 'createBy', title: '制单人', width: '10%', align: 'center'}
+                    , {field: 'approveBy', title: '复核人', width: '10%', align: 'center'}
+                    , {field: 'geneBy', title: '记账人', width: '10%', align: 'center'}
+                    , {field: 'voucherFlag', title: '凭证状态', width: '6%', align: 'center'}
+                ]
+            ],
+            //将复选框设置为不可选中
+            // onLoadSuccess: function(data){//加载完毕后获取所有的checkbox遍历
+            //     if (data.rows.length > 0) {
+            //         //循环判断操作为新增的不能选择
+            //         for (var i = 0; i < data.rows.length; i++) {
+            //             //根据isFinanceExamine让某些行不可选
+            //             if (data.rows[i].voucherFlag == '已记账') {
+            //                 $("input[type='checkbox']")[i + 1].disabled = true;
+            //             }
+            //         }
+            //     }
+            // },
+            // onClickRow: function(rowIndex, rowData){
+            //     //加载完毕后获取所有的checkbox遍历
+            //     $("input[type='checkbox']").each(function(index, el){
+            //         //如果当前的复选框不可选，则不让其选中
+            //         if (el.disabled == true) {
+            //             $('#dg').datagrid('unselectRow', index - 1);
+            //         }
+            //     })
+            // },
+
+            /*,toolbar: '#tbar'*/    //通过id选择器引用
+            toolbar: [{
+                text: '记账',
+                iconCls: 'e-icon fa fa-newspaper-o',
+                plain: true,
+                handler: Accounting
+            }, '-'
+            , {
+                text: '反记账',
+                iconCls: 'e-icon fa fa-mail-reply-all',
+                plain: true,
+                handler: revokeAccounting
+            }],
+            loadMsg: '加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        })
+
+    })
+    //查询
+    function searchF() {
+        var params = {};
+        $('#searchForm').find('input').each(function(){
+            var obj = $(this);
+            var name = obj.attr('name');
+            if(name){
+                params[name] = obj.val();
+            }
+        });
+        $('#sg').datagrid({
+            url:'/voucheraccounting/list',
+            queryParams:params
+        });
+    }
+    //重置
+    function reset() {
+        $('#searchForm').form('clear');
+        var data = $('#yearMonth').combobox('getData');
+        if (data.length>0) {
+            $('#yearMonth').combobox('setValue',data[data.length-1].value);
+        }
+        /*$('#voucherNoStart').textbox({disabled: true});
+        $('#voucherNoEnd').textbox({disabled: true});*/
+    }
+    //记账
+    function Accounting() {
+        var rows = $('#sg').datagrid('getSelections');
+        if(rows.length==0){$.messager.alert('消息提示','请选择要记账的凭证数据!','warning');return ;}
+        var idArr = new Array();
+        var yearMonthDate = '';
+        for(var i=0;i<rows.length;i++){
+            if(rows[i].voucherFlag != "已复核"){
+                $.messager.alert('提示',rows[i].voucherNo+"凭证不为已复核状态，不允许进行记账操作！",'warning');
+                return;
+            }
+            idArr[i] =rows[i].voucherNo;
+            if (yearMonthDate) {
+                if (yearMonthDate!=rows[i].yearMonthDate) {
+                    $.messager.alert('提示',rows[i].voucherNo+"凭证与其余凭证会计期间不一致！",'warning');
+                    return;
+                }
+            } else {
+                yearMonthDate = rows[i].yearMonthDate;
+            }
+        }
+        var data =[{name:'voucherNo',value:idArr.join(',')},{name:'yearMonthDate',value:yearMonthDate}];
+        $.messager.confirm('记账','确认要记账选中的凭证信息么?',function(r){
+            if (r){
+                $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+                $.post('/voucheraccounting/accounting',data,function(result){
+                    if (result.success){
+                        $('#waitMenu').dialog('close');//关闭等待窗口
+                        $('#sg').datagrid('reload');	// reload the user data
+                        $.messager.show({	// show error message
+                            title: '提示',
+                            msg: result.data,
+                            timeout: 5000,
+                            showType: 'slide'
+                        });
+                    } else {
+                        $('#waitMenu').dialog('close');//关闭等待窗口
+                        $.messager.show({	// show error message
+                            title: '提示',
+                            msg: result.errorMsg,
+                            timeout: 5000,
+                            showType: 'slide'
+                        });
+                    }
+                },'json');
+            }
+        })
+    }
+    //反记账
+    function revokeAccounting() {
+        var rows = $('#sg').datagrid('getSelections');
+        if(rows.length==0){$.messager.alert('消息提示','请选择要反记账的凭证数据!','warning');return ;}
+        var idArr = new Array();
+        var yearMonthDate = '';
+        for(var i=0;i<rows.length;i++){
+            if(rows[i].voucherFlag != "已记账"){
+                $.messager.alert('提示',rows[i].voucherNo+"凭证为非已记账状态，不允许进行反记账操作！",'warning');
+                return;
+            }
+            idArr[i] =rows[i].voucherNo;
+            if (yearMonthDate) {
+                if (yearMonthDate!=rows[i].yearMonthDate) {
+                    $.messager.alert('提示',rows[i].voucherNo+"凭证与其余凭证会计期间不一致！",'warning');
+                    return;
+                }
+            } else {
+                yearMonthDate = rows[i].yearMonthDate;
+            }
+        }
+        var data =[{name:'voucherNo',value:idArr.join(',')},{name:'yearMonthDate',value:yearMonthDate}];
+        $.messager.confirm('反记账','确认要反记账选中的凭证信息么?',function(r){
+            if (r){
+                $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+                $.post('/voucheraccounting/revokeAccounting',data,function(result){
+                    if (result.success){
+                        $('#waitMenu').dialog('close');//关闭等待窗口
+                        $('#sg').datagrid('reload');	// reload the user data
+                        $.messager.show({	// show error message
+                            title: '提示',
+                            msg: result.data,
+                            timeout: 5000,
+                            showType: 'slide'
+                        });
+                    } else {
+                        $('#waitMenu').dialog('close');//关闭等待窗口
+                        $.messager.show({	// show error message
+                            title: '提示',
+                            msg: result.errorMsg,
+                            timeout: 5000,
+                            showType: 'slide'
+                        });
+                    }
+                },'json');
+            }
+        })
+
+    }
+    function lookInfo(row) {
+        //type指调用查看页面的是凭证记账与反记账页面
+        addTab(row.voucherNo+'查看', '/voucher/look?voucherNo='+row.voucherNo+'&yearMonth='+row.yearMonthDate+'&type='+'account');
+    }
+
+    //隐藏指定ID的 datagrid toolbar 按钮
+    function datagridToolbarAssignIdHide(assignId) {
+        //获取所有的toolbar按钮
+        var button=$('div.datagrid div.datagrid-toolbar a');
+        //如果按钮都没权限，若都需要隐藏，可直接隐藏toolbar eg：$('div.datagrid div.datagrid-toolbar').hide();
+        for (var i = 0; i < button.length; i++) {
+            if (button[i].id == assignId) {
+                //隐藏第 i 个按钮
+                $('div.datagrid div.datagrid-toolbar a').eq(i).hide();
+                //隐藏第 i 条分隔线
+                $('div.datagrid-toolbar div').eq(i).hide();
+
+                break;// break 退出当前循环，continue 退出本次循环，return 直接结束当前方法
+            }
+        }
+    }
+    //显示指定ID的 datagrid toolbar 按钮
+    function datagridToolbarAssignIdShow(assignId) {
+        //获取所有的toolbar按钮
+        var button=$('div.datagrid div.datagrid-toolbar a');
+        for (var i = 0; i < button.length; i++) {
+            if (button[i].id == assignId) {
+                //显示第 i 个按钮
+                $('div.datagrid div.datagrid-toolbar a').eq(i).show();
+                //显示第 i 条分隔线
+                $('div.datagrid-toolbar div').eq(i).show();
+                break;// break 退出当前循环，continue 退出本次循环，return 直接结束当前方法
+            }
+        }
+    }
+
+    function addTab(subtitle, url) {
+        if (!parent.$('#tabs').tabs('exists', subtitle)) {
+            parent.$('#tabs').tabs(
+                'add',
+                {
+                    title: subtitle,
+                    content: createFrame(url),
+                    closable: true,
+                    width: parent.$('#mainPanle').width() - 10,
+                    height: parent.$('#mainPanle').height() - 26
+                });
+        } else {
+            parent.$('#tabs').tabs('select', subtitle);
+        }
+    }
+
+    function createFrame(url) {
+        var s = '<iframe name="mainFrame" fit="true" scrolling="auto" frameborder="0"  overflow-y:"hidden" src="'
+            + url + '" style="width:100%;height:100%;"></iframe>';
+        return s;
+    }
+
+    //等待
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+
+    var ii = 2;
+    function showalert() {
+        var text = "";
+        var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+
+    function onClose() {
+        clearInterval(loading);
+    }
+
+</script>
+
+</body>
+</html>

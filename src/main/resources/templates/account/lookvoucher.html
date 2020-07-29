@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('凭证查看','/css/Standard.css','')">
+</head>
+
+<body>
+<span id="lookVoucherNo" style="display:none" th:text="${map.lookVoucherNo}"></span>
+<span id="lookYearMonth" style="display:none" th:text="${map.lookYearMonth}"></span>
+<span id="lookSpecialNameP" style="display:none" th:text="${map.lookSpecialNameP}"></span>
+<span id="lookType" style="display:none" th:text="${map.lookType}"></span>
+<span id="lookSuffixNo" style="display:none" th:text="${map.lookSuffixNo}"></span>
+<div class="easyui-panel" style="height: auto; width:100%; padding: 0px 0px 0px 0px;overflow: hidden;">
+    <div id="dlg" align="center" buttons="#dlg-buttons">
+        <form id="fm" method="post" style="margin-bottom: 0">
+            <table style="width:100%;" align=center class=common cellpadding="2" cellspacing="1" border="0">
+                <tr>
+                    <td class=formtitle colspan="4">凭证基本信息</td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;"><label>凭证号:</label></td>
+                    <td >
+                        <input class="easyui-textbox" readonly type="text" id="voucherNo" name="voucherNo" >
+                    </td>
+                    <td style="text-align: right;"><label>会计期间:</label></td>
+                    <td>
+                        <input class="easyui-combobox" type="text"  id ="yearMonth" name="yearMonth" data-options="readonly:true,prompt:'会计期间',editable:false,missingMessage:'请选择会计期间'">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;"><label>制单日期:</label></td>
+                    <td>
+                        <input id="voucherDate" name="voucherDate" class="easyui-datebox" data-options="readonly:true,prompt: '制单日期',editable:false">
+                    </td>
+                    <td style="text-align: right;"><label>附件张数:</label></td>
+                    <td >
+                        <input class="easyui-textbox" type="text" readonly id="auxNumber" name="auxNumber">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;"><label>制单人:</label></td>
+                    <td >
+                        <input class="easyui-textbox" readonly type="text" id="createBy" name="createBy" >
+                    </td>
+                    <td style="text-align: right;"><label>凭证状态:</label></td>
+                    <td >
+                        <input class="easyui-textbox" readonly type="text" id="voucherFlag" name="voucherFlag" >
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;"><label>复核人:</label></td>
+                    <td >
+                        <input class="easyui-textbox" readonly type="text" id="approveBy" name="approveBy" >
+                    </td>
+                    <td style="text-align: right;"><label>记账人:</label></td>
+                    <td >
+                        <input class="easyui-textbox" readonly type="text" id="geneBy" name="geneBy" >
+                    </td>
+                </tr>
+                <tr>
+                    <td class=formtitle colspan="4">凭证分录信息</td>
+                </tr>
+            </table>
+            <div class="easyui-panel" style="border: 0; width: 100%">
+                <table id="dg"
+                       class="easyui-datagrid"
+                       rownumbers="true"
+                       striped="true"
+                       nowrap="false"
+                       singleSelect="true"
+                       showFooter="true"
+                       autoRowHeight="false"
+                       loadMsg="加载数据中..."
+                       method="get"
+                       style="width:100%;"
+                >
+                    <!--<div id="toolbar">
+                        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add icon-large" plain="true" id="add" onclick="addSub()">新增</a>
+                    </div>-->
+                    <thead>
+                    <tr>
+                        <th field="tagCode" align="left" halign="center" width="14%" >标注</th>
+                        <th field="remarkName" align="left" halign="center" width="15%" >摘要</th>
+                        <th field="subjectCode" align="left" halign="center" width="19%" >科目代码</th>
+                        <th field="subjectName" align="left" halign="center" width="21%">科目名称</th>
+                        <th field="debit" align="right" halign="center" width="12%" formatter="formatNumberByValue">借方金额</th>
+                        <th field="credit" align="right" halign="center" width="12%" formatter="formatNumberByValue">贷方金额</th>
+                        <th field="..." align="center" halign="center" width="6%" formatter="deal">操作</th>
+                    </tr>
+                    </thead>
+                </table>
+                <table style="width:100%;" border="0">
+                    <tr>
+                        <td width="60%"><center>当前凭证合计:</center></td>
+                        <td width="20%" class=title align="right">
+                           借方金额:<input class="readonly" readonly type="text" value="0.00"  id="DebitAll" name="DebitAll" style="width:55%;text-align:right;">
+                        </td>
+                        <td width="20%" class=title align="right">
+                            贷方金额:<input class="readonly" readonly type="text" value="0.00"  id="CreditAll" name="CreditAll" style="width:55%;text-align:right;">
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="easyui-panel" style="border: 0; width: 100%">
+                <table id="dgS"
+                       class="easyui-datagrid"
+                       toolbar="#toolbarS"
+                       rownumbers="true"
+                       striped="true"
+                       nowrap="false"
+                       singleSelect="true"
+                       autoRowHeight="true",
+                       fitColumns="false"
+                       loadMsg="加载数据中..."
+                       method="get"
+                       style="width:100%;"
+                >
+                    <div id="toolbarS">
+                        <!--<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add icon-large" plain="true" onclick="lookS()">专项信息</a>-->
+                        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search icon-large" plain="true" onclick="specialNamePShow()">专项名称全级显示</a>
+                    </div>
+                    <thead>
+                    <tr>
+                        <th field="subjectCodeS" align="left" halign="center" width="12%">科目代码</th>
+                        <th field="subjectNameS" align="left" halign="center" width="16%">科目名称</th>
+                        <th field="specialCodeS" width="69%" formatter="specialdeal">专项信息</th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </form>
+        <div id="dlg-buttons">
+            <table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+                <tr>
+                    <td style="text-align: center; width: 20%">
+                        <a href="javascript:void(0)" id="JADA" style="display: inline-block; width: 60%" class="easyui-linkbutton" iconCls="icon-search icon-large" onclick="JointAssistDetailAccount()">联查辅助明细账</a>
+                        <a href="javascript:void(0)" id="approve" style="display: inline-block; width: 50%" class="easyui-linkbutton" iconCls="icon-redo icon-large" onclick="approveVoucher()">复&nbsp;&nbsp;核</a>
+                    </td>
+                    <td style="text-align: center; width: 20%">
+                        <a href="javascript:void(0)" id="JDA" style="display: inline-block; width: 50%" class="easyui-linkbutton" iconCls="icon-search icon-large" onclick="JointDetailAccount()">联查明细账</a>
+                        <a href="javascript:void(0)" id="revoke" style="display: inline-block; width: 50%" class="easyui-linkbutton" iconCls="icon-undo icon-large" onclick="revokeVoucher()">撤&nbsp;&nbsp;销</a>
+                    </td>
+                    <td style="text-align: center; width: 20%">
+                        <a href="javascript:void(0)" id="PV" style="display: inline-block; width: 50%" class="easyui-linkbutton" iconCls="icon-print icon-large" onclick="printVoucher()">打&nbsp;&nbsp;印</a>
+                    </td>
+                    <td style="text-align: center; width: 20%">
+                        <a href="javascript:void(0)" id="EV" style="display: inline-block; width: 50%" class="easyui-linkbutton" iconCls="icon-filter icon-large" onclick="exportVoucher()">导&nbsp;&nbsp;出</a>
+                    </td>
+                    <td style="text-align: center; width: 20%">
+                        <a href="javascript:void(0)" style="display: inline-block; width: 50%" class="easyui-linkbutton" onclick="closeTab()"  data-options="iconCls:'e-icon fa fa-close'">关&nbsp;&nbsp;闭</a>
+                    </td>
+                </tr>
+                <!-- 调用凭证详情页面的是凭证管理界面 -->
+                <tr id="beforeOrAfter">
+                    <td style="text-align: center; width: 20%"></td>
+                    <td style="text-align: center; width: 20%">
+                        <a href="javascript:void(0)" id="beforeVoucher" style="display: inline-block; width: 40%" class="easyui-linkbutton" iconCls="icon-undo icon-large" onclick="beforeOrAfterVoucher('before')">上一张</a>
+                    </td>
+                    <td style="text-align: center; width: 20%"></td>
+                    <td style="text-align: center; width: 20%">
+                        <a href="javascript:void(0)" id="afterVoucher" style="display: inline-block; width: 40%" class="easyui-linkbutton" iconCls="icon-redo icon-large" onclick="beforeOrAfterVoucher('after')">下一张</a>
+                    </td>
+                    <td style="text-align: center; width: 20%"></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+<script th:src="@{/js/windowOpenNewPage.js}"></script>
+<script th:src="@{/js/inputVoucherConfig.js}"></script>
+<script>
+    var originalLookVoucherNo = null;
+
+    $(function(){
+        var lookVoucherNo = $('#lookVoucherNo').text();
+        var lookYearMonth = $('#lookYearMonth').text();
+        var lookSpecialNameP = $('#lookSpecialNameP').text();
+        var lookType = $('#lookType').text();
+        if (lookType=='JDA' || lookType=='JADA') {
+            //DA代表调用凭证详情页面的是联查明细账
+            //JADA代表调用查看凭证详情的页面是联查辅助明细账
+            //account 一般的查看页面
+            //修改标题名称
+            window.document.title = lookVoucherNo+'查看';
+        }
+        var data = {'voucherNo':lookVoucherNo, 'yearMonth':lookYearMonth, 'copyType':'3', 'specialNameP':lookSpecialNameP};
+        if(lookType == 'approve'){
+            $('#beforeOrAfter').hide();
+            document.getElementById("JADA").style.display='none';
+            document.getElementById("JDA").style.display='none';
+            document.getElementById("approve").style.display='';
+            document.getElementById("revoke").style.display='';
+        }else if (lookType == 'beforeOrAfter') {
+            //beforeOrAfter代表调用凭证详情页面的是凭证管理界面
+            document.getElementById("approve").style.display='none';
+            document.getElementById("revoke").style.display='none';
+            document.getElementById("JADA").style.display='';
+            document.getElementById("JDA").style.display='';
+            $('#beforeOrAfter').show();
+        } else{
+            document.getElementById("approve").style.display='none';
+            document.getElementById("revoke").style.display='none';
+            $('#beforeOrAfter').hide();
+            document.getElementById("JADA").style.display='';
+            document.getElementById("JDA").style.display='';
+        }
+        $.post('/voucher/getCopyData', data ,
+            function(result){
+                $('#fm').form('load',result);
+                $('#dg').datagrid("loadData",result.data2);
+                $('#dgS').datagrid("loadData",result.data3);
+                sumData();
+                var suffixNo = $('#lookSuffixNo').text();
+                if (suffixNo) {
+                    var initSelectIndex = parseInt(suffixNo)-1;
+                    $('#dg').datagrid('selectRow', initSelectIndex);
+                    $('#dgS').datagrid('selectRow', initSelectIndex);
+                }
+            }
+        );
+
+        $('#dg').datagrid({
+            onClickCell: function (rowIndex, field, value) {
+                $('#dg').datagrid('selectRow', rowIndex);
+                setSpecial(rowIndex);//选择对应专项
+            }
+        });
+        $('#dgS').datagrid({
+            onClickCell: function (rowIndex, field, value) {
+                $('#dg').datagrid('selectRow', rowIndex);
+            }
+        });
+    });
+
+    //设置专项表格（如果表单长度一致则选择同一行数据）
+    function setSpecial(rowIndex){
+        var rowSs=$("#dgS").datagrid('getRows');
+        if(rowSs.length-1>=rowIndex){
+            $('#dgS').datagrid('selectRow', rowIndex);
+            var row = $('#dgS').datagrid('getSelected');
+        }
+    }
+
+    function addNum(name){
+        var sum=0;
+        var rows=$("#dg").datagrid('getRows');
+        if(name=="debit"){
+            for(var i=0;i<rows.length;i++){
+                if(rows[i].debit){
+                    /*sum =sum + parseFloat(rows[i].debit);*/
+                    sum = decimalAdd(sum, parseFloat(rows[i].debit));
+                }
+            }
+        }else if(name=="credit"){
+            for(var i=0;i<rows.length;i++){
+                if(rows[i].credit){
+                    /*sum =sum + parseFloat(rows[i].credit);*/
+                    sum = decimalAdd(sum, parseFloat(rows[i].credit));
+                }
+            }
+        }else{
+            console.log("参数有误！");
+        }
+        /*return sum;*/
+        return formatNumber(sum, 2, 0);
+    }
+    function sumData() {
+        var sum1=addNum('debit');
+        document.getElementById("DebitAll").value =formatNumberByValue(sum1);
+        var sum2=addNum('credit');
+        document.getElementById("CreditAll").value =formatNumberByValue(sum2);
+    }
+
+    //展示操作按钮
+    function deal(value,row,index) {
+        var look = "<span class='sino-btn sino-btn-disabled sino-btn-xs' disabled='value'>+</span>";
+        var btn  = "<span class='sino-btn sino-btn-disabled sino-btn-xs' disabled='value'>-</span>";
+        var changeResult =  look + "&nbsp;&nbsp;" + btn;
+        return changeResult;
+    }
+    function specialdeal(value,row,index){
+        //单个专项信息加载
+        //多个专项信息加载
+        //6601/10/01/-水费，或6601/10/02/-电费科目时 需要出现单价和数量两个输入字段
+        //如果科目为银行存款 需要录入结算类型，结算单号，结算日期（结算日期默认凭证制单日期，结算日期可修改，并不得晚于凭证制单日期）
+        if (value && value!='无关联专项') {
+            var inputAndSpan = '';
+            var arr = value.split(",");
+            for (var i=0;i<arr.length;i++) {
+                var arr1 = arr[i].split(";");
+                var arr2 = (row.specialSuperCodeS).split(",");
+                var specialCodeID = 'specialCode_'+index+'_'+i;
+                var specialNameID = 'specialName_'+index+'_'+i;
+                var input = '';
+                if (row.specialSuperCodeS) {
+                    input = '<input readonly type="text" id="'+ specialCodeID +'" name="specialCodeS" alt="'+arr2[i]+'" value="'+arr1[0]+'"/>';
+                } else {
+                    input = '<input readonly type="text" id="'+ specialCodeID +'" name="specialCodeS" alt="'+arr1[0]+'" value="'+arr1[0]+'"/>';
+                }
+                var span = '<span id="' + specialNameID + '">'+arr1[1]+'</span>';
+
+                if (i!=arr.length-1) {
+                    inputAndSpan = inputAndSpan + input + '&nbsp;' + span + '&nbsp;&nbsp;';
+                } else {
+                    inputAndSpan = inputAndSpan + input + '&nbsp;'  + span;
+                }
+            }
+
+            //水电费科目
+            /*if (row.subjectCodeS=='6601/10/01/' || row.subjectCodeS=='6601/10/02/'){
+                inputAndSpan = inputAndSpan + '<br/>';
+            }*/
+            /*if (row.subjectCodeS=='6601/10/01/') {
+                var waterRatePrice = 'waterRate_price_' + index;
+                var waterRateUnit = 'waterRate_unit_' + index;
+                var input = '<input readonly type="text" id="'+ waterRatePrice +'" name="unitPrice" readonly value="'+row.unitPrice+'"/>';
+                var span = '<span>单价</span>';
+                /!*inputAndSpan = inputAndSpan + '&nbsp;&nbsp;' + input + '&nbsp;' + span + '&nbsp;&nbsp;';*!/
+                inputAndSpan = inputAndSpan + input + '&nbsp;' + span + '&nbsp;&nbsp;';
+                input = '<input readonly type="text" id="'+ waterRateUnit +'" name="unitNum" readonly value="'+row.unitNum+'"/>';
+                span = '<span>数量（单位:毫升）</span>';
+                inputAndSpan = inputAndSpan + input + '&nbsp;' + span;
+            } else if (row.subjectCodeS=='6601/10/02/') {//电费科目
+                var energyChargePrice = 'energyCharge_price_' + index;
+                var energyChargeUnit = 'energyCharge_unit_' + index;
+                var input = '<input readonly type="text" id="'+ energyChargePrice +'" name="unitPrice" readonly value="'+row.unitPrice+'"/>';
+                var span = '<span>单价</span>';
+                /!*inputAndSpan = inputAndSpan + '&nbsp;&nbsp;' + input + '&nbsp;' + span + '&nbsp;&nbsp;';*!/
+                inputAndSpan = inputAndSpan + input + '&nbsp;' + span + '&nbsp;&nbsp;';
+                input = '<input readonly type="text" id="'+ energyChargeUnit +'" name="unitNum" readonly value="'+row.unitNum+'"/>';
+                span = '<span>数量（单位:度）</span>';
+                inputAndSpan = inputAndSpan + input + '&nbsp;' + span;
+            }*/
+
+            /*var bankDepositIds = '';
+            if (((row.subjectCodeS).split("/"))[0]=='1002') {//银行存款类一级科目，以1002开头的
+                inputAndSpan = inputAndSpan + '<br/>';
+
+                var bankDepositType = 'bankDeposit_type_'+index;
+                var bankDepositNum = 'bankDeposit_no_'+index;
+                var bankDepositDate = 'bankDeposit_date_'+index;
+                bankDepositIds = bankDepositType+','+bankDepositNum+','+bankDepositDate;
+                var span = '<span>结算类型:</span>';
+                var input = '<input id="'+bankDepositType+'" name="settlementType" readonly value="'+row.settlementTypeName+'"></input>';
+                /!*inputAndSpan = inputAndSpan + '&nbsp;&nbsp;&nbsp;&nbsp;' + span + '&nbsp;' + input + '&nbsp;&nbsp;';*!/
+                inputAndSpan = inputAndSpan + span + '&nbsp;' + input + '&nbsp;&nbsp;';
+                span = '<span>结算单号:</span>';
+                input = '<input id="'+bankDepositNum+'" name="settlementNo" readonly value="'+row.settlementNo+'"></input>';
+                inputAndSpan = inputAndSpan + span + '&nbsp;' + input + '&nbsp;&nbsp;';
+                span = '<span>结算日期:</span>';
+                input = '<input id="'+bankDepositDate+'" name="settlementDate" readonly value="'+row.settlementDate+'"></input>';
+                inputAndSpan = inputAndSpan + span + '&nbsp;' + input;
+            }*/
+
+            inputAndSpan = needInvoiceNoSubjectDispose(value, row, index, inputAndSpan);
+
+            return inputAndSpan;
+        } else if (value && value=='无关联专项') {
+            var inputAndSpan = '';
+
+            inputAndSpan = needInvoiceNoSubjectDispose(value, row, index, inputAndSpan);
+
+            if (inputAndSpan) {
+                return value + '&nbsp;&nbsp;&nbsp;&nbsp;' + inputAndSpan;
+            } else {
+                return value;
+            }
+        } else {
+            return value;
+        }
+    }
+
+    function needInvoiceNoSubjectDispose(value, row, index, inputAndSpan) {
+        if (needInvoiceNoSubject.length != 0) {
+            for (var i=0,len=needInvoiceNoSubject.length;i<len;i++) {
+                var needCode = needInvoiceNoSubject[i];
+                var needCodeLength = needCode.length;
+                var inputCode = row.subjectCodeS;
+                //应交增值税-销项税科目
+                if (inputCode.length>=needCodeLength && inputCode.substring(0,needCodeLength)==needCode) {
+
+                    if (inputAndSpan) {
+                        inputAndSpan = inputAndSpan + '<br/>';
+                    }
+
+                    var invoiceNo = 'invoiceNo_' + index;
+                    var span = '<span>发票号:</span>';
+                    var input = '';
+                    if (row.invoiceNo) {
+                        input = '<input readonly type="text" id="'+ invoiceNo +'" name="invoiceNo" value="'+row.invoiceNo+'"/>';
+                    } else {
+                        input = '<input readonly type="text" id="'+ invoiceNo +'" name="invoiceNo"/>';
+                    }
+
+                    inputAndSpan = inputAndSpan + span + '&nbsp;' + input;
+
+                    break;
+                }
+            }
+        }
+
+        return inputAndSpan;
+    }
+
+    //凭证复核
+    function approveVoucher() {
+
+        if($('#voucherFlag').textbox('getValue') == '已复核'){
+            $.messager.alert('提示',$('#voucherNo').textbox('getValue')+"凭证已复核，不允许进行复核操作！",'warning');
+            return ;
+        }
+        if($('#voucherFlag').textbox('getValue') == '已记账'){
+            $.messager.alert('提示',$('#voucherNo').textbox('getValue')+"凭证已记账，不允许进行复核操作！",'warning');
+            return ;
+        }
+        var vNo = new Array();
+        vNo[0] =$('#voucherNo').textbox('getValue');
+        var data =[{name:'voucherNo',value:vNo.join(',') }];
+        $.messager.confirm('复核','确认要复核该凭证吗?',function(r){
+            if (r){
+                $.post('/voucherapprove/reviewPass',data,function(result){
+                    if (result.success){
+                        /*$.messager.show({	// show error message
+                            title: '提示',
+                            msg: "操作成功"
+                        });*/
+                        $.messager.alert('提示','操作成功！','info',function () {
+                            window.location.reload();
+                        });
+                    } else {
+                        $.messager.show({	// show error message
+                            title: '提示',
+                            msg: result.errorMsg
+                        });
+                    }
+                },'json');
+            }
+        })
+    }
+    //撤销复核
+    function revokeVoucher() {
+        if($('#voucherFlag').textbox('getValue') == "未复核"){
+            $.messager.alert('提示',$('#voucherNo').textbox('getValue')+"凭证未复核，不允许进行撤销操作！",'warning');
+            return;
+        }
+        if($('#voucherFlag').textbox('getValue') == "已记账"){
+            $.messager.alert('提示',$('#voucherNo').textbox('getValue')+"凭证已记账，不允许进行撤销操作！",'warning');
+            return;
+        }
+        var vNo = new Array();
+        vNo[0] =$('#voucherNo').textbox('getValue');
+        var data =[{name:'voucherNo',value:vNo.join(',') }];
+        $.messager.confirm('撤销','确认要撤销该凭证吗?',function(r){
+            if (r){
+                $.post('/voucherapprove/reviewBack',data,function(result){
+                    if (result.success){
+                        /*$.messager.show({	// show error message
+                            title: '提示',
+                            msg: "操作成功"
+                        });*/
+                        $.messager.alert('提示','操作成功！','info',function () {
+                            window.location.reload();	// reload the user data
+                        });
+                    } else {
+                        $.messager.show({	// show error message
+                            title: '提示',
+                            msg: result.errorMsg
+                        });
+                    }
+                },'json');
+            }
+        })
+    }
+    //联查辅助明细账
+    function JointAssistDetailAccount() {
+        var row = $('#dg').datagrid('getSelected');
+        var rowS = $('#dgS').datagrid('getSelected');
+        if (row && rowS) {
+            if (rowS.specialCodeS) {
+                if (rowS.specialCodeS!=''&&rowS.specialCodeS!='无关联专项') {
+                    var url = '/querydetailaccount/assist';
+                    //附带参数待定
+                    var params = '';
+                    //科目方向段(300/201/207/)、科目名称、专项编码、专项名称当前会计期间(开始时间)、制单日期(截止日期)
+                    var directionIdx = row.subjectCode;
+                    var itemName = row.subjectName;
+                    var specialCode = '';
+                    var specialSuperCodeS = '';
+                    var specialName = '';
+                    if (rowS.specialCodeS) {
+                        var s = rowS.specialCodeS.split(",");
+                        for (var i=0;i<s.length;i++) {
+                            var ss = s[i].split(";");
+                            var ss2 = rowS.specialSuperCodeS.split(",");
+                            if (ss[0]==ss2[i]) {
+                                $.messager.alert('警告','请先请选择专项！','warning'); return false;
+                            }
+                            specialCode = specialCode + ss[0] + ',';
+                            specialName = specialName + ss[1] + ',';
+                        }
+                        specialCode = specialCode.substring(0,specialCode.length-1);
+                        specialName = specialName.substring(0,specialName.length-1);
+                    }
+                    specialSuperCodeS = rowS.specialSuperCodeS;
+                    var yearMonth = $('#yearMonth').combobox('getValue');
+                    var endDate = $('#voucherDate').datebox('getValue');
+
+                    var params = '';
+                    if (directionIdx && itemName && specialCode && specialName && yearMonth && endDate) {
+                        params = {'directionIdx':directionIdx, 'itemName':itemName, 'specialCode':specialCode, 'specialSuperCodeS':specialSuperCodeS, 'specialName':specialName, 'yearMonth':yearMonth, 'endDate':endDate, 'specialNameP':$('#lookSpecialNameP').text()};
+                    }
+                    windowOpenNewPage(url, params);
+                } else {
+                    $.messager.alert('警告','该科目无关联专项信息或专项信息为空！','warning'); return false;
+                }
+            } else {
+                $.messager.alert('警告','无科目分录信息！','warning'); return false;
+            }
+        } else {
+            if (row) {
+                $.messager.alert('警告','请先请选择专项！','warning'); return false;
+            } else {
+                $.messager.alert('警告','请先选中分录信息！','warning'); return false;
+            }
+        }
+    }
+    //联查明细账
+    function JointDetailAccount() {
+        var row = $('#dg').datagrid('getSelected');
+        if (row) {
+            if (row.subjectCode) {
+                var url = '/querydetailaccount/detai';
+                //附带参数待定
+                //科目方向段(300/201/207/)、当前会计期间(开始时间)、制单日期(截止日期)
+                var directionIdx = row.subjectCode;
+                var itemName = row.subjectName;
+                var yearMonth = $('#yearMonth').combobox('getValue');
+                var endDate = $('#voucherDate').datebox('getValue');
+
+                var params = '';
+                if (directionIdx && itemName && yearMonth && endDate) {
+                    params = {'directionIdx':directionIdx, 'itemName':itemName, 'yearMonth':yearMonth, 'endDate':endDate, 'specialNameP':$('#lookSpecialNameP').text()};
+                }
+                windowOpenNewPage(url, params);
+            } else {
+                $.messager.alert('警告','无科目分录信息！','warning'); return false;
+            }
+        } else {
+            $.messager.alert('警告','请先选中分录信息！','warning'); return false;
+        }
+    }
+
+    function addTab(subtitle, url) {
+        if (!parent.$('#tabs').tabs('exists', subtitle)) {
+            parent.$('#tabs').tabs(
+                'add',
+                {
+                    title: subtitle,
+                    content: createFrame(url),
+                    closable: true,
+                    width: parent.$('#mainPanle').width() - 10,
+                    height: parent.$('#mainPanle').height() - 26
+                });
+        } else {
+            parent.$('#tabs').tabs('select', subtitle);
+        }
+    }
+
+    function createFrame(url) {
+        var s = '<iframe name="mainFrame" fit="true" scrolling="auto" frameborder="0"  overflow-y:"hidden" src="'
+            + url + '" style="width:100%;height:100%;"></iframe>';
+        return s;
+    }
+
+    function specialNamePShow() {
+        var rowS = $('#dgS').datagrid('getRows');
+        if (rowS.length>0) {
+            if ($('#lookSpecialNameP').text()) {//名称显示简称
+                $('#lookSpecialNameP').html('');
+            } else {//名称显示全称
+                $('#lookSpecialNameP').html('1');
+            }
+            var codeS = '';
+            for (var i=0;i<rowS.length;i++) {
+                if (rowS[i].specialCodeS!=''&&rowS[i].specialCodeS!='无关联专项') {
+                    var s = rowS[i].specialCodeS.split(",");//多个专项
+                    for (var j=0;j<s.length;j++) {
+                        var ss = s[j].split(";");//专项代码+专项名称
+                        if (j!=s.length-1) {
+                            codeS = codeS + ss[0] + ';';
+                        } else {
+                            codeS = codeS + ss[0];
+                        }
+                    }
+                } else {
+                    codeS = codeS + '无关联专项';//此处即代表本次循环即将结束，因此无需加,分隔符
+                }
+                codeS = codeS + ',';
+            }
+            codeS = codeS.substring(0,codeS.length-1);
+            if (codeS) {
+                var jsonData = {'codeS':codeS, 'specialNameP':$('#lookSpecialNameP').text()};
+                $.post('/voucher/specialNamePBySpecialCode', jsonData, function (data) {
+                    if (data) {
+                        var data1 = data.split(",");
+                        for (var i=0;i<data1.length;i++) {
+                            if (data1[i]!=''&&data1[i]!='无关联专项') {
+                                var data2 = data1[i].split(";");
+                                for (var j=0;j<data2.length;j++) {
+                                    var id = 'specialName_' + i + '_' +j;
+                                    $('#'+id).html(data2[j]);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    //打印
+    function printVoucher() {
+        windowOpenNewPage('/voucherprint/print', {'yearMonth':$('#lookYearMonth').text(),'voucherNo':$('#lookVoucherNo').text(),'specialNameP':$('#lookSpecialNameP').text()});
+    }
+    //导出
+    function exportVoucher() {
+
+        var params = {'yearMonthDate':$('#yearMonth').textbox('getValue'),'voucherNo':$('#voucherNo').textbox('getValue')};
+        jsutil.core.download("/voucherprint/export",params);
+
+    }
+
+    function beforeOrAfterVoucher(type) {
+        var lookVoucherNo = $('#lookVoucherNo').text();
+        var lookYearMonth = $('#lookYearMonth').text();
+        var lookSpecialNameP = $('#lookSpecialNameP').text();
+        if (type == 'before' && (lookVoucherNo == (lookYearMonth.substring(2)+'00001'))) {
+            $.messager.alert('提示','已经是第一张凭证了！','info'); return false;
+        }
+        var data = {'voucherNo':lookVoucherNo, 'yearMonth':lookYearMonth, 'specialNameP':lookSpecialNameP, 'beforeOrAfter':type, 'type':'look'};
+        $.post('/voucher/beforeOrAfterVoucher', data ,
+            function(result){
+                if (result) {
+                    if (result.voucherNo) {
+                        $('#fm').form('load',result);
+                        $('#dg').datagrid("loadData",result.data2);
+                        $('#dgS').datagrid("loadData",result.data3);
+                        sumData();
+                        if (!originalLookVoucherNo) {
+                            originalLookVoucherNo = lookVoucherNo;
+                        }
+                        $("#lookVoucherNo").html(result.voucherNo);
+                    } else {
+                        $.messager.alert('提示',result.temp,'info'); return false;
+                    }
+                } else {
+                    if (type == 'before') {
+                        $.messager.alert('提示','未查询到上一张凭证数据！','info'); return false;
+                    } else if (type == 'after') {
+                        $.messager.alert('提示','未查询到下一张凭证数据！','info'); return false;
+                    }
+                }
+            }
+        );
+    }
+
+    //关闭
+    function closeTab() {
+        if ($('#lookType').text()=='JDA' || $('#lookType').text()=='JADA') {
+            //DA代表调用凭证详情页面的是联查明细账
+            //JADA代表调用查看凭证详情的页面是联查辅助明细账
+            window.close();
+        } else {
+            var title = (originalLookVoucherNo==null?$('#lookVoucherNo').text():originalLookVoucherNo)+'查看';
+            var tabs = parent.$('#tabs').tabs('tabs');
+            for (var i=0;i<tabs.length;i++) {
+                if (tabs[i].panel('options').title==title){
+                    parent.$('#tabs').tabs('close',i);
+                }
+            }
+        }
+    }
+
+    function formatNumberByValue(value) {
+        if (value) {
+            return formatNumber(value*1,2,1);
+        } else {
+            return value;
+        }
+    }
+</script>
+</html>

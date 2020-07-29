@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('查看专项科目余额表明细','','')">
+
+</head>
+<body>
+<div class="easyui-panel"  style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+    <span id="lookSubjectCode" style="display:none" th:text="${map.lookSubjectCode}"></span>
+    <span id="lookDetailCode" style="display:none" th:text="${map.lookDetailCode}"></span>
+    <span id="lookDetailName" style="display:none" th:text="${map.lookDetailName}"></span>
+    <span id="lookCenterCode" style="display:none" th:text="${map.lookCenterCode}"></span>
+    <span id="lookSubjectNameP" style="display:none" th:text="${map.lookSubjectNameP}"></span>
+    <span id="lookSpecialNameP" style="display:none" th:text="${map.lookSpecialNameP}"></span>
+    <span id="lookYearMonth" style="display:none" th:text="${map.lookYearMonth}"></span>
+    <span id="lookYearMonthDate" style="display:none" th:text="${map.lookYearMonthDate}"></span>
+    <span id="lookAccounRules" style="display:none" th:text="${map.lookAccounRules}"></span>
+    <span id="lookVoucherGene" style="display:none" th:text="${map.lookVoucherGene}"></span>
+
+    <!-- 表头信息 -->
+    <div id="headerDiv">
+        <br/>
+        <table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+            <div align="center">
+                <span align="center" style="font-size:18px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bolder" th:text="${session.currentUser.currentManageBranchName}"></span>
+                <br/>
+                <span align="center" style="font-size:20px; font-family: Verdana, 微软雅黑, 黑体; font-weight: bold">专项科目明细账</span>
+            </div>
+        </table>
+        <table cellpadding="2" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="text-align: left; padding-left: 10px"><label>核算单位：<span id="centerCode"></span></label></td>
+                <td style="text-align: center;"><label>期间：自&nbsp;<span id="yearMonth1"></span>&nbsp;至&nbsp;<span id="yearMonthDate1"></span></label></td>
+                <td style="text-align: right; padding-right: 10px"><label>单位：<span>人民币元</span></label></td>
+            </tr>
+        </table>
+    </div>
+    <!-- 展示搜索结果 -->
+    <div id="accounRules1"><table id = "dg"></table></div>
+    <div id="accounRules2"><table id = "dg2"></table></div>
+    <!-- 表尾信息 -->
+    <div id="footerDiv">
+        <table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+            <tr>
+                <td style="width:10%;text-align: right;" ><label>财务主管：</label></td>
+                <td style="width:13%;"><span id="leader"></span></td>
+                <td style="width:10%;text-align: right;" ><label>操作员：</label></td>
+                <td style="width:13%;"><span id="operationUser" th:text="${session.currentUser.userName}"></span></td>
+                <td style="width:10%;text-align: right;" ><label>打印日期：</label></td>
+                <td style="width:13%;"><span id="printDate"></span></td>
+            </tr>
+            <tr></tr>
+            <tr>
+                <td colspan="2" style="text-align: center;">
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="printF()" data-options="iconCls:'e-icon fa fa-print'" style="width:20%;">打印</a>
+                </td>
+                <td colspan="2" style="text-align: center;">
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="exportF()"  data-options="iconCls:'e-icon fa fa-table'" style="width:20%;">导出</a>
+                </td>
+                <td colspan="2" style="text-align: center;">
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="closeTab('专项科目余额表明细查看')"  data-options="iconCls:'e-icon fa fa-close'" style="width:20%;">关闭</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+</body>
+<script th:src="@{/js/windowOpenNewPage.js}"></script>
+<script>
+    $(function(){
+        $('#dg').datagrid({
+            striped: true  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false
+            ,method: 'post'  //默认为 post
+            ,fitColumns: true //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            ,singleSelect: true //设置为 true，则只允许选中一行。 默认false
+            ,nowrap: true
+            /**
+             * field: 列的字段名
+             * width: 列的宽度。如果未定义，则宽度会自动扩展以适应它的内容。没有定义宽度将会降低性能。
+             * align： 指示如何对齐该列的数据，可以用 'left'、'right'、'center'。 默认undefined
+             * halign：指示如何对齐该列的头部，可能的值：'left'、'right'、'center'。如果没有分配值，则头部对齐方式将与通过 'align' 属性定义的数据对齐方式一致。该属性自版本 1.3.2 起可用。
+             * sortable： 设置为 true，则允许该列被排序。
+             * order：默认的排序顺序，只能用 'asc' 或 'desc'。该属性自版本 1.3.2 起可用。
+             * resizable：设置为 true，则允许该列可调整尺寸。
+             * fixed: 设置为 true，则当 'fitColumns' 设置为 true 时放置调整宽度。
+             * hidden: 设置为 true，则隐藏该列。
+             * checkbox: 设置为 true，则显示复选框。复选框有固定宽度。
+             * formatter: 单元格的格式化函数，需要三个参数：value：字段的值。rowData：行的记录数据。rowIndex：行的索引。
+             */
+            ,columns: [
+                [
+                    {field:'voucherDate',title:'日期',width:'8%',halign:'center',align:'center',rowspan:2,formatter: function(value,row,index){
+                            if (value && value.length==6 && value.indexOf("JS")!=-1) {
+                                //当凭证日期为会计期间时并且为JS月，则应显示为当年12月
+                                return value.substring(0,4)+'12';
+                            }
+                            return value
+                        }},
+                    {field:'voucherNo',title:'凭证号',width:'7%',halign:'center',align:'center',rowspan:2,formatter: function(value,row,index){
+                            if (value) {
+                                return "<span style='color: blue; cursor: pointer;' onclick='lookVoucher("+JSON.stringify(row)+")'>" + value + "</span>";
+                            }
+                            return value;
+                        }},
+                    {field:'subject',title:'科目',width:'20%',halign:'center',align:'center',colspan:2},
+                    {field:'special',title:'专项',width:'20%',halign:'center',align:'center',colspan:2},
+                    {field:'remarkName',title:'摘要',width:'10%',halign:'center',align:'left',rowspan:2},
+                    {field:'debitDest',title:'借方',width:'11%',halign:'center',align:'right',rowspan:2,formatter: function(value,row,index){if (value) {return formatNumber(value*1,2,1);} else {return value;}}},
+                    {field:'creditDest',title:'贷方',width:'11%',halign:'center',align:'right',rowspan:2,formatter: function(value,row,index){if (value) {return formatNumber(value*1,2,1);} else {return value;}}},
+                    {field:'balanceFX',title:'方向',width:'3%',halign:'center',align:'center',rowspan:2},
+                    {field:'balanceDest',title:'余额',width:'11%',halign:'center',align:'right',rowspan:2,formatter: function(value,row,index){if (value) {return formatNumber(value*1,2,1);} else {return value;}}},
+                ],
+                [
+                    {field:'subjectCode',title:'编码',width:'10%',halign:'center',align:'center'},
+                    {field:'subjectName',title:'名称',width:'10%',halign:'center',align:'left'},
+                    {field:'specialCode',title:'编码',width:'10%',halign:'center',align:'center'},
+                    {field:'specialName',title:'名称',width:'10%',halign:'center',align:'left'},
+                ]
+            ],
+            onClickRow: function (rowIndex, rowData) {
+                $(this).datagrid('unselectRow', rowIndex);
+            },
+            onLoadSuccess:function(data){
+                if (data.total>0) {
+                    $('#yearMonth1').html($('#lookYearMonth').text());
+                    $('#yearMonthDate1').html($('#lookYearMonthDate').text());
+                    $('#centerCode').html(data.rows[0].centerCode);
+                    $('#printDate').html(getCurrentData());
+                    $('#headerDiv').show();
+                    $('#footerDiv').show();
+                } else {
+                    $.messager.show({
+                        title: '提示'
+                        ,msg:'未查询到相关数据'
+                        ,showType:'slide'
+                    });
+                    $('#headerDiv').hide();
+                    $('#footerDiv').hide();
+                }
+            },
+            loadMsg:'加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        });
+
+        $('#dg2').datagrid({
+            striped: true  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false
+            ,method: 'post'  //默认为 post
+            ,fitColumns: true //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            ,singleSelect: true //设置为 true，则只允许选中一行。 默认false
+            ,nowrap: true
+            /**
+             * field: 列的字段名
+             * width: 列的宽度。如果未定义，则宽度会自动扩展以适应它的内容。没有定义宽度将会降低性能。
+             * align： 指示如何对齐该列的数据，可以用 'left'、'right'、'center'。 默认undefined
+             * halign：指示如何对齐该列的头部，可能的值：'left'、'right'、'center'。如果没有分配值，则头部对齐方式将与通过 'align' 属性定义的数据对齐方式一致。该属性自版本 1.3.2 起可用。
+             * sortable： 设置为 true，则允许该列被排序。
+             * order：默认的排序顺序，只能用 'asc' 或 'desc'。该属性自版本 1.3.2 起可用。
+             * resizable：设置为 true，则允许该列可调整尺寸。
+             * fixed: 设置为 true，则当 'fitColumns' 设置为 true 时放置调整宽度。
+             * hidden: 设置为 true，则隐藏该列。
+             * checkbox: 设置为 true，则显示复选框。复选框有固定宽度。
+             * formatter: 单元格的格式化函数，需要三个参数：value：字段的值。rowData：行的记录数据。rowIndex：行的索引。
+             */
+            ,columns: [
+                [
+                    {field:'voucherDate',title:'日期',width:'8%',halign:'center',align:'center',rowspan:2,formatter: function(value,row,index){
+                            if (value && value.length==6 && value.indexOf("JS")!=-1) {
+                                //当凭证日期为会计期间时并且为JS月，则应显示为当年12月
+                                return value.substring(0,4)+'12';
+                            }
+                            return value
+                        }},
+                    {field:'voucherNo',title:'凭证号',width:'7%',halign:'center',align:'center',rowspan:2,formatter: function(value,row,index){
+                            if (value) {
+                                return "<span style='color: blue; cursor: pointer;' onclick='lookVoucher("+JSON.stringify(row)+")'>" + value + "</span>";
+                            }
+                            return value;
+                        }},
+                    {field:'special',title:'专项',width:'20%',halign:'center',align:'center',colspan:2},
+                    {field:'subject',title:'科目',width:'20%',halign:'center',align:'center',colspan:2},
+                    {field:'remarkName',title:'摘要',width:'10%',halign:'center',align:'left',rowspan:2},
+                    {field:'debitDest',title:'借方',width:'11%',halign:'center',align:'right',rowspan:2,formatter: function(value,row,index){if (value) {return formatNumber(value*1,2,1);} else {return value;}}},
+                    {field:'creditDest',title:'贷方',width:'11%',halign:'center',align:'right',rowspan:2,formatter: function(value,row,index){if (value) {return formatNumber(value*1,2,1);} else {return value;}}},
+                    {field:'balanceFX',title:'方向',width:'3%',halign:'center',align:'center',rowspan:2},
+                    {field:'balanceDest',title:'余额',width:'11%',halign:'center',align:'right',rowspan:2,formatter: function(value,row,index){if (value) {return formatNumber(value*1,2,1);} else {return value;}}},
+                ],
+                [
+                    {field:'specialCode',title:'编码',width:'10%',halign:'center',align:'center'},
+                    {field:'specialName',title:'名称',width:'10%',halign:'center',align:'left'},
+                    {field:'subjectCode',title:'编码',width:'10%',halign:'center',align:'center'},
+                    {field:'subjectName',title:'名称',width:'10%',halign:'center',align:'left'},
+                ]
+            ],
+            onClickRow: function (rowIndex, rowData) {
+                $(this).datagrid('unselectRow', rowIndex);
+            },
+            onLoadSuccess:function(data){
+                if (data.total>0) {
+                    $('#yearMonth1').html($('#lookYearMonth').text());
+                    $('#yearMonthDate1').html($('#lookYearMonthDate').text());
+                    $('#centerCode').html(data.rows[0].centerCode);
+                    $('#printDate').html(getCurrentData());
+                    $('#headerDiv').show();
+                    $('#footerDiv').show();
+                } else {
+                    $.messager.show({
+                        title: '提示'
+                        ,msg:'未查询到相关数据'
+                        ,showType:'slide'
+                    });
+                    $('#headerDiv').hide();
+                    $('#footerDiv').hide();
+                }
+            },
+            loadMsg:'加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        });
+        searchF();
+    });
+
+    //搜索
+    function searchF(){
+        var params = {};
+        params['yearMonth'] = $("#lookYearMonth").text();//当前会计期间
+        params['yearMonthDate'] = $("#lookYearMonthDate").text();//当前会计期间
+        params['subjectCode'] = $("#lookSubjectCode").text();//科目编码
+        params['centerCode'] = $("#lookCenterCode").text();//科目编码
+        params['specialCode'] = $("#lookDetailCode").text();//专项代码
+        params['specialName'] = $("#lookDetailName").text();//专项名字
+        params['subjectNameP'] = $('#lookSubjectNameP').text();
+        params['specialNameP'] = $("#lookSpecialNameP").text();//专项名字
+        params['accounRules'] = $("#lookAccounRules").text();
+        params['voucherGene'] = $("#lookVoucherGene").text();
+
+        if (!$("#lookAccounRules").text() || $("#lookAccounRules").text()=='1') {//按科目汇总
+            $('#accounRules1').show();
+            $('#accounRules2').hide();
+            $('#dg').datagrid({
+                url:'/specialsubjectdetailaccount/list',
+                queryParams:params
+            });
+        } else {//按专项汇总
+            $('#accounRules2').show();
+            $('#accounRules1').hide();
+            $('#dg2').datagrid({
+                url:'/specialsubjectdetailaccount/list',
+                queryParams:params
+            });
+        }
+    }
+
+    function formate(data) {
+        if (data || (data+'')=='0') {
+            return formatNumber(data, 2, 1);
+        }
+        return data;
+    }
+
+    //将","替换为"/"
+    function repalceValue(value) {
+        if (value) {
+            var str = '';
+            var s = value.split(",");
+            for (var i=0;i<s.length;i++) {
+                str = str + s[i] + '/'
+            }
+            value = str.substring(0,str.length-1);
+        }
+        return value;
+    }
+
+    function lookVoucher(row) {
+        if(row) {
+            //CM代表调用凭证详情页面的是凭证管理(CertificateManage)
+            addTab(row.voucherNo+'查看', '/voucher/look?voucherNo='+row.voucherNo+'&yearMonth='+row.yearMonthDate+'&specialNameP='+$('#lookSpecialNameP').text()+'&type=CM'+'&suffixNo='+row.suffixNo);
+        }
+    }
+    function addTab(subtitle, url) {
+        if (!parent.$('#tabs').tabs('exists', subtitle)) {
+            parent.$('#tabs').tabs(
+                'add',
+                {
+                    title: subtitle,
+                    content: createFrame(url),
+                    closable: true,
+                    width: parent.$('#mainPanle').width() - 10,
+                    height: parent.$('#mainPanle').height() - 26
+                });
+        } else {
+            parent.$('#tabs').tabs('select', subtitle);
+        }
+    }
+    function createFrame(url) {
+        var s = '<iframe name="mainFrame" fit="true" scrolling="auto" frameborder="0"  overflow-y:"hidden" src="'
+            + url + '" style="width:100%;height:100%;"></iframe>';
+        return s;
+    }
+
+    function printF(){
+        var params = {};
+        params['yearMonth'] = $("#lookYearMonth").text();//当前会计期间
+        params['yearMonthDate'] = $("#lookYearMonthDate").text();//当前会计期间
+        params['subjectCode'] = $("#lookSubjectCode").text();//科目编码
+        params['centerCode'] = $("#lookCenterCode").text();//科目编码
+        params['specialCode'] = $("#lookDetailCode").text();//专项代码
+        params['specialName'] = $("#lookDetailName").text();//专项名字
+        params['subjectNameP'] = $('#lookSubjectNameP').text();
+        params['specialNameP'] = $("#lookSpecialNameP").text();//专项名字
+        params['accounRules'] = $("#lookAccounRules").text();
+        params['voucherGene'] = $("#lookVoucherGene").text();
+        windowOpenNewPage('/specialsubjectdetailaccount/print',params);
+    }
+    function exportF() {
+        var params = {};
+        params['yearMonth'] = $("#lookYearMonth").text();//当前会计期间
+        params['yearMonthDate'] = $("#lookYearMonthDate").text();//当前会计期间
+        params['subjectCode'] = $("#lookSubjectCode").text();//科目编码
+        params['centerCode'] = $("#lookCenterCode").text();//科目编码
+        params['specialCode'] = $("#lookDetailCode").text();//专项代码
+        params['specialName'] = $("#lookDetailName").text();//专项名字
+        params['subjectNameP'] = $('#lookSubjectNameP').text();
+        params['specialNameP'] = $("#lookSpecialNameP").text();//专项名字
+        params['accounRules'] = $("#lookAccounRules").text();
+        params['voucherGene'] = $("#lookVoucherGene").text();
+        $.ajax({
+            url:'/specialsubjectdetailaccount/ishasdata',
+            type:'post',
+            dataType:'json',
+            data:params,
+            success:function (result) {
+                if (result.success){
+                    jsutil.core.download("/specialsubjectdetailaccount/export",params);
+                } else {
+                    $.messager.alert('提示',result.errorMsg,'warning');
+                }
+            }
+        });
+    }
+    function closeTab(title) {
+        var tabs = parent.$('#tabs').tabs('tabs');
+        for (var i=0;i<tabs.length;i++) {
+            if (tabs[i].panel('options').title==title){
+                parent.$('#tabs').tabs('close',i);
+            }
+        }
+    }
+</script>
+</html>

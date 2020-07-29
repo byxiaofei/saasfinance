@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('价值结构分析表','/css/Standard.css','')">
+</head>
+<body>
+    <!--搜索模块-->
+    <div class="easyui-panel"
+         style="height: auto; width:100%;padding: 8px 0px 0px 0px;overflow: hidden;">
+        <form id="serachFrom" method="post" style="margin-bottom:0;">
+            <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+                <tr>
+                    <td style="width:10%;text-align: right;" ><label>会计期间:</label></td>
+                    <td style="width:10%;">
+                        <input style="width:100%;" id="yearMonthDate" name="yearMonthDate" class="easyui-combobox" data-options="valueField:'value',textField:'text',prompt: '会计期间'">
+                    </td>
+
+                    <td style="width:10%;text-align: right;" ><label>起始层级:</label></td>
+                    <td style="width:10%;">
+                        <input style="width:100%;" id="startLevel" name="startLevel" class="easyui-combobox" data-options="valueField:'value',textField:'text',prompt: '起始层级',onSelect:compareLevel">
+                    </td>
+
+                    <td style="width:10%;text-align: right;" ><label>终止层级:</label></td>
+                    <td style="width:10%;">
+                        <input style="width:100%;" id="endLevel" name="endLevel" class="easyui-combobox" data-options="valueField:'value',textField:'text',prompt: '终止层级',onSelect:compareLevel">
+                    </td>
+                    <td style="width:10%;text-align: right;" ></td>
+                    <td style="width:10%;"></td>
+                </tr>
+                <tr>
+                    <td colspan="8" style="text-align: right; padding-right: 20px;">
+                        <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-search'" style="width: 8%;" onclick="searchF()" >查询</a>
+                        <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-refresh'" style="width: 8%;" onclick="reset()">重置</a>
+                    </td>
+                </tr>
+            </table>
+
+            <table style="width: 98%; overflow: hidden;table-layout: fixed;" border="0">
+                <tr>
+                    <td colspan="3" style="text-align: center;font-size: 15px;font-weight: bolder;" th:text="${session.currentUser.currentManageBranchName}"></td>
+                </tr>
+                <tr>
+                    <td colspan="3" style="text-align: center;font-size: 15px;font-weight: bolder;">固定资产价值结构分析表</td>
+                </tr>
+                <tr>
+                    <td id = "hs" style="width: 33%; text-align: left;">核算单位：0000000000</td>
+                    <td id = "rq" style="width: 33%; text-align: center;">日期：000000</td>
+                    <td id = "dw" style="width: 33%; text-align: right;">单位：人民币元</td>
+                </tr>
+            </table>
+        </form>
+
+        <!-- 展示搜索结果 -->
+        <table id = "dg" data-show-footer="true" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"></table>
+    </div>
+
+    <div id="waitMenu" class="easyui-dialog" style="width: 300px; height: 100px; padding: 10px 20px;" closed="true" align="center" data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+        <div id="msg"></div>
+    </div>
+
+    <script type="text/javascript">
+        $(function () {
+            $('#dg').datagrid({
+                // title: '核算单位：1000000000    日期：201808   单位：人民币',
+                striped: true,  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false,
+                method: 'post', //默认为 post
+                rownumbers: false,
+                fitColumns: true,//设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+                nowrap: true,
+                columns: [
+                    [
+                        {field: 'assetComplexName', title: '资产类别', width: '22%', align: 'left', halign: 'center'},
+                        {field: 'count', title: '数量', width: '13%', align: 'right', halign: 'center'},
+                        {field: 'qmAssetOriginValue', title: '期末原值', width: '13%', align: 'right', halign: 'center',formatter: function(value,row,index){return formate(value);}},
+                        {field: 'qmEndDepreMoney', title: '期末累计折旧', width: '13%', align: 'right', halign: 'center',formatter: function(value,row,index){return formate(value);}},
+                        {field: 'qmKHS', title: '期末净值', width: '13%', align: 'right', halign: 'center',formatter: function(value,row,index){return formate(value);}},
+                        {field: 'zb', title: '期末折旧占原值百分比%', width: '13%', align: 'right', halign: 'center'},
+                        {field: 'jz', title: '净值率%', width: '13%', align: 'right', halign: 'center'}
+                    ]
+                ],
+                onClickRow: function (rowIndex, rowData) {
+                    $(this).datagrid('unselectRow', rowIndex);
+                },
+                loadMsg: '加载中...' , //当从远程站点加载数据时，显示的提示消息。
+            });
+
+            // $('#year').combobox('setValue', getCurrentYear());
+            // searchF();//数据加载
+
+            $('#topGrid').datagrid({
+                onClickRow: function (rowIndex, rowData) {
+                    $(this).datagrid('unselectRow', rowIndex);
+                }
+            });
+
+            //会计期间
+            $('#yearMonthDate').combobox({
+                valueField:'value',
+                textField:'text',
+                url: '/valuestructurereport/yearMonthDate',
+                onLoadSuccess:function (data) {
+                    $('#yearMonthDate').combobox('setValue', data[0].value);
+                    // searchF();//数据加载
+                }
+            });
+
+            //起始层级
+            $('#startLevel').combobox({
+                valueField:'value',
+                textField:'text',
+                url: '/valuestructurereport/startLevel',
+                onLoadSuccess:function (data) {
+                    $('#startLevel').combobox('setValue', data[0].value);
+                    // searchF();//数据加载
+                }
+            });
+
+            //终止层级
+            $('#endLevel').combobox({
+                valueField:'value',
+                textField:'text',
+                url: '/valuestructurereport/startLevel',
+                onLoadSuccess:function (data) {
+                    $('#endLevel').combobox('setValue', data[data.length-1].value);
+                    searchF();//数据加载
+                }
+            });
+        });
+        //层级校验
+        function compareLevel() {
+            var start=$('#startLevel').combobox('getValue');
+            var end=$('#endLevel').combobox('getValue');
+            if(start>end&&end!=null&&end!=""){
+                $.messager.alert("提示","起始层级不能大于终止层级！","info");
+               // $('#startLevel').combobox('setValue','');
+                $('#endLevel').combobox('setValue','');
+            }
+        }
+
+        //查询
+        function searchF() {
+            if($('#yearMonthDate').combobox('getValue') == "" || $('#yearMonthDate').combobox('getValue') == null){
+                $('#rq').html("日期：000000");//默认值
+            }else{
+                $('#rq').html("日期："+ $('#yearMonthDate').combobox('getValue'));
+            }
+            $('#hs').html("核算单位：0000000000");//核算 默认值
+            $('#dw').html("单位：人民币元");//单位 默认值
+
+            var params = {};
+            $('#serachFrom').find('input').each(function(){
+                var obj = $(this);
+                var name = obj.attr('name');
+                if(name){
+                    params[name] = obj.val();
+                }
+            });
+            $('#dg').datagrid({
+                url:'/valuestructurereport/list',
+                queryParams:params,
+                onLoadSuccess:function (data) {
+                    $('#hs').html("核算单位："+data.rows[0].centerCode);//核算
+                    if(data.rows[0].currency == "CNY"){
+                        $('#dw').html("单位：人民币元");//单位
+                    }else{
+                        $('#dw').html("单位："+data.rows[0].currency);//单位
+                    }
+
+                }
+            });
+        }
+
+        //将对账结果转为中文显示
+        function replaceIsBalance(value,row,index) {
+            if(value)
+                return value=='Y'?'平衡':'不平';
+            return value;
+        }
+        function formate(data) {
+            if (data || (data+'')=='0') {
+                return formatNumber(data*1, 2, 1);
+            }
+            return data;
+        }
+        //重置
+        function reset() {
+            $('#serachFrom').form('clear');
+            $('#year').combobox('setValue', getCurrentYear());
+        }
+
+        function closeWaitMenu() {
+            $('#waitMenu').dialog('close');//关闭等待窗口
+        }
+
+        //等待
+        function onOpen() {
+            loading = setInterval(showalert, 500);
+        }
+        var ii = 2;
+        function showalert() {
+            var text = "";
+            var text1 = "";
+            if (ii == 1) {
+                text = '正在处理，请稍后.';
+            } else if (ii == 2) {
+                text = '正在处理，请稍后..';
+            } else if (ii == 3) {
+                text = '正在处理，请稍后...';
+                ii = 0;
+            }
+            ii++;
+            $('#msg').text(text);
+        }
+        function onClose() {
+            clearInterval(loading);
+        }
+    </script>
+</body>
+</html>

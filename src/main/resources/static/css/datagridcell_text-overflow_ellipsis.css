@@ -1,0 +1,4 @@
+/*easyui datagrid 单元格文本超出部分以省略号显示*/
+.datagrid-cell, .datagrid-cell-group, .datagrid-header-rownumber, .datagrid-cell-rownumber {
+    text-overflow: ellipsis;
+}

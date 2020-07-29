@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('账龄报表','','')">
+
+</head>
+<body>
+<div class="easyui-panel" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+    <!-- 筛选条件 -->
+    <form id="searchForm" method="post" style="margin-bottom: 0">
+        <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="width:8%;text-align: right;" >
+                    <label>账龄类型:</label>
+                </td>
+                <td style="width:13%;">
+                    <input style="width:100%;" id="ageAnalysisType" name="ageAnalysisType" class="easyui-combobox" data-options="prompt: '账龄类型',required:true,editable:false">
+                </td>
+                <td style="width:8%;text-align: right;" >
+                    <label>计算日期:</label>
+                </td>
+                <td style="width:13%;">
+                    <input style="width:100%;" id="computeDate" name="computeDate" class="easyui-datebox" data-options="prompt: '计算日期',required:true,editable:false">
+                </td>
+                <!--<td style="width:8%;text-align: right;" >
+                    <label>公司:</label>
+                </td>
+                <td style="width:13%;">
+                    <input style="width:100%;" id="centerCode" name="centerCode" class="easyui-combobox" data-options="prompt: '单位',required:true,editable:false">
+                </td>
+                <td style="width:8%;text-align: right;" >
+                    <label>账套:</label>
+                </td>
+                <td style="width:13%;">
+                    <input style="width:100%;" id="accBookCode" name="accBookCode" class="easyui-combobox" data-options="prompt: '单位',required:true,editable:false">
+                </td>-->
+                <td style="width:8%;text-align: right;" >
+                    <label>单位:</label>
+                </td>
+                <td style="width:13%;">
+                    <input style="width:100%;" id="unit" name="unit" class="easyui-combobox" data-options="prompt: '单位',required:true,editable:false">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7" style="text-align: right; padding-right: 20px" >
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="searchF()"  data-options="iconCls:'e-icon fa fa-search'" style="width:7%;">查询</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="computeF()" data-options="iconCls:'e-icon fa fa-refresh'" style="width:7%;">计算</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="exportF()" data-options="iconCls:'e-icon fa fa-table'" style="width:7%;">导出</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="resetF()" data-options="iconCls:'e-icon fa fa-refresh'" style="width:7%;">重置</a>
+                </td>
+            </tr>
+        </table>
+    </form>
+
+    <table id="dynamictDatagridList" class="easyui-datagrid" title="报表数据" style="width:auto;height:auto"
+           data-options="singleSelect:true,autoRowHeight:true,nowrap:false,fitColumns:false,closed:true">
+    </table>
+</div>
+<div id="waitMenu" class="easyui-dialog" style="width: 300px; height: 100px; padding: 10px 20px;" closed="true" align="center" data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+    <div id="msg"></div>
+</div>
+</body>
+<script>
+    $(function() {
+        //账龄类型
+        $('#ageAnalysisType').combobox({
+            url:'/codeSelect?type=ageAnalysisType',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        //单位
+        $('#unit').combobox({
+            url:'/codeSelect?type=moneyUnit',
+            method:'GET',
+            valueField:'value',
+            textField:'text',
+            onLoadSuccess: function () {
+                var data = $('#unit').combobox('getData');
+                if (data.length>0) {
+                    $('#unit').combobox('setValue',data[0].value);
+                }
+            }
+        });
+    });
+    //搜索
+    function searchF() {
+        if(!$('#searchForm').form('validate')){
+            $.messager.show({
+                title : '提示',
+                msg : '请填写必输项',
+                timeout:2000
+            });
+            return false;
+        }
+
+        $('#dynamictDatagridList').datagrid({
+            closed: true
+        });
+
+        var params = getsearchFormParams();
+
+        $.ajax({
+            url: "/ageAnalysisReport/checkReport",
+            type: 'post',
+            dataType: 'json',
+            data: params,
+            success: function (result) {
+                if (result.success) {
+                    $('#dynamictDatagridList').datagrid({
+                        closed: false
+                    });
+
+                    $.ajax({
+                        url: "/ageAnalysisReport/getRepotHead", //获取表头
+                        type: 'post',
+                        dataType: 'json',
+                        data: params,
+                        success: function (data) {
+                            var msg = JSON.parse(data.obj);
+                            console.log(msg.title);
+
+                            $("#dynamictDatagridList").datagrid({
+                                columns: msg.title    //动态取标题
+                            });
+
+                            $('#dynamictDatagridList').datagrid({
+                                url: '/ageAnalysisReport/list',
+                                queryParams: params
+                            });
+                        }
+                    });
+                } else {
+                    $.messager.alert('提示',result.errorMsg,'warning');
+                }
+            }
+        });
+    }
+
+    //账龄报表计算生成
+    function computeF(){
+        if(!$('#searchForm').form('validate')){
+            $.messager.show({
+                title : '提示',
+                msg : '请填写必输项',
+                timeout:2000
+            });
+            return false;
+        }
+
+        var params = getsearchFormParams();
+
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        $.ajax({
+            url: "/ageAnalysisReport/compute",
+            type: 'post',
+            dataType: 'json',
+            data: params,
+            success: function (result) {
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                if(result.success){
+                    $.messager.alert('提示','账龄计算成功！', 'info');
+                }else{
+                    $.messager.alert('提示',result.errorMsg,'warning');
+                }
+            }
+        });
+    }
+
+    function getsearchFormParams() {
+        var params = {};
+        $('#searchForm').find('input').each(function () {
+            var obj = $(this);
+            var name = obj.attr('name');
+            if (name) {
+                params[name] = obj.val();
+            }
+        });
+        return params;
+    }
+
+    //导出报表信息列表
+    function exportF(){
+        if(!$('#searchForm').form('validate')){
+            $.messager.show({
+                title : '提示',
+                msg : '请填写必输项',
+                timeout:2000
+            });
+            return false;
+        }
+
+        var params = getsearchFormParams();
+
+        $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+        $.ajax({
+            url: "/ageAnalysisReport/checkReport",
+            type: 'post',
+            dataType: 'json',
+            data: params,
+            success: function (result) {
+                $('#waitMenu').dialog('close');//关闭等待窗口
+                if (result.success) {
+                    jsutil.core.download("/ageAnalysisReport/download",params);
+                } else {
+                    $.messager.alert('提示',result.errorMsg,'warning');
+                }
+            }
+        });
+    }
+
+    //重置
+    function resetF(){
+        $('#searchForm').form("clear");
+
+        var data = $('#unit').combobox('getData');
+        if (data.length>0) {
+            $('#unit').combobox('setValue',data[0].value);
+        }
+    }
+
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+    function onClose() {
+        clearInterval(loading);
+    }
+    var ii = 2;
+    function showalert() {
+        var text = "";
+        var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+</script>
+</html>

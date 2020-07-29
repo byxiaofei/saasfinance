@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title, otherCssPaths, otherJsPaths)">
+    <title th:text="${title}"></title>
+    <meta charset="UTF-8">
+    <!-- IE=edge告诉IE使用最新的引擎渲染网页 -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <!-- 响应式布局 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <!-- begin::基础样式-->
+    <link th:href="@{/js/easyui/themes/bootstrap/easyui.css}" rel="stylesheet" media="all"/>
+    <link th:href="@{/js/easyui/themes/icon.css}" rel="stylesheet" media="all"/>
+    <link th:href="@{/js/easyui/demo.css}" rel="stylesheet" media="all"/>
+    <link th:href="@{/font-awesome/css/font-awesome.min.css}" rel="stylesheet" media="all"/>
+    <link th:href="@{/css/common.css}" rel="stylesheet" media="all"/>
+    <!-- end::基础样式-->
+
+    <!--begin::页面样式 -->
+    <link rel="stylesheet" type="text/css" th:each="cssPath,status:${#strings.setSplit(otherCssPaths,',')}" th:href="@{${cssPath}}"/>
+    <!--end::页面样式 -->
+
+    <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+    <!--[if lt IE 9]>
+    <script th:src="@{/js/html5.min.js}"></script>
+    <script th:src="@{/js/respond.min.js}"></script>
+    <![endif]-->
+
+    <script th:src="@{/js/easyui/jquery.min.js}"></script>
+    <script th:src="@{/js/easyui/jquery.easyui.min.js}"></script>
+    <script th:src="@{/js/easyui/plugins/jquery.cookie.js}"></script>
+    <script th:src="@{/js/jsutil.js}"></script>
+    <script th:src="@{/js/easyui/load.js}"></script>
+    <script th:src="@{/js/easyui/locale/easyui-lang-zh_CN.js}"></script>
+    <script th:src="@{/js/easyui/changeEasyuiTheme.js}"></script>
+
+    <!-- ajax请求浏览器缓存问题以及重定向无法调整问题处理 -->
+    <script th:src="@{/js/ajaxSetup_cache_complete.js}"></script>
+
+    <!-- 小数计算（加减乘除），以及修约 -->
+    <script th:src="@{/js/decimalcalculationfunction.js}"></script>
+    <!-- 年份 -->
+    <script th:src="@{/js/yearJson.js}"></script>
+
+    <script th:each="jsPath,status:${#strings.setSplit(otherJsPaths,',')}" th:src="@{${jsPath}}" />
+
+</head>
+</html>

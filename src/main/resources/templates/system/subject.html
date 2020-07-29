@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="commons/head::head('科目管理','','')">
+</head>
+
+<body>
+<div class="easyui-panel" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;">
+    <!-- 筛选条件 -->
+    <form id="searchForm" method="post" style="margin-bottom: 0">
+        <table cellpadding="5" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
+            <tr>
+                <td style="width:10%;text-align: right;"><label>科目代码范围:</label></td>
+                <td colspan="3">
+                    <input class="easyui-textbox" name="subjectCode" id="subjectCode" style="width:45%;" data-options="prompt:'科目代码',missingMessage:'请输入起始代码'">&nbsp;-&nbsp;
+                    <input class="easyui-textbox" name="subjectCodeEnd" id="subjectCodeEnd" style="width:45%;" data-options="prompt:'科目代码',missingMessage:'请输入终止代码'">
+                </td>
+                <td style="width:10%;text-align: right;"><label>科目类型<!--<span style="color: red">*</span>-->:</label></td>
+                <td>
+                    <input class="easyui-combobox" type="text" id ="subjectType" name="subjectType" style="width:100%;" data-options="prompt:'科目类型',editable:false,missingMessage:'请选择科目类型'">
+                </td>
+                <td style="width:10%;text-align: right;"><label>末级标志<!--<span style="color: red">*</span>-->:</label></td>
+                <td style="width:14%;">
+                    <input class="easyui-combobox" type="text" id ="endFlag" name="endFlag" style="width:100%;" data-options="prompt:'末级标志',editable:false,missingMessage:'请选择末级标志'">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:10%;text-align: right;"><label>科目层级范围:</label></td>
+                <td colspan="3">
+                    <input class="easyui-combobox" type="text" id ="level" name="level" style="width:45%;" data-options="prompt:'科目层级',editable:false,missingMessage:'请选择起始层级'">&nbsp;-&nbsp;
+                    <input class="easyui-combobox" type="text" id ="levelEnd" name="levelEnd" style="width:45%;" data-options="prompt:'科目层级',editable:false,missingMessage:'请选择终止层级'">
+                </td>
+                <td style="width:10%;text-align: right;"><label>余额方向<!--<span style="color: red">*</span>-->:</label></td>
+                <td>
+                    <input class="easyui-combobox" type="text" id ="direction" name="direction" style="width:100%;" data-options="prompt:'余额方向',editable:false,missingMessage:'请选择余额方向'">
+                </td>
+                <td style="width:10%;text-align: right;"><label>关联专项<!--<span style="color: red">*</span>-->:</label></td>
+                <td>
+                    <input class="easyui-combobox" type="text" id ="specialIdS" name="specialId" style="width:100%;" data-options="prompt:'关联专项',editable:false,missingMessage:'请选择关联专项'">
+                </td>
+            </tr>
+            <tr>
+                <td style="width:10%;text-align: right;"><label>科目名称:</label></td>
+                <td colspan="3">
+                    <input class="easyui-textbox" type="text" id="subjectName" name="subjectName" style="width:95%;" data-options="prompt:'科目名称',missingMessage:'请输入科目名称'">
+                </td>
+                <td style="width:10%;text-align: right;"><label>使用状态:</label></td>
+                <td>
+                    <input id="useflagS" name="useflag" class="easyui-combobox" style="width:100%;" data-options="prompt: '使用状态',editable:false" >
+                </td>
+                <td colspan="3" style="text-align: right; padding-right: 25px" >
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="searchF()"  data-options="iconCls:'e-icon fa fa-search'" style="width:18%;">查询</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="resetF()" data-options="iconCls:'e-icon fa fa-refresh'" style="width:18%;">重置</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="exportF('科目管理信息表')" data-options="iconCls:'e-icon fa fa-download'" style="width:18%;">导出</a>
+                </td>
+            </tr>
+        </table>
+    </form>
+
+    <!--  数据列表 -->
+    <table id = "dg" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"></table>
+
+</div>
+
+<!--  新增弹框界面-->
+<div id="dlg" class="easyui-dialog" style="width: 600px; padding: 10px 20px" align="center"
+     data-options="title:'科目信息',modal:true,closed:true"  buttons="#dlg-buttons">
+    <form id="fm" method="post">
+        <table>
+            <input type="hidden" name="id">
+            <tr>
+                <td style="text-align: right;"><label>科目代码<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input class="easyui-textbox" name="subjectCode" id="subjectCodeIn" style="width:140px;"data-options="prompt:'科目代码',required:true,missingMessage:'请输入科目代码'">
+                </td>
+                <td style="text-align: right;"><label>科目名称<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input class="easyui-textbox" name="subjectName" id="subjectNameIn" style="width:140px;"data-options="prompt:'科目名称',required:true,missingMessage:'请输入科目名称'">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>科目类型<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input class="easyui-combobox" type="text"  id ="subjectTypeIn" name="subjectType" style="width:140px;" data-options="prompt:'科目类型',required:true,editable:false,missingMessage:'请选择科目类型'">
+                </td>
+                <td style="text-align: right;"><label>余额方向<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input class="easyui-combobox" type="text"  id ="directionIn" name="direction" style="width:140px;" data-options="prompt:'余额方向',required:true,editable:false,missingMessage:'请选择余额方向'">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>末级标志<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input class="easyui-combobox" type="text"  id ="endFlagIn" name="endFlag" style="width:140px;" data-options="prompt:'末级标志',required:true,editable:false,missingMessage:'请选择末级标志'">
+                </td>
+                <td style="text-align: right;"><label>关联专项<span style="color: white">*</span>:</label></td>
+                <td>
+                    <input class="easyui-combobox" type="text"  id ="specialId" name="specialId" style="width:140px;" data-options="prompt:'关联专项',multiple:true,required:false,editable:false,disabled:true">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>使用状态<span style="color: red">*</span>:</label></td>
+                <td>
+                    <input class="easyui-combobox" type="text"  id ="useflagIn" name="useflag" style="width:140px;" data-options="prompt:'使用状态',editable:false,required:true">
+                </td>
+                <div ><td style="text-align: right;" class="super1"><label>父级科目<span style="color: white">*</span>:</label></td>
+                    <td></div>
+                <div class="super1"><input class="easyui-textbox" type="text"  id ="allSubjectIn" name="allSubject" style="width:140px;" data-options="prompt:'父级科目'">
+                    </td></div>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>备注</label></td>
+                <td class="ttd rtd" style="width: 80%" colspan="3">
+                    <input class="easyui-textbox" id="temp1" name="temp" style="width: 100%;height: 100px" multiline="true" data-options="prompt:'备注'">
+                </td>
+            </tr>
+            <!--<tr>
+                <td style="text-align: right;"><label>备注:</label></td>
+                <td colspan="3"><textarea name="temp" style="width: 300px; height: 40px;"></textarea></td>
+            </tr>-->
+        </table>
+        <input type='hidden' name="token" value="">
+        <input type="hidden" value="" name="account" id="hidAccount">
+    </form>
+
+    <div id="dlg-buttons">
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-floppy-o" onclick="saveSubject()">保存</a>
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-close" onclick="cancel()">取消</a>
+    </div>
+</div>
+<!--  查看弹框界面-->
+<div id="dlgL" class="easyui-dialog" style="width: 600px; padding: 10px 20px" align="center"
+     data-options="title:'科目信息',modal:true,closed:true"  buttons="#dlgL-buttons">
+    <form id="fmL" method="post">
+        <table>
+            <input type="hidden" name="id" >
+            <tr>
+                <td style="text-align: right;"><label>科目代码:</label></td>
+                <td>
+                    <input class="easyui-textbox" name="subjectCode" id="subjectCodes" style="width:140px;"data-options="required:true">
+                </td>
+                <td style="text-align: right;"><label>科目名称:</label></td>
+                <td>
+                    <input class="easyui-textbox" name="subjectName" style="width:140px;"data-options="required:true,readonly:true">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>科目类型:</label></td>
+                <td>
+                    <input class="easyui-combobox" type="text"  id ="subjectTypeL" name="subjectType" style="width:140px;" data-options="required:true,editable:false,readonly:true">
+                </td>
+                <td style="text-align: right;"><label>余额方向:</label></td>
+                <td>
+                    <input class="easyui-combobox" type="text"  id ="directionL" name="direction" style="width:140px;" data-options="required:true,editable:false,readonly:true">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>末级标志:</label></td>
+                <td>
+                    <input class="easyui-combobox" type="text"  id ="endFlagL" name="endFlag" style="width:140px;" data-options="required:true,editable:false,readonly:true">
+                </td>
+                <td style="text-align: right;"><label>关联专项:</label></td>
+                <td>
+                    <input class="easyui-combobox" type="text"  id ="specialIdL" name="specialId" style="width:140px;" data-options="multiple:true,editable:false">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>父级科目:</label></td>
+                <td>
+                    <input class="easyui-textbox" type="text"  name="allSubject" style="width:140px;" data-options="editable:false,readonly:true">
+                </td>
+                <td style="text-align: right;"><label>使用状态:</label></td>
+                <td>
+                    <input class="easyui-combobox" type="text"  id ="useflagL" name="useflag" style="width:140px;" data-options="editable:false,readonly:true">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>科目层级:</label></td>
+                <td>
+                    <input class="easyui-combobox" type="text"  id ="levelL" name="level" style="width:140px;" data-options="editable:false,readonly:true">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>备注:</label></td>
+                <td colspan="3"><textarea name="temp" style="width: 300px; height: 40px;"></textarea></td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>创建人:</label></td>
+                <td>
+                    <input class="easyui-textbox" type="text" name="createOperName" style="width:140px;" data-options="editable:false,readonly:true">
+                </td>
+                <td style="text-align: right;"><label>创建时间:</label></td>
+                <td>
+                    <input class="easyui-textbox" type="text" name="createTime" style="width:140px;" data-options="editable:false,readonly:true">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;"><label>修改人:</label></td>
+                <td>
+                    <input class="easyui-textbox" type="text" name="updateOperName" style="width:140px;" data-options="editable:false,readonly:true">
+                </td>
+                <td style="text-align: right;"><label>修改时间:</label></td>
+                <td>
+                    <input class="easyui-textbox" type="text" name="updateTime" style="width:140px;" data-options="editable:false,readonly:true">
+                </td>
+            </tr>
+        </table>
+    </form>
+    <div id="dlgL-buttons">
+        <a href="#" class="easyui-linkbutton" iconCls="e-icon fa fa-close" onclick="cancel()">取消</a>
+    </div>
+</div>
+
+<div id="subjectGrid" class="easyui-dialog" style="width: 40%;top: 15%;padding:10px 10px 10px 10px;" data-options="modal:true,closed:true,resizable:false,collapsible:false,minimizable:false,maximizable:true" buttons="#roleData-buttons">
+    <div class="easyui-panel" style="width: 100%;height: 350px;">
+        <ul id="subjectTree" class="easyui-tree"  data-options="method:'post',animate:true,checkbox:true,cascadeCheck:false"></ul>
+    </div>
+    <div id="roleData-buttons">
+        <a href="#" class="easyui-linkbutton" iconCls="icon-ok icon-large" onclick="saveSuperSubject()">保存</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove icon-large" onclick="javascript:$('#subjectGrid').dialog('close')">取消</a>
+
+    </div>
+</div>
+
+<div id="waitMenu" class="easyui-dialog"
+     style="width: 300px; height: 100px; padding: 10px 20px;" closed="true"
+     align="center"
+     data-options="modal:true,closed:true,onOpen:onOpen,onClose:onClose">
+    <div id="msg"></div>
+</div>
+
+</body>
+<script th:src="@{/js/subjectExport.js}"></script>
+<script>
+    var flag=0;
+    var count;
+    var sumRow="";
+    $(function(){
+        $('#dg').datagrid({
+            url: '/subject/listALL'
+            //,fit:true //当设置为true的时候冻结表头信息，同时面板大小将自适应父容器。
+            ,striped: true  //设置为 true，则把行条纹化。（即奇偶行使用不同背景色） 默认false
+            ,method: 'get'  //默认为 post
+            ,pagination: false //设置为 true，则在数据网格（datagrid）底部显示分页工具栏。默认false
+            //,rownumbers: true //设置为 true，则显示带有行号的列。默认false
+            ,fitColumns: true //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+            //,autoRowHeight: true //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能。
+            ,singleSelect: true //设置为 true，则只允许选中一行。 默认false
+            ,checkOnSelect: true //如果设置为 true，当用户点击某一行时，则会选中/取消选中复选框。
+            ,pagePosition: 'bottom' //定义分页栏的位置。可用的值有：'top'、'bottom'、'both'。 默认 bottom
+            ,pageList: [10,20,30,40,50] //当设置了 pagination 属性时，初始化页面尺寸的选择列表。
+            ,nowrap: true
+            /**
+             * field: 列的字段名
+             * width: 列的宽度。如果未定义，则宽度会自动扩展以适应它的内容。没有定义宽度将会降低性能。
+             * align： 指示如何对齐该列的数据，可以用 'left'、'right'、'center'。 默认undefined
+             * halign：指示如何对齐该列的头部，可能的值：'left'、'right'、'center'。如果没有分配值，则头部对齐方式将与通过 'align' 属性定义的数据对齐方式一致。该属性自版本 1.3.2 起可用。
+             * sortable： 设置为 true，则允许该列被排序。
+             * order：默认的排序顺序，只能用 'asc' 或 'desc'。该属性自版本 1.3.2 起可用。
+             * resizable：设置为 true，则允许该列可调整尺寸。
+             * fixed: 设置为 true，则当 'fitColumns' 设置为 true 时放置调整宽度。
+             * hidden: 设置为 true，则隐藏该列。
+             * checkbox: 设置为 true，则显示复选框。复选框有固定宽度。
+             * formatter: 单元格的格式化函数，需要三个参数：value：字段的值。rowData：行的记录数据。rowIndex：行的索引。
+             */
+            ,columns: [
+                [
+                    {field:'ck',checkbox: true ,align:'center'}
+                    ,{field:'subjectCodeAll',title:'科目代码',width:'15%',halign:'center',align:'left',formatter:function(value,row){
+                        if(row.allSubject==null||row.allSubject==""){
+                            return "<span onclick='lookSubjec("+JSON.stringify(row)+")' style='cursor:pointer;color:blue;'>"+row.subjectCode+"</span>";
+                            //return row.subjectCode;
+                        }else{
+                            if(row.allSubject.substr(row.allSubject.length-1,1)=='/'){
+                                return "<span onclick='lookSubjec( "+JSON.stringify(row)+")' style='cursor:pointer;color:blue;' >"+row.allSubject+row.subjectCode+"</span>";
+                                //return row.allSubject+row.subjectCode ;
+                            }else{
+                                return "<span onclick='lookSubjec("+JSON.stringify(row)+")' style='cursor:pointer;color:blue;' class='hov'>"+row.allSubject+'/'+row.subjectCode+"</span>";
+                                //return row.allSubject+'/'+row.subjectCode ;
+                            }
+                        };
+                    }}
+                    ,{field:'subjectName',title:'科目名称',width:'20%',halign:'center',align:'left'}
+                    ,{field:'specialIdName',title:'关联专项',width:'13%',halign:'center',align:'left'}
+                    ,{field:'endFlagName',title:'末级标志',width:'7%',align:'center'}
+                    ,{field:'subjectTypeName',title:'科目类型',width:'7%',align:'center'}
+                    ,{field:'directionName',title:'余额方向',width:'7%',align:'center'}
+                    ,{field:'allSubject',title:'父级科目代码',width:'15%',halign:'center',align:'left'}
+                    ,{field:'id',title:'操作',width:'15%',align:'center',formatter: function(value,row,index){
+                        //格式：单引号必须在外，单双引号保持一致。不然脚本执行异常
+                        //console.log(row.NextJi);
+                        var btn = '';
+                        if(row.endFlag == 0){
+                            btn = '<button class="sino-btn sino-btn-danger sino-btn-xs" onclick="deleteSubject('+value+')">删除</button>';
+                        }else{
+                            btn = '<button class="sino-btn sino-btn-disabled sino-btn-xs" disabled="value">删除</button>';
+                        }
+                        var newAdd='';
+                        //末级，父级停用状态不能新增
+                        if(row.endFlag == 0||row.useflag==0){
+                            newAdd = "<button class='sino-btn sino-btn-disabled sino-btn-xs' )'>新增下级</button>";
+                        }else{
+                            newAdd = "<button class='sino-btn sino sino-btn-xs' onclick='newAddSubjec("+JSON.stringify(row)+")'>新增下级</button>";
+                        }
+                        var changeResult='';
+                        if(row.NextJi<1){
+                            changeResult= newAdd+ "&nbsp;&nbsp;<button class='sino-btn sino sino-btn-xs' onclick='eidtSubjec("+ JSON.stringify(row) +")'>编辑</button>&nbsp;&nbsp;"+btn ;
+
+                        }else{
+                            changeResult = newAdd+ "&nbsp;&nbsp;<button class='sino-btn sino-btn-disabled sino-btn-xs' >编辑</button>&nbsp;&nbsp;"+btn ;
+                        }
+                        return changeResult;
+                    }}
+                ]
+            ]
+            /*,toolbar: '#tbar'*/    //通过id选择器引用
+            ,toolbar: [{
+                text: '新增'
+                ,iconCls: 'e-icon fa fa-plus'
+                ,plain: true
+                ,handler: function(){
+                    $('#subjectTypeIn').combobox({
+                        url:'/codeSelect?type=subjectType',
+                        method:'GET',
+                        valueField:'value',
+                        textField:'text'
+                    });
+                    $('#directionIn').combobox({
+                        url:'/codeSelect?type=balanceDirection',
+                        method:'GET',
+                        valueField:'value',
+                        textField:'text'
+                    });
+                    $('#useflagIn').combobox({
+                        url:'/codeSelect?type=useFlag',
+                        method:'GET',
+                        valueField:'value',
+                        textField:'text'
+                    });
+                    //$('#endFlagIn').combobox({ disabled: true }); //禁用
+                    $('.super1').hide();
+
+                    $('#specialId').combobox({disabled: true});
+                    $("#subjectTypeIn").combobox('readonly',false);
+                    $("#directionIn").combobox('readonly',false);
+                    //$('#subjectCodeIn').textbox('textbox').attr('readonly',false);
+                    //$('#subjectNameIn').textbox('textbox').attr('readonly',false);
+                    $('#useflagIn').combobox('readonly',false);
+                    $('#endFlagIn').combobox({
+                        url:'/codeSelect?type=endflag',
+                        method:'GET',
+                        valueField:'value',
+                        textField:'text',
+                        onChange:function(newValue,oldValue){
+                            if(newValue==0){
+                                $('#specialId').combobox({
+                                    disabled: false,
+                                    url:'/subject/specialList',
+                                    method:'GET',
+                                    valueField:'value',
+                                    textField:'text'
+                                });
+                            }else{
+                                $('#specialId').combobox({
+                                    disabled: true
+                                });
+                            }
+                        }
+                    });
+                    //父级科目
+                    /*$("input",$("#allSubjectIn").next("span")).dblclick(function(){
+                        $('#subjectTree').tree({
+                            url:'/subject/super?code=000',
+                            onSelect: function (node) {
+                                var cknodes = $('#subjectTree').tree("getChecked");
+                                for (var i = 0; i < cknodes.length; i++) {
+                                    if (cknodes[i].id != node.id) {
+                                        $('#subjectTree').tree("uncheck", cknodes[i].target);
+                                    }
+                                }
+                                if (node.checked) {
+                                    $('#subjectTree').tree('uncheck', node.target);
+                                } else {
+                                    $('#subjectTree').tree('check', node.target);
+                                }
+                            },
+                            onLoadSuccess: function (node, data) {
+                                $('#subjectGrid').dialog('open').dialog('setTitle','父级科目代码');
+                                $(this).find('span.tree-checkbox').unbind().click(function () {
+                                    $('#subjectTree').tree('select', $(this).parent());
+                                    return false;
+                                });
+                            }
+                        });
+                    });*/
+                    //获取token,防止表单重复提交
+                    jsutil.tool.refreshToken('',$('#fm').find('input[name="token"]'));
+                    url='/subject/add';
+                    $('#dlg').dialog('open');
+                    $('#dlg').window('center');//使Dialog居中显示
+                    $('#fm').form('clear');
+
+                    //默认值设置
+                    $('#useflagIn').combobox('setValue','1')
+
+                    /*var rows = $('#dg').datagrid('getSelections');
+                    if(rows.length==1&&rows[0].endFlag==1){
+                        var superCode = "";
+                        if(rows[0].allSubject==null||rows[0].allSubject==""){
+                            superCode = rows[0].subjectCode+"/";
+                        }else{
+                            superCode = rows[0].allSubject+rows[0].subjectCode+"/";
+                        }
+                        $('#allSubjectIn').textbox('setValue',superCode);
+                    }*/
+                }
+            }]
+            ,loadMsg:'加载中...'  //当从远程站点加载数据时，显示的提示消息。
+        });
+
+        $('#subjectType').combobox({
+            url:'/codeSelect/unlimited?type=subjectType',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#direction').combobox({
+            url:'/codeSelect/unlimited?type=balanceDirection',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#endFlag').combobox({
+            url:'/codeSelect/unlimited?type=endflag',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#useflagS').combobox({
+            url:'/codeSelect/unlimited?type=useFlag',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#level').combobox({
+            url:'/codeSelect?type=SubjectsLevel',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#levelEnd').combobox({
+            url:'/codeSelect?type=SubjectsLevel',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#specialIdS').combobox({
+            url:'/subject/specialListUnlimited',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+
+        var subjectCodeReg=/^[0-9]*$/;
+        //如果同时存在双击监听，则此onChange监听要在双击之前初始化，否则可能会失效，暂未知
+        $('#subjectCode').textbox({
+            onChange:function (newValue, oldValue) {
+                if (newValue && subjectCodeReg.exec(newValue)) {
+                    $.ajax({
+                        type: 'post',
+                        url: '/subject/getSubjectCodeByNumCode',
+                        data: {'slashFlag': false, 'numberCode': newValue},
+                        async: true,
+                        success: function(result){
+                            if(result){ $('#subjectCode').textbox('setValue', result); }
+                        }
+                    });
+                }
+            }
+        });
+        //如果同时存在双击监听，则此onChange监听要在双击之前初始化，否则可能会失效，暂未知
+        $('#subjectCodeEnd').textbox({
+            onChange:function (newValue, oldValue) {
+                if (newValue && subjectCodeReg.exec(newValue)) {
+                    $.ajax({
+                        type: 'post',
+                        url: '/subject/getSubjectCodeByNumCode',
+                        data: {'slashFlag': false, 'numberCode': newValue},
+                        async: true,
+                        success: function(result){
+                            if(result){ $('#subjectCodeEnd').textbox('setValue', result); }
+                        }
+                    });
+                }
+            }
+        });
+
+        //搜索框双击tree选择
+        $("input",$("#subjectCode").next("span")).dblclick(function(){
+            flag=0;
+            var value = $('#subjectCode').textbox('getText');
+            $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+            $('#subjectTree').tree({
+                url:'/subject/super?code='+encodeURI(value)+'&onlyLastStage=N',
+                onSelect: function (node) {
+                    var cknodes = $('#subjectTree').tree("getChecked");
+                    for (var i = 0; i < cknodes.length; i++) {
+                        if (cknodes[i].id != node.id) {
+                            $('#subjectTree').tree("uncheck", cknodes[i].target);
+                        }
+                    }
+                    if (node.checked) {
+                        $('#subjectTree').tree('uncheck', node.target);
+                    } else {
+                        $('#subjectTree').tree('check', node.target);
+                    }
+                },
+                onDblClick: function (node) {
+                    saveSuperSubject();
+                },
+                onLoadSuccess: function (node, data) {
+                    /*console.log(data);
+                    console.log(node);*/
+                    $('#waitMenu').dialog('close');//关闭等待窗口
+                    $('#subjectGrid').dialog('open').dialog('setTitle','科目代码');
+                    $(this).find('span.tree-checkbox').unbind().click(function () {
+                        $('#subjectTree').tree('select', $(this).parent());
+
+                        return false;
+                    });
+                }
+            });
+        });
+        //搜索框双击tree选择
+        $("input",$("#subjectCodeEnd").next("span")).dblclick(function(){
+            flag=1;
+            var value = $('#subjectCodeEnd').textbox('getText');
+            $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
+            $('#subjectTree').tree({
+                url:'/subject/super?code='+encodeURI(value)+'&onlyLastStage=N',
+                onSelect: function (node) {
+                    var cknodes = $('#subjectTree').tree("getChecked");
+                    for (var i = 0; i < cknodes.length; i++) {
+                        if (cknodes[i].id != node.id) {
+                            $('#subjectTree').tree("uncheck", cknodes[i].target);
+                        }
+                    }
+                    if (node.checked) {
+                        $('#subjectTree').tree('uncheck', node.target);
+                    } else {
+                        $('#subjectTree').tree('check', node.target);
+                    }
+                },
+                onDblClick: function (node) {
+                    saveSuperSubject();
+                },
+                onLoadSuccess: function (node, data) {
+                    /*console.log(data);
+                    console.log(node);*/
+                    $('#waitMenu').dialog('close');//关闭等待窗口
+                    $('#subjectGrid').dialog('open').dialog('setTitle','科目代码');
+                    $(this).find('span.tree-checkbox').unbind().click(function () {
+                        $('#subjectTree').tree('select', $(this).parent());
+                        return false;
+                    });
+                }
+            });
+        });
+    });
+    //搜索
+    function searchF(){
+        //查询之前验证
+        var params = {};
+        //JSON.stringify(params)
+        $('#searchForm').find('input').each(function(){
+            var obj = $(this);
+            var name = obj.attr('name');
+            if(name){
+                params[name] = obj.val();
+            }
+        });
+        $('#dg').datagrid("load", params);
+    }
+    //重置
+    function resetF(){
+        $('#searchForm').form('clear');
+    }
+
+    //导出科目信息列表
+    function exportF(xlsName){
+        //准备参数
+        var result = prepareParam(xlsName);
+        if (result == "false") {
+            return false;
+        }
+        //使用参数执行一次查询，且将查询数据导出
+        jsutil.core.download(
+            'subjectdownload',
+            result);
+    }
+
+    //准备参数
+    function prepareParam(xlsName) {
+        var param = {
+            name : xlsName,
+            queryConditions : {},
+            cols : subjectExportXls
+        };
+        var grid = $("#dg");
+        var datas = grid.datagrid("getRows");
+        if (datas.length > 0) {
+            //查询之前验证
+            $('#searchForm').find('input').each(
+                function() {
+                    var obj = $(this);
+                    var name = obj.attr('name');
+                    if (name) {
+                        param.queryConditions[name] = obj.val();
+                    }
+                });
+            return param;
+        } else {
+            $.messager.alert("提示", "请先查询或者没有要导出的数据", "warning");
+            return "false";
+        }
+    }
+
+    // 创建用户
+    function saveSubject(){
+        var flag=$('#fm').form('validate');
+        if(!flag){
+            $.messager.alert('提示','请填写带*信息栏', 'warning');
+            return flag;
+        }
+        var subjectCode = $('#subjectCodeIn').textbox('getText');
+        var allSubject = $('#allSubjectIn').textbox('getText');
+        if (allSubject) {//新增下级
+            //if (subjectCode.length!=2) {$.messager.alert('提示','请输入2位的科目代码', 'warning');return flag;}
+            if (allSubject.length>=allSubject.length && subjectCode.substring(0, allSubject.length)==allSubject) {
+                $.messager.alert('提示','请输入不包含父级的科目本级代码', 'warning');return flag;
+            }
+        } else {//新增一级
+            if (subjectCode.length!=4) {$.messager.alert('提示','请输入4位的科目代码', 'warning');return flag;}
+        }
+        //表单数据序列化  jquery的方法
+        var data = $('#fm').serialize();
+        console.log(data);
+        $.post(url, data, function(result){
+            if(result.success){
+                $.messager.alert('提示','操作成功！', 'info');
+                $('#dlg').dialog('close');
+                $('#dg').datagrid('reload');
+            }else{
+                $.messager.alert('提示',result.errorMsg,'warning');
+            }
+        });
+    }
+    function cancel(){
+        $('#dlg').dialog('close');
+        $('#dlgL').dialog('close');
+        $('#model').dialog('close');
+    }
+    function saveSuperSubject(){
+        var superCode="";
+        var nodes = $('#subjectTree').tree('getChecked');//获取选中科目信息
+        if (nodes.length > 0){
+            var parent1= $('#subjectTree').tree('getParent',nodes[0].target);
+            if(parent1==null){
+                superCode = nodes[0].id+"/";
+                $.messager.alert('提示','请重新选择，不允许选择科目分类','warning');
+                return false;
+            }else{
+                var parent2= $('#subjectTree').tree('getParent',parent1.target);
+                if(parent2==null){
+                    superCode = parent1.id+"/"+nodes[0].id+"/";
+                }else{
+                    var parent3= $('#subjectTree').tree('getParent',parent2.target);
+                    if(parent3==null){
+                        superCode = parent2.id+"/"+parent1.id+"/"+nodes[0].id+"/";
+                    }else{
+                        var parent4= $('#subjectTree').tree('getParent',parent3.target);
+                        if(parent4==null){
+                            superCode = parent3.id+"/"+parent2.id+"/"+parent1.id+"/"+nodes[0].id+"/";
+                        }else{
+                            var parent5= $('#subjectTree').tree('getParent',parent4.target);
+                            if(parent5==null){
+                                superCode = parent4.id+"/"+parent3.id+"/"+parent2.id+"/"+parent1.id+"/"+nodes[0].id+"/";
+                            }else {
+                                var parent6= $('#subjectTree').tree('getParent',parent5.target);
+                                if(parent6==null){
+                                    superCode = parent5.id+"/"+parent4.id+"/"+parent3.id+"/"+parent2.id+"/"+parent1.id+"/"+nodes[0].id+"/";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            /* for(var obj in nodes){
+                 superCode += nodes[obj].id+"/";
+             }*/
+            //去除一级（科目分类：资产、负债、权益、损益）
+            var superCodeArr = superCode.split("/");
+            if (superCodeArr.length>2) {//最后一个是空的，因此为2
+                superCode = superCode.substring(superCode.indexOf("/")+1);
+                //$('#subjectTypeIn').combobox('setValue',superCodeArr[0])
+            }
+            superCode = superCode.substring(0,superCode.length-1)
+            //console.log(superCode);
+            if(flag==0){
+                $('#subjectCode').textbox('setValue',superCode);
+            }
+            if(flag==1){
+                $('#subjectCodeEnd').textbox('setValue',superCode);
+            }
+        }else {
+            if(flag==0){
+                $('#subjectCode').textbox('setValue',"");
+            }
+            if(flag==1){
+                $('#subjectCodeEnd').textbox('setValue',"");
+            }
+        }
+
+
+        $('#subjectGrid').dialog('close');
+    }
+    function deleteSubject(value){
+        var data =[{name:'ids',value:value }];
+        $.messager.confirm('删除','确认删除该科目吗?',function(r){
+            if (r){
+                $.post('/subject/delete',data,function(result){
+                    if (result.success){
+                        $('#dg').datagrid('reload');
+                        $.messager.alert('提示','操作成功！', 'info');
+                    } else {
+                        $.messager.alert('提示',result.errorMsg,'warning');
+                    }
+                },'json');
+            }
+        });
+
+    }
+
+    function lookSubjec(row){
+        $('#subjectTypeL').combobox({
+            url:'/codeSelect?type=subjectType',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#directionL').combobox({
+            url:'/codeSelect?type=balanceDirection',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#endFlagL').combobox({
+            url:'/codeSelect?type=endflag',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#specialIdL').combobox({
+            url:'/subject/specialList',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#useflagL').combobox({
+            url:'/codeSelect?type=useFlag',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#levelL').combobox({
+            url:'/codeSelect?type=SubjectsLevel',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        //var rows = $('#dg').datagrid('getSelections');
+        //if(rows.length!=1){$.messager.alert('消息提示','请选择一条要查看的数据!','warning');return ;}
+        $('#dlgL').dialog('open');
+        $('#dlgL').window('center');//使Dialog居中显示
+        $('#fmL').form('clear');
+        $('#fmL').form('load',row);
+        $('#subjectCodes').textbox('textbox').attr('readonly',true);
+    }
+    //新增下级
+    function  newAddSubjec(row){
+        $('.super1').show();
+        $('#subjectTypeIn').combobox({
+            url:'/codeSelect?type=subjectType',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#directionIn').combobox({
+            url:'/codeSelect?type=balanceDirection',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#useflagIn').combobox({
+            url:'/codeSelect?type=useFlag',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#specialId').combobox({disabled: true});
+        $('#endFlagIn').combobox({
+            url:'/codeSelect?type=endflag',
+            method:'GET',
+            valueField:'value',
+            textField:'text',
+            disabled:false,
+            onChange:function(newValue,oldValue){
+                if(newValue==0){
+                    $('#specialId').combobox({
+                        disabled: false,
+                        url:'/subject/specialList',
+                        method:'GET',
+                        valueField:'value',
+                        textField:'text'
+                    });
+                } else {
+                    $('#specialId').combobox({
+                        disabled: true
+                    });
+                }
+            }
+        });
+
+        //父级科目
+        /* $("input",$("#allSubjectIn").next("span")).dblclick(function(){
+              $('#subjectTree').tree({
+                  url:'/subject/super?code=000',
+                  onSelect: function (node) {
+                      var cknodes = $('#subjectTree').tree("getChecked");
+                      for (var i = 0; i < cknodes.length; i++) {
+                          if (cknodes[i].id != node.id) {
+                              $('#subjectTree').tree("uncheck", cknodes[i].target);
+                          }
+                      }
+                      if (node.checked) {
+                          $('#subjectTree').tree('uncheck', node.target);
+                      } else {
+                          $('#subjectTree').tree('check', node.target);
+                      }
+                  },
+                  onLoadSuccess: function (node, data) {
+                      $('#subjectGrid').dialog('open').dialog('setTitle','父级科目代码');
+                      $(this).find('span.tree-checkbox').unbind().click(function () {
+                          $('#subjectTree').tree('select', $(this).parent());
+                          return false;
+                      });
+                  }
+             });
+        });*/
+        //获取token,防止表单重复提交
+        jsutil.tool.refreshToken('',$('#fm').find('input[name="token"]'));
+        url='/subject/add';
+        $('#dlg').dialog('open');
+        $('#dlg').window('center');//使Dialog居中显示
+        $('#fm').form('clear');
+
+        var row1 = {
+            allSubject:row.allSubject+row.subjectCode,
+            account: row.account,
+            subjectType:row.subjectType,
+            direction:row.direction,
+            useflag:row.useflag
+        };
+        console.log(row);
+        $('#fm').form('load',row1);
+        // $('#allSubjectIn').textbox('setValue',row1.allSubject);
+        $('#allSubjectIn').textbox('textbox').attr('readonly',true);
+        $("#subjectTypeIn").combobox('readonly',true);
+        $("#directionIn").combobox('readonly',false);
+        //  $('#subjectCodeIn').textbox('textbox').attr('readonly',false);
+        // $('#subjectNameIn').textbox('textbox').attr('readonly',false);
+        $('#useflagIn').combobox('readonly',false);
+        //$('#allSubjectIn').textbox({disabled: true});
+
+
+        /* var rows = $('#dg').datagrid('getSelections');
+         if(rows.length==1&&rows[0].endFlag==1){
+             var superCode = "";
+             if(rows[0].allSubject==null||rows[0].allSubject==""){
+                 superCode = rows[0].subjectCode+"/";
+             }else{
+                 superCode = rows[0].allSubject+rows[0].subjectCode+"/";
+             }
+             $('#allSubjectIn').textbox('setValue',superCode);
+         }*/
+
+    }
+    function eidtSubjec(row){
+        $('.super1').show();
+        $('#subjectTypeIn').combobox({
+            url:'/codeSelect?type=subjectType',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#directionIn').combobox({
+            url:'/codeSelect?type=balanceDirection',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#useflagIn').combobox({
+            url:'/codeSelect?type=useFlag',
+            method:'GET',
+            valueField:'value',
+            textField:'text'
+        });
+        $('#specialId').combobox({disabled: true});
+        /* $('#endFlagIn').combobox({disabled: true});
+         //如果endflagIn为末级，不禁用
+         if(row.endFlagName=='末级'){
+             $('#endFlagIn').combobox({
+                 disabled: false,
+                 url:'/codeSelect?type=endFlag',
+                 method:'GET',
+                 valueField:'value',
+                 textField:'text'
+             });
+         };*/
+        $('#endFlagIn').combobox({
+            url:'/codeSelect?type=endflag',
+            method:'GET',
+            valueField:'value',
+            textField:'text',
+            onChange:function(newValue,oldValue){
+                if(newValue==0){
+                    $('#specialId').combobox({
+                        disabled: false,
+                        url:'/subject/specialList',
+                        method:'GET',
+                        valueField:'value',
+                        textField:'text'
+                    });
+                };
+            }
+        });
+
+        //var rows = $('#dg').datagrid('getSelections');
+        //if(rows.length!=1){$.messager.alert('消息提示','请选择一条要编辑的数据!','warning');return ;}
+        /*$("input",$("#allSubjectIn").next("span")).dblclick(function(){
+            $('#subjectTree').tree({
+                url:'/subject/super?code='+row.subjectCode,
+                onSelect: function (node) {
+                    var cknodes = $('#subjectTree').tree("getChecked");
+                    for (var i = 0; i < cknodes.length; i++) {
+                        if (cknodes[i].id != node.id) {
+                            $('#subjectTree').tree("uncheck", cknodes[i].target);
+                        }
+                    }
+                    if (node.checked) {
+                        $('#subjectTree').tree('uncheck', node.target);
+                    } else {
+                        $('#subjectTree').tree('check', node.target);
+                    }
+                },
+                onLoadSuccess: function (node, data) {
+                    $('#subjectGrid').dialog('open').dialog('setTitle','父级科目代码');
+                    $(this).find('span.tree-checkbox').unbind().click(function () {
+                        $('#subjectTree').tree('select', $(this).parent());
+                        return false;
+                    });
+                }
+            });
+        });*/
+        //获取token,防止表单重复提交
+        jsutil.tool.refreshToken('',$('#fm').find('input[name="token"]'));
+        url='/subject/edit';
+        $('#dlg').dialog('open');
+        $('#dlg').window('center');//使Dialog居中显示
+
+        $('#fm').form('clear');
+        $('#fm').form('load',row);
+
+        $('#directionIn').combobox('readonly',true);
+        $('#subjectTypeIn').combobox('readonly',true);
+        // $('#subjectCodeIn').textbox('textbox').attr('readonly',false);
+        // $('#subjectNameIn').textbox('textbox').attr('readonly',false);
+        $('#allSubjectIn').textbox('textbox').attr('readonly',true);
+
+        //判断是否有下级目录
+        /*  if(count>0 &&row.endFlag==1){
+              $("#endFlagIn").combobox('readonly',true);
+              $('#endFlagIn').combobox('setValue',row.endFlag);
+          }*/
+        if(count==0 && row.level==1){
+            $("#directionIn").combobox('readonly',false);
+            $("#subjectTypeIn").combobox('readonly',false);
+        }
+        /*   if(count>0 ){
+               $('#subjectCodeIn').textbox('textbox').attr('readonly',true);
+               $('#subjectNameIn').textbox('textbox').attr('readonly',true);
+               $('#useflagIn').combobox('readonly',true);
+           }*/
+
+        /*console.log(row);*/
+        $("#hidAccount").val(row.account);
+    }
+
+    //等待
+    function onOpen() {
+        loading = setInterval(showalert, 500);
+    }
+    var ii = 2;
+    function showalert() {
+        var text = "";
+        var text1 = "";
+        if (ii == 1) {
+            text = '正在处理，请稍后.';
+        } else if (ii == 2) {
+            text = '正在处理，请稍后..';
+        } else if (ii == 3) {
+            text = '正在处理，请稍后...';
+            ii = 0;
+        }
+        ii++;
+        $('#msg').text(text);
+    }
+    function onClose() {
+        clearInterval(loading);
+    }
+</script>
+</html>

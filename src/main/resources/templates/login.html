@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- head(param1, param2, param3)  param1:表示title, param2引入自定义的css样式文件，
+如果有多个css文件，使用 ',' 分割， param3引入自定义的js脚本文件，如果有多个js文件，使用 ',' 分隔-->
+<head th:include="commons/head::head('首页','/css/reset.css,/css/login.css','')">
+
+</head>
+<body onkeydown="keyLogin(event);">
+<div class="bg">
+    <img th:src="@{/images/background.jpg}">
+    <header>
+        <h1>财务管理信息系统</h1>
+    </header>
+    <div id="box" class="container">
+        <div class="cover">
+            <div class="boxL1">
+                <img  th:src="@{/images/11.png}" height="500" width="600">
+            </div>
+            <div class="boxL2">
+                <img alt="" th:src="@{/images/22.png}" height="250" width="350">
+            </div>
+            <div class="boxR">
+                <div class="form" >
+                    <form id="fm"  method="post" >
+                        <table cellspacing="0">
+                            <!--<tr><td>机&nbsp;&nbsp;&nbsp;构&nbsp;&nbsp;<input id="comId" name="comId" class="easyui-validatebox" data-options="required:true,missingMessage:'请选择机构'" /></td>
+                            <tr><td>账&nbsp;&nbsp;&nbsp;套&nbsp;&nbsp;<input id="accountId" name="accountId" class="easyui-validatebox" data-options="required:true,missingMessage:'请选择账套'" /></td>-->
+                            <tr><td>用户名&nbsp;&nbsp;<input id="username" type="text" name="username" class="easyui-validatebox" data-options="required:true,missingMessage:'请输入用户名'" /></td>
+                            </tr><tr><td>密&nbsp;&nbsp;&nbsp;码&nbsp;&nbsp;<input id="password" type="password" name="password" class="easyui-validatebox inputTwo" data-options="required:true,missingMessage:'请输入密码'" /></td></tr>
+                            <tr>
+                                <td>验证码&nbsp;&nbsp;<input id="checkCode" type="text" name="checkCode"  style="width:100px;"  class="easyui-validatebox" data-options="required:true,missingMessage:'请在60秒内输入验证码'"  /></td>
+                                <!--<img th:src="@{/loadimage}" id="kaptcha" style="width:100px;height:40px;" class="mr-2"/>
+                                <a href="javascript:loadimage();" class="font-size-12 align-bottom">刷新验证码</a>-->
+                            </tr>
+                            <div class="loadimage" id="loadimage">
+                                    <img th:src="@{/loadimage}" id="kaptcha"  class="mr-2" onclick="loadimage()" />
+                            </div>
+                            <tr><td><a id="login" class="btn1" type="submit" onclick="loginIn()" >登录</a>
+                                <a class="btn2" type="reset"  onclick="clearForm()">重置</a></td>
+                            </tr>
+                        </table>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        <p>技术支持：中科软科技股份有限公司</p>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function () {
+        /*$('#comId').combobox({
+            valueField:'value',
+            textField:'text',
+            url:'/codeSelect/loginPageFindComCom',
+            method:'GET',
+            panelHeight:'120',
+            onSelect: function (rec) {
+                $('#accountId').combobox({
+                    valueField:'value',
+                    textField:'text',
+                    url:'/codeSelect/loginPageFindAccountByComComId?'+rec.value,
+                    method:'GET',
+                    panelHeight:'120'
+                });
+            }
+        })*/
+    });
+
+    if(top!=window){
+        top.location.href=window.location.href;
+    }
+    function keyLogin(event){
+        if (event.keyCode==13)  //回车键的键值为13
+            document.getElementById("login").click(); //调用登录按钮的登录事件
+    }
+
+    function loginIn() {
+        /*$('#fm').form('submit',{
+            url: '/login',
+            queryParams:{'t':'${requestScope.t}'},
+            onSubmit: function(){
+                return $(this).form('validate');
+            },
+            success: function(data){
+
+                eval("result="+data);
+                if(result.success){
+                    $.messager.show({
+                        type: 'success',
+                        content:  '登录成功！'
+                    });
+                    window.location.href="/index";
+                }else{
+                    $.messager.show({
+                        title: '登录失败',
+                        msg: result.errorMsg
+                    });
+                }
+            }
+        });*/
+
+
+        if($('#fm').form('validate')){
+            var data = $('#fm').serialize();
+            $.ajax({
+                type: 'POST'  //默认值: "GET")。请求方式 ("POST" 或 "GET")， 默认为 "GET"。注意：其它 HTTP 请求方法，如 PUT 和 DELETE 也可以使用，但仅部分浏览器支持。
+                ,url: '/login'
+                ,data: data //发送到服务器的数据。将自动转换为请求字符串格式。
+                ,dataType: 'json'
+                ,success: function(result){
+                    if(result.success){
+                        $.messager.show({
+                            type: 'success',
+                            content:  '登录成功！'
+                        });
+                        window.location.href="/index";
+                    }else{
+                        $.messager.show({
+                            title: '登录失败',
+                            msg: result.errorMsg
+                        });
+                        loadimage();
+                    }
+                }
+                ,error: function(xmlHttpRequest , msg){
+
+                }
+            });
+        }else {
+            return false;
+        }
+    }
+    function clearForm(){
+        $('#fm').form('clear');
+    };
+    //切换验证码图片
+    function loadimage(){
+        var path = "/loadimage?p=" + Math.random();
+        $("#kaptcha").attr("src", path);
+    }
+   /* window.onload = function () {
+        setInterval(loadimage, 60000);
+        var vUserName = getCookie('t_user');
+        $("#username").val(vUserName);
+    }*/
+</script>
+</body>
+</html>
