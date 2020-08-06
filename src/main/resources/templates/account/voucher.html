@@ -2547,7 +2547,7 @@
                     });
                 }else if(result.errorMsg.indexOf("往来科目")==0){
                     $('#topGrid').datagrid({
-                        onClickRow: function (rowIndex, rowData) {
+                        onClickRow: function (rowIndex, rowData){
                             $(this).datagrid('unselectRow', rowIndex);
                         }
                     });

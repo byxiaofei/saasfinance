@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="4S店系统" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="4S店系统" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="4S店系统" options="-parameters -verbose -bootclasspath D:/jdk1.8/jdk1.8.0_162/jre\lib\rt.jar;D:/jdk1.8/jdk1.8.0_162/jre\lib\jce.jar" />
+    </option>
+  </component>
+</project>
