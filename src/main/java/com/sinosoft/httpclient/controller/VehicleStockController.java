@@ -1,10 +1,9 @@
 package com.sinosoft.httpclient.controller;
 
 import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.sinosoft.httpclient.dao.VehicleStockDTO;
-import com.sinosoft.httpclient.domain.Jstoken;
+import com.sinosoft.httpclient.domain.VehicleStock;
 import com.sinosoft.httpclient.service.HttpClient;
+import com.sinosoft.httpclient.service.VehicleStockService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,16 +15,19 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping(value = "testVehicleStock")
+@RequestMapping(value = "/testVehicleStock")
 public class VehicleStockController {
     @Autowired
-    HttpClient httpClient ;
+    private HttpClient httpClient ;
+
+    @Autowired
+    private VehicleStockService vehicleStockService;
 
     /**
      * VehicleStock 接口接受解析报文
      */
-    @RequestMapping(value = "1")
-    public void getAccessToken(){
+    @RequestMapping(value = "/1")
+    public void getVehicleStock(){
         String url = "https://api.weixin.qq.com/cgi-bin/token";
         //添加参数
         Map<String, Long> uriMap = new HashMap<>(6);
@@ -34,7 +36,7 @@ public class VehicleStockController {
         uriMap.put("startTime",startTime);
         uriMap.put("endTime", endTime);
 
-        String jstoken = httpClient.sendGet(url,uriMap);
+        String returnStr1 = httpClient.sendGet(url,uriMap);
 
         //模拟请求返回报文结果
         String returnStr = "[" +
@@ -86,10 +88,12 @@ public class VehicleStockController {
                               "}" +
                            "]";
 
-        List<VehicleStockDTO> vehicleStocks = (List<VehicleStockDTO>) JSONArray.parseArray(returnStr, VehicleStockDTO.class);
+        List<VehicleStock> vehicleStockList = (List<VehicleStock>) JSONArray.parseArray(returnStr, VehicleStock.class);
+        //保存入库
+       String str =  vehicleStockService.savevehicleStockList(vehicleStockList);
 
 
-        System.out.println("");
+        System.out.println(str);
 
     }
 
@@ -144,8 +148,7 @@ public class VehicleStockController {
                 "}" +
                 "]";
 
-        List<VehicleStockDTO> vehicleStocks = (List<VehicleStockDTO>) JSONArray.parseArray(returnStr, VehicleStockDTO.class);
-
+        List<VehicleStock> vehicleStocks = (List<VehicleStock>) JSONArray.parseArray(returnStr, VehicleStock.class);
 
         System.out.println(vehicleStocks);
 
