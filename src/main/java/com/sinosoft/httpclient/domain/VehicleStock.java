@@ -1,31 +1,17 @@
-package com.sinosoft.httpclient.dao;
+package com.sinosoft.httpclient.domain;
 
+import javax.persistence.*;
 import java.math.BigDecimal;
 
-public class VehicleStockDTO {
-/*
-     dealerNo": "GS0031211",
-    "companyNo": "GS0031211",
-	"transactionType": "STOCK_IN",
-	"stockChangeDate": "2019-11-15",
-	"commissionNo": "0688644948",
-	"vin": "WDDWH4CB4HF559394",
-	"fin": "WDD2052421F559394",
-	"baumuster": "2052421",
-	"nst": "CN2",
-	"brand": "MB",
-	"origin": "CBU",
-	"model": "C200",
-	"typeClass": "C",
-	"engineNo": "27492031031662",
-	"originVehicleStatus": "NOT_BOOKED",
-	"currentVehicleStatus": "BOOKED_IN",
-	"description": "C 200 旅行轿车",
-	"vehicleCurrentCost": 0,
-	"vehicleOldCost": 0,
-	"vehicleCostChange": 0,
-	"operationDate": "2019-11-15"
-* */
+@Entity
+@Table(name = "bz_vehiclestock")
+public class VehicleStock {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Integer id;
+
     //经销商 GSSN 号
     private String dealerNo;
     //记账公司 GSSN 号
@@ -67,6 +53,14 @@ public class VehicleStockDTO {
     //操作日期
     private String operationDate;
 
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
     public String getDealerNo() {
         return dealerNo;
