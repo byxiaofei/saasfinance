@@ -30,7 +30,7 @@ public class Test1Controller {
         // uriMap.put("endTime", new Date().toString());
         uriMap.put("appid","wx1d3b0f41812203d9&secret=fab2317a0f3786c9df4d71e519aaf82a");
         uriMap.put("grant_type","client_credential");
-        String jstoken = httpClient.sendGet(url,uriMap);
+        String jstoken = httpClient.sendGet2(url,uriMap);
 
         //转json对象
         JSONObject jsonObject1 =JSONObject.parseObject(jstoken);
