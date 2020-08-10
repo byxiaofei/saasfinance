@@ -2,6 +2,7 @@ package com.sinosoft.httpclient.controller;
 
 import com.alibaba.fastjson.JSONArray;
 import com.sinosoft.httpclient.domain.VehicleStock;
+import com.sinosoft.httpclient.dto.VehicleStockDTO;
 import com.sinosoft.httpclient.service.HttpClient;
 import com.sinosoft.httpclient.service.VehicleStockService;
 import org.springframework.beans.factory.annotation.Autowired;

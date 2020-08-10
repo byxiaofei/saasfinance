@@ -24,4 +24,4 @@ CREATE TABLE `bz_vehiclestock` (
                                `vehicle_cost_change` decimal(14,2) DEFAULT NULL COMMENT '车辆成本变动',
                                `operation_date` varchar(50) DEFAULT NULL COMMENT '操作日期',
                                PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=470 DEFAULT CHARSET=utf8 COMMENT='车辆库存变动接口';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='车辆库存变动接口';

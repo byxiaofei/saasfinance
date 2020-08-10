@@ -3,7 +3,6 @@ package com.sinosoft.httpclient.service.impl;
 import com.sinosoft.httpclient.domain.VehicleStock;
 import com.sinosoft.httpclient.repository.VehicleStockRespository;
 import com.sinosoft.httpclient.service.VehicleStockService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
