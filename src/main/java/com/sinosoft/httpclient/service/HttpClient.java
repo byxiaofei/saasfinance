@@ -1,12 +1,11 @@
 package com.sinosoft.httpclient.service;
 
 import com.sinosoft.util.CommonUtil;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Date;
-import java.util.HashMap;
+
 import java.util.Map;
 
 @Service
@@ -36,46 +35,33 @@ public class HttpClient {
         return sb.toString();
     }
 
-    public String generateRequestParameters2( String uri, Map<String, String> params) {
-        StringBuilder sb = new StringBuilder(uri);
-        if (!CommonUtil.isEmpty(params)) {
-            sb.append("?");
-            for (Map.Entry map : params.entrySet()) {
-                sb.append(map.getKey())
-                        .append("=")
-                        .append(map.getValue())
-                        .append("&");
-            }
-            uri = sb.substring(0, sb.length() - 1);
-            return uri;
+    /**
+     * get请求
+     * @return
+     */
+
+    public String sendGet(String url, Map<String, Long> uriMap) {
+
+        RestTemplate restTemplate = new RestTemplate();
+        //添加请求头
+        HttpHeaders headers = new HttpHeaders();
+       // headers.add("x-api-key", "c18f9f88-b85a-4585-9593-b0df09f05680");
+        headers.add("x-api-key", "c9423f7e-0240-44d6-afe3-95bf29db2308");
+
+        //添加请求的实体类，这里第一个参数是要发送的参数，第二个参数是请求头里的数据
+        HttpEntity<Object> requestEntity = new HttpEntity<>(null, headers);
+        url = generateRequestParameters(url, uriMap);
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.GET, requestEntity, String.class);
+
+        if (HttpStatus.OK == responseEntity.getStatusCode()) {
+            return (String) responseEntity.getBody();
+        } else {
+            // log.error("#method# 远程调用失败 httpCode = [{}]", responseEntity.getStatusCode());
+            return (String) "接口调用失败";
+
         }
-        return sb.toString();
+
     }
 
-    /**
-     * get请求
-     * @return
-     */
-
-    public String sendGet(String uri, Map<String, Long> uriMap) {
-
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity responseEntity = restTemplate.getForEntity(generateRequestParameters(uri, uriMap), String.class);
-        // 可以将下面的T 换成类名 可以直接将返回数据转对象
-       //  xxxDto dto  = restTemplate.getForEntity(generateRequestParameters(uri, uriMap), String.class);
-        return (String) responseEntity.getBody();
-    }
-    /**
-     * get请求
-     * @return
-     */
-
-    public String sendGet2(String uri, Map<String, String> uriMap) {
-
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity responseEntity = restTemplate.getForEntity(generateRequestParameters2(uri, uriMap), String.class);
-        // 可以将下面的T 换成类名 可以直接将返回数据转对象
-        //  xxxDto dto  = restTemplate.getForEntity(generateRequestParameters(uri, uriMap), String.class);
-        return (String) responseEntity.getBody();
-    }
 }
