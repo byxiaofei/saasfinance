@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.xml.crypto.Data;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -47,35 +49,13 @@ public class PartsStockController {
     }
 
     public static void main(String[] args) {
-        //模拟请求返回报文结果
-        String returnStr = "[" +
-                "{ "+
-                    "\"dealerNo\": \"GS0031211\","+
-                    "\"companyNo\": \"GS0031211\","+
-                    "\"transactionType\": \"UNRECEIVE\","+
-                    "\"stockInParts\": " +
-                    "[" +
-                            "{ "+
-                                "\"partsNo\": \"A0008204206\","+
-                                "\"description\": \"冷藏箱\","+
-                                "\"genuineFlag\": \"N\",\n" +
-                                "\"partsAnalysisCode\": \"G\","+
-                                "\"businessDate\": \"2019-11-14\","+
-                                "\"poNo\": \"3284\","+
-                                "\"quantity\": -10,"+
-                                "\"partsUnitCost\": 2024.58,"+
-                                "\"supplierNo\": \"VEH00001\","+
-                                "\"supplierDescription\": \"利星行汽车服务有限公司\" "+
-                            "}" +
-                    "]," +
-                    "\"operationDate\": \"2019-11-14\" "+
-                "}" +
-        "]";
+        long time = 1597000000000L;
+        Date date = new Date(time);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String format = sdf.format(date);
+        System.out.println(format);
 
-        List<JsonToPartsStock> vehicleStocks = (List<JsonToPartsStock>) JSONArray.parseArray(returnStr, JsonToPartsStock.class);
-
-        System.out.println(vehicleStocks);
-
+        long time1 = new Date().getTime();
+        System.out.println(time1);
     }
-
 }
