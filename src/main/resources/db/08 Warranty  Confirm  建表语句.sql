@@ -1,0 +1,31 @@
+
+DROP TABLE IF EXISTS `bz_warrantyconfirm`;
+CREATE TABLE `bz_warrantyconfirm`  (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '交易数据唯一标识',
+  `dealer_no` varchar(50)  DEFAULT NULL COMMENT '经销商 GSSN 号',
+  `company_no` varchar(50)  DEFAULT NULL COMMENT '记账公司 GSSN 号',
+  `claim_id` varchar(50)  DEFAULT NULL COMMENT 'claim唯一标识',
+  `invoice_no` varchar(50)  DEFAULT NULL COMMENT '账单编号',
+  `invoice_date` date  DEFAULT NULL COMMENT '账单日期',
+  `confirm_date` date  DEFAULT NULL COMMENT '确认日期',
+  `customer_type_no` varchar(50)  DEFAULT NULL COMMENT '客户类型编号',
+  `customer_type_no_description` varchar(50)  DEFAULT NULL COMMENT '客户类型编号描述',
+  `rwo_no` varchar(50)  DEFAULT NULL COMMENT 'RWO工单号',
+  `customer_name` varchar(50)  DEFAULT NULL COMMENT '客户名称',
+  `company_name` varchar(50)  DEFAULT NULL COMMENT '公司名称',
+  `registration_no` varchar(50)  DEFAULT NULL COMMENT '车牌号',
+  `fin` varchar(50)  DEFAULT NULL COMMENT '欧版底盘号',
+  `invoice_total` decimal(14, 2)  DEFAULT NULL COMMENT '系统账单总计',
+  `parts_total` decimal(14, 0)  DEFAULT NULL COMMENT '系统零件总计',
+  `labor_total` decimal(14, 2)  DEFAULT NULL COMMENT '系统工时总计',
+  `sundries_total` decimal(14, 2) DEFAULT NULL COMMENT '系统杂项总计',
+  `handling_fee_total` decimal(14, 2)  DEFAULT NULL COMMENT '系统手续费总计',
+  `credit_note_no` int(50)  DEFAULT NULL COMMENT 'Credit note号',
+  `credit_note_date` date  DEFAULT NULL COMMENT 'Credit note日期',
+  `compensate_parts` decimal(14, 2)  DEFAULT NULL COMMENT '赔付的零件金额(不含税)',
+  `compensate_labor` decimal(14, 2)  DEFAULT NULL COMMENT '赔付的工时金额(不含税)',
+  `compensate_sundries` decimal(14, 2) DEFAULT NULL COMMENT '赔付的杂项金额(不含税)',
+  `compensate_handling_fee` decimal(14, 2)  DEFAULT NULL COMMENT '赔付的手续金额(不含税)',
+  `claim_no_of_otr` varchar(50)  DEFAULT NULL COMMENT 'claim 编号-OTR',
+  PRIMARY KEY (`id`) 
+) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET=utf8 COMMENT='所有索赔确认的数据';
