@@ -1,69 +1,48 @@
 package com.sinosoft.httpclient.controller;
 
 import com.alibaba.fastjson.JSONArray;
+import com.sinosoft.httpclient.domain.ConfigureManage;
+import com.sinosoft.httpclient.domain.ConfigureManageId;
 import com.sinosoft.httpclient.domain.VehicleInvoice;
-import com.sinosoft.httpclient.domain.VehicleStock;
-import com.sinosoft.httpclient.service.HttpClient;
+import com.sinosoft.httpclient.repository.ConfigureManageRespository;
 import com.sinosoft.httpclient.service.VehicleInvoiceService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Date;
-import java.util.HashMap;
+import javax.annotation.Resource;
 import java.util.List;
-import java.util.Map;
 
 @RestController
-@RequestMapping(value = "/testVehicleInvoice")
-public class VehicleInvoiceController {
+@RequestMapping(value = "/test")
+public class TestController1 {
 
-    @Autowired
-    VehicleInvoiceService vehicleInvoiceService;
+    @Resource
+    private ConfigureManageRespository configureManageRespository;
 
-    @Autowired
-    HttpClient httpClient;
+    @Resource
+    private VehicleInvoiceService vehicleInvoiceService;
 
-    /**
-     *
-     */
-    @RequestMapping(value = "/1")
-    public void getVehicleInvoice(){
-
-        String url = "https://otrplus-cn-test.api.mercedes-benz.com.cn/api/accounting/vehicle-invoice";
-
-        // 添加参数
-        Map<String, Long> uriMap = new HashMap<>(6);
-        Long startTime = new Date().getTime();   //开始时间需要传参
-        Long endTime = new Date().getTime();
-        uriMap.put("startTime",Long.parseLong("1596001003220"));
-        uriMap.put("endTime", endTime);
-
-        String returnStr = httpClient.sendGet(url,uriMap);
-        String str  ;
-        if(returnStr.equals("接口调用失败")){
-            str = "接口调用失败"; // TODO 循环请求或者 其他原因导致请求失败，具体原因分析
-        }else{
-            List<VehicleInvoice> vehicleInvoices = JSONArray.parseArray(returnStr, VehicleInvoice.class);
-            //保存入库
-            str =  vehicleInvoiceService.saveVehicleInvoiceList(vehicleInvoices);
+    @RequestMapping("/1")
+    public void testDomainInfo(){
+        List<ConfigureManage> configureManages = configureManageRespository.queryConfigureManageByInterfaceInfo("2");
+        for(ConfigureManage configureManage : configureManages){
+            ConfigureManageId id = configureManage.getId();
+            System.out.println("这里是：查询出的数据库中主键的信息展示："+id.toString());
+            System.out.println("分割线----------------------------------");
+            System.out.println("这里展示:ConfigureManage的信息："+configureManage.toString());
+            System.out.println("-----------------上述完成一条信息的展示-------------------------------");
         }
-
-
-        System.out.println(str);
-
     }
 
 
 
-
-    public static void main(String[] args) {
+    @RequestMapping("/second")
+    public String saveSecondInterfaceInfo(){
         String returnMessage = "[\n" +
                 "    {\n" +
                 "        \"id\": 144041,\n" +
                 "        \"dealerNo\": \"GS0036160\",\n" +
-                "        \"companyNo\": \"GS0036160\",\n" +
+                "        \"companyNo\": \"1011101000\",\n" +
                 "        \"invoiceType\": \"Credit\",\n" +
                 "        \"invoiceNo\": \"20200727NC0002\",\n" +
                 "        \"originInvoiceNo\": \"20200727NI0004\",\n" +
@@ -101,8 +80,26 @@ public class VehicleInvoiceController {
         List<VehicleInvoice> vehicleInvoiceList = JSONArray.parseArray(returnMessage,VehicleInvoice.class);
         System.out.println(vehicleInvoiceList);
         // 保存入库
-//        String message = vehicleInvoiceService.saveVehicleInvoiceList(vehicleInvoiceList);
-//        System.out.println(message);
+        String message = vehicleInvoiceService.saveVehicleInvoiceList(vehicleInvoiceList);
+        System.out.println(message);
+        return message;
     }
 
+
+    public static void main(String[] args) {
+        String  strMsg = "123123123123123123131";
+        String[] strings  = new String[4];
+        strings[0] = "123";
+        strings[1] = "111";
+        strings[2] = "222";
+        strings[3] = "3333";
+        System.out.println(strings.length);
+        System.out.println(strings[0]+strings[1]+strings[2]+strings[3]);
+
+        for(int i = 0 ; i<strings.length ; i++){
+            System.out.println(strings[i]);
+        }
+
+        System.out.println("String类型的字符串长度为"+strMsg.length());
+    }
 }

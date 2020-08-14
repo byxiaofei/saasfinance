@@ -146,8 +146,14 @@ public interface VoucherService {
 	 * 功能描述:	 接口对接
 	 *
 	 */
-//	VoucherDTO getVoucherNo(String yearMonth);
-
 	String saveVoucher1(List<VoucherDTO> list2, List<VoucherDTO> list3, VoucherDTO dto);
 
+	/**
+	 * 	功能描述：4s接口对接 保存凭证
+	 * @param list2
+	 * @param list3
+	 * @param dto
+	 * @return
+	 */
+	String saveVoucherForFourS(List<VoucherDTO> list2 , List<VoucherDTO> list3 , VoucherDTO dto );
 }

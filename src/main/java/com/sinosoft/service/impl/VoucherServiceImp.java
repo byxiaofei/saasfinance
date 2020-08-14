@@ -2987,4 +2987,238 @@ public class VoucherServiceImp implements VoucherService {
 			return am.getId().getVoucherNo();
 		}
 	}
+
+	@Override
+	public String saveVoucherForFourS(List<VoucherDTO> list2, List<VoucherDTO> list3, VoucherDTO dto) {
+		synchronized (this) {
+			String centerCode = dto.getCenterCode();
+			String accBookCode = dto.getAccBookCode();
+			String accBookType = dto.getAccBookType();
+			String branchCode = dto.getBranchCode();
+			if (dto.getOldVoucherNo()!=null&&!"".equals(dto.getOldVoucherNo())) {
+				//占用已有凭证号
+				//如果长度为9，则为完整凭证号，否则为有效号（去四位前缀）
+				if (dto.getOldVoucherNo().length()!=(10+centerCode.length())) {
+					try {
+						//拼出完整的凭证号
+						dto.setOldVoucherNo(centerCode+dto.getYearMonth().substring(2,6)+String.format("%06d", Integer.parseInt(dto.getOldVoucherNo())));
+					} catch (Exception e) {
+						logger.error("占用已有凭证号拼接异常", e);
+						return "请输入有效的凭证号！";
+					}
+				}
+
+				//校验通过，允许占用
+				//当占用已有凭证操作时必须先调用此方法再保存凭证信息
+				voucherManageService.voucherAnewSortBecauseOccupyOrDel(centerCode, centerCode, accBookType, accBookCode, dto.getYearMonth(), dto.getOldVoucherNo(),"occupy");
+				//再将待保存凭证的凭证号改为占用的凭证号
+				dto.setVoucherNo(dto.getOldVoucherNo());
+			} else {
+				//非占用凭证号的保存凭证，还需校验凭证号是否正确且合理
+				//获取凭证最大号
+				AccVoucherNoId avn = new AccVoucherNoId();
+				avn.setCenterCode(centerCode);
+				avn.setAccBookType(accBookType);
+				avn.setAccBookCode(accBookCode);
+				avn.setYearMonthDate(dto.getYearMonth());
+				AccVoucherNo accVoucherNo = accVoucherNoRespository.findById(avn).get();
+				// 这个是现取的凭证号
+				String checkNo = centerCode+dto.getYearMonth().substring(2,6)+String.format("%06d", Integer.parseInt(accVoucherNo.getVoucherNo()));
+//				if (!checkNo.equals(dto.getVoucherNo())) {
+//					dto.setVoucherNo(checkNo);
+//				}
+				// 把判断去掉，直接现查现插入
+				dto.setVoucherNo(checkNo);
+			}
+			//System.out.println("凭证录入开始：");
+			AccMainVoucherId amid=new AccMainVoucherId();
+			AccMainVoucher am =new AccMainVoucher();
+			amid.setCenterCode(centerCode);
+			amid.setBranchCode(branchCode);
+			amid.setAccBookType(accBookType);
+			amid.setAccBookCode(accBookCode);//账套编码
+			amid.setYearMonthDate(dto.getYearMonth());
+			amid.setVoucherNo(dto.getVoucherNo());
+			am.setId(amid);
+			//判断凭证类别
+			if(dto.getVoucherType() == null || dto.getVoucherType().equals("")){
+				am.setVoucherType("2");//凭证类型为记账凭证
+			}else {
+				am.setVoucherType(dto.getVoucherType());//凭证类型设置为参数类型
+			}
+			//判断凭证录入方式
+			if(dto.getGenerateWay() == null || dto.getGenerateWay().equals("")){
+				am.setGenerateWay("2");//凭证记账方式为手工
+			}else {
+				am.setGenerateWay(dto.getGenerateWay());//凭证记账方式为自动
+			}
+			//判断数据来源
+			if (dto.getDataSource() == null || "".equals(dto.getDataSource())){
+				am.setDataSource("1");
+			}else{
+				am.setDataSource(dto.getDataSource());
+			}
+
+			am.setVoucherDate(dto.getVoucherDate());
+			if (dto.getAuxNumber()!=null&&!"".equals(dto.getAuxNumber())) {
+				am.setAuxNumber(Integer.valueOf(dto.getAuxNumber()));
+			}
+			am.setCreateBranchCode("");//制单单位
+			am.setCreateBy("1");
+			am.setVoucherFlag("1"); //未复核
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			String date = df.format(new Date());
+			am.setCreateTime(date);
+			voucherRepository.save(am);
+			voucherRepository.flush();
+			//System.out.println("凭证主表录入完成");
+			for(int i=0;i<list2.size();i++){
+				VoucherDTO vd1=list2.get(i);
+				VoucherDTO vd2=list3.get(i);
+				AccSubVoucherId asid=new AccSubVoucherId();
+				AccSubVoucher as =new AccSubVoucher();
+				asid.setCenterCode(centerCode);
+				asid.setBranchCode(branchCode);
+				asid.setAccBookType(accBookType);
+				asid.setAccBookCode(accBookCode);//账套编码
+				asid.setYearMonthDate(dto.getYearMonth());
+				asid.setVoucherNo(dto.getVoucherNo());
+				asid.setSuffixNo(i+1+"");
+				as.setId(asid);
+				String[] itemCode=vd1.getSubjectCode().split("/");
+				if(itemCode.length>=1){as.setItemCode(itemCode[0]);as.setF01(itemCode[0]); }
+				if(itemCode.length>=2){as.setF02(itemCode[1]);}
+				if(itemCode.length>=3){as.setF03(itemCode[2]);}
+				if(itemCode.length>=4){as.setF04(itemCode[3]);}
+				if(itemCode.length>=5){as.setF05(itemCode[4]);}
+				if(itemCode.length>=6){as.setF06(itemCode[5]);}
+				if(itemCode.length>=7){as.setF07(itemCode[6]);}
+				if(itemCode.length>=8){as.setF08(itemCode[7]);}
+				if(itemCode.length>=9){as.setF09(itemCode[8]);}
+				if(itemCode.length>=10){as.setF10(itemCode[9]);}
+				if(itemCode.length>=11){as.setF11(itemCode[10]);}
+				if(itemCode.length>=12){as.setF12(itemCode[11]);}
+				if(itemCode.length>=13){as.setF13(itemCode[12]);}
+				if(itemCode.length>=14){as.setF14(itemCode[13]);}
+				if(itemCode.length>=15){as.setF15(itemCode[14]);}
+				as.setDirectionIdx(vd1.getSubjectCode().endsWith("/")?vd1.getSubjectCode():vd1.getSubjectCode()+"/");
+				if (vd1.getSubjectName()!=null&&!"".equals(vd1.getSubjectName())) {
+					as.setDirectionIdxName(vd1.getSubjectName());
+				} else {
+					as.setDirectionIdxName(qrySubjectNameAllBySubjectCode(vd1.getSubjectCode()));
+				}
+				//需要再处理，里面可能保存除专项信息以外的特殊信息，需要单独做处理
+				//除专项之外的特殊信息设置：水费的单价(5位小数)数量(2位小数)，电费的单价(2位小数)和数量(2位小数)，银行存款类的结算类型、结算单号、结算日期
+				if (vd2.getUnitPrice()!=null&&!"".equals(vd2.getUnitPrice())) {
+					as.setD01(vd2.getUnitPrice());//单价
+				}
+				if (vd2.getUnitNum()!=null&&!"".equals(vd2.getUnitNum())) {
+					as.setD02(vd2.getUnitNum());//数量
+				}
+				if (vd2.getSettlementType()!=null&&!"".equals(vd2.getSettlementType())) {
+					as.setD03(vd2.getSettlementType());//结算类型
+				}
+				if (vd2.getSettlementNo()!=null&&!"".equals(vd2.getSettlementNo())) {
+					as.setD04(vd2.getSettlementNo());//结算单号
+				}
+				if (vd2.getSettlementDate()!=null&&!"".equals(vd2.getSettlementDate())) {
+					as.setD05(vd2.getSettlementDate());//结算日期
+				}
+				if (vd2.getCheckNo()!=null&&!"".equals(vd2.getCheckNo())) {
+					as.setCheckNo(vd2.getCheckNo());//支票号
+				}
+				if (vd2.getInvoiceNo()!=null&&!"".equals(vd2.getInvoiceNo())) {
+					as.setInvoiceNo(vd2.getInvoiceNo());//发票号
+				}
+				//专项存储：根据 段定义表- AccSegmentDefine进行分字段存放
+				if (vd2.getSpecialCodeS()!=null&&!"".equals(vd2.getSpecialCodeS())) {
+					String[] specialCode=vd2.getSpecialCodeS().split(",");
+					String[] specialSuperCode = vd2.getSpecialSuperCodeS().split(",");
+					for(int m=0;m<specialCode.length;m++){
+						StringBuffer sql=new StringBuffer();
+						sql.append(" SELECT a.segment_flag as specialCode from AccSegmentDefine a where a.segment_col = ?1");
+
+						Map<Integer, Object> params = new HashMap<>();
+						params.put(1, specialSuperCode[m]);
+
+						List<?> result =voucherRepository.queryBySqlSC(sql.toString(), params);
+						Map map = new HashMap();
+						String data=null;
+						if(result!=null&&result.size()!=0){
+							map.putAll((Map) result.get(0));
+							data=(String)map.get("specialCode");//专项存储位置
+							if(data.equals("s01")){as.setS01(specialCode[m]);
+							}else if(data.equals("s02")){as.setS02(specialCode[m]);
+							}else if(data.equals("s03")){as.setS03(specialCode[m]);
+							}else if(data.equals("s04")){as.setS04(specialCode[m]);
+							}else if(data.equals("s05")){as.setS05(specialCode[m]);
+							}else if(data.equals("s06")){as.setS06(specialCode[m]);
+							}else if(data.equals("s07")){as.setS07(specialCode[m]);
+							}else if(data.equals("s08")){as.setS08(specialCode[m]);
+							}else if(data.equals("s09")){as.setS09(specialCode[m]);
+							}else if(data.equals("s10")){as.setS10(specialCode[m]);
+							}else if(data.equals("s11")){as.setS11(specialCode[m]);
+							}else if(data.equals("s12")){as.setS12(specialCode[m]);
+							}else if(data.equals("s13")){as.setS13(specialCode[m]);
+							}else if(data.equals("s14")){as.setS14(specialCode[m]);
+							}else if(data.equals("s15")){as.setS15(specialCode[m]);
+							}else if(data.equals("s16")){as.setS16(specialCode[m]);
+							}else if(data.equals("s17")){as.setS17(specialCode[m]);
+							}else if(data.equals("s18")){as.setS18(specialCode[m]);
+							}else if(data.equals("s19")){as.setS19(specialCode[m]);
+							}else if(data.equals("s20")){as.setS20(specialCode[m]);
+							}else{
+								logger.debug(specialCode[m]+"未配置在段定义表中！");
+							}
+						}
+					}
+				}
+				if (vd2.getSpecialCodeS()!=null&&!"".equals(vd2.getSpecialCodeS())) {
+					as.setDirectionOther(vd2.getSpecialCodeS());//专项编码（可多个,可为空）
+				}
+				as.setRemark(vd1.getRemarkName());
+				if ((vd1.getTagCode()!=null&&!"".equals(vd1.getTagCode()))&&(vd1.getTagCodeS()!=null&&!"".equals(vd1.getTagCodeS()))) {
+					as.setFlag(vd1.getTagCodeS());
+				}
+				as.setCurrency(currency);//人民币
+				as.setExchangeRate(new BigDecimal(exchangeRate));//当前汇率
+				if(vd1.getDebit()!=null&&!vd1.getDebit().equals("")){
+					as.setDebitSource(new BigDecimal(vd1.getDebit()));
+					as.setDebitDest(new BigDecimal(vd1.getDebit()));
+				} else {
+					as.setDebitSource(new BigDecimal("0.00"));
+					as.setDebitDest(new BigDecimal("0.00"));
+				}
+				if(vd1.getCredit()!=null&&!vd1.getCredit().equals("")){
+					as.setCreditSource(new BigDecimal(vd1.getCredit()));
+					as.setCreditDest(new BigDecimal(vd1.getCredit()));
+				} else {
+					as.setCreditSource(new BigDecimal("0.00"));
+					as.setCreditDest(new BigDecimal("0.00"));
+				}
+				as.setCreateBy("1");
+				as.setCreateTime(date);
+				voucherSubRepository.save(as);
+				voucherSubRepository.flush();
+			}
+			//System.out.println("凭证子表录入完成");
+			//将凭证号最大号数据+1
+//			voucherRepository.voucherMaxNoAutoIncrementOne(centerCode ,accBookType,accBookCode,dto.getYearMonth(),"1");
+//			voucherRepository.flush();
+			// 由原来上述原生语句方式修改为Jpa 中形式方式进行刷入到数据库中。
+			AccVoucherNoId id = new AccVoucherNoId();
+			id.setCenterCode(centerCode);
+			id.setAccBookType(accBookType);
+			id.setAccBookCode(accBookCode);
+			id.setYearMonthDate(dto.getYearMonth());
+			AccVoucherNo voucherNo = accVoucherNoRespository.findById(id).get();
+			voucherNo.setVoucherNo(String.valueOf(Integer.valueOf(voucherNo.getVoucherNo()) + 1));
+			accVoucherNoRespository.saveAndFlush(voucherNo);
+			accVoucherNoRespository.flush();
+
+
+			System.out.println("当前凭证号为："+am.getId().getVoucherNo());
+			return "success";
+		}
+	}
 }
