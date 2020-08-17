@@ -12,4 +12,11 @@ public interface VehicleInvoiceService {
      * @return
      */
     String saveVehicleInvoiceList(List<VehicleInvoice> vehicleInvoiceList);
+
+
+    /**
+     * 保存入库信息
+     */
+
+    String saveVehicleInvoiceListTest(List<VehicleInvoice> vehicleInvoiceList);
 }
