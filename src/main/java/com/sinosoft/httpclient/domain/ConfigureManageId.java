@@ -6,6 +6,7 @@ import java.io.Serializable;
 @Embeddable
 public class ConfigureManageId implements Serializable {
 
+    private String branchCode;
     private String subjectCode;
     private String interfaceInfo;
     private String interfaceType;
@@ -14,10 +15,19 @@ public class ConfigureManageId implements Serializable {
         super();
     }
 
-    public ConfigureManageId(String subjectCode, String interfaceInfo, String interfaceType) {
+    public ConfigureManageId(String branchCode, String subjectCode, String interfaceInfo, String interfaceType) {
+        this.branchCode = branchCode;
         this.subjectCode = subjectCode;
         this.interfaceInfo = interfaceInfo;
         this.interfaceType = interfaceType;
+    }
+
+    public String getBranchCode() {
+        return branchCode;
+    }
+
+    public void setBranchCode(String branchCode) {
+        this.branchCode = branchCode;
     }
 
     public String getSubjectCode() {
@@ -47,7 +57,8 @@ public class ConfigureManageId implements Serializable {
     @Override
     public String toString() {
         return "ConfigureManageId{" +
-                "subjectCode='" + subjectCode + '\'' +
+                "branchCode='" + branchCode + '\'' +
+                ", subjectCode='" + subjectCode + '\'' +
                 ", interfaceInfo='" + interfaceInfo + '\'' +
                 ", interfaceType='" + interfaceType + '\'' +
                 '}';

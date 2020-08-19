@@ -10,6 +10,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -87,19 +92,42 @@ public class TestController1 {
 
 
     public static void main(String[] args) {
-        String  strMsg = "123123123123123123131";
-        String[] strings  = new String[4];
-        strings[0] = "123";
-        strings[1] = "111";
-        strings[2] = "222";
-        strings[3] = "3333";
-        System.out.println(strings.length);
-        System.out.println(strings[0]+strings[1]+strings[2]+strings[3]);
+//        String  strMsg = "123123123123123123131";
+//        String[] strings  = new String[4];
+//        strings[0] = "123";
+//        strings[1] = "111";
+//        strings[2] = "222";
+//        strings[3] = "3333";
+//        System.out.println(strings.length);
+//        System.out.println(strings[0]+strings[1]+strings[2]+strings[3]);
+//
+//        for(int i = 0 ; i<strings.length ; i++){
+//            System.out.println(strings[i]);
+//        }
+//
+//        System.out.println("String类型的字符串长度为"+strMsg.length());
 
-        for(int i = 0 ; i<strings.length ; i++){
-            System.out.println(strings[i]);
+        BigDecimal bigDecimal = new BigDecimal("14412.5351");
+        BigDecimal bigDecimal1 = bigDecimal.setScale(2, RoundingMode.HALF_UP);
+        System.out.println("当前为四位小数："+bigDecimal);
+        System.out.println("当前为四舍五入小数:"+bigDecimal1.toString());
+
+        try {
+            Date date = new Date();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String format = sdf.format(date);
+            System.out.println(format);
+            long time = date.getTime();
+            System.out.println(time);
+
+            String yearMonth = "2020-08-10 00:00:00";
+            String yearMonthLast = "2020-08-10 23:59:59";
+            Date parse = sdf.parse(yearMonth);
+            Date parse1 = sdf.parse(yearMonthLast);
+            System.out.println(parse.getTime());
+            System.out.println(parse1.getTime());
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
-
-        System.out.println("String类型的字符串长度为"+strMsg.length());
     }
 }

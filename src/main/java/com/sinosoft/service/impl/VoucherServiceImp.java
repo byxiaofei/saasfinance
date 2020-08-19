@@ -2355,6 +2355,7 @@ public class VoucherServiceImp implements VoucherService {
 			params.put(2, subjectCodeAll);
 
             List<SubjectInfo> listBySql = (List<SubjectInfo>)subjectRepository.queryBySql(sql.toString(), params, SubjectInfo.class);
+            // 这里说明当前科目代码存在专项，
 			if (listBySql!=null&&listBySql.size()>0) {
 				if (list3.get(i).getSpecialCodeS()!=null&&!"".equals(list3.get(i).getSpecialCodeS())) {
 					String[] str = (list3.get(i).getSpecialCodeS()).split(",");// 页面传入的数组
@@ -2383,9 +2384,13 @@ public class VoucherServiceImp implements VoucherService {
 						j++;// 为了防止"123,345,,744";
 					}
 				} else {
+					// 当前科目存在专项信息，但传输过来的信息为空，或为null，走此处。
 					return InvokeResult.failure(subject.getSubjectCode()+"科目请输入专项信息！");
 				}
-			} else {
+			}
+			// 说明当前科目代码不存在专项信息。
+			else {
+				// 当前科目代码本不应该存在专项信息，如果存在则报错。
 				if (list3.get(i).getSpecialCodeS()!=null&&!"".equals(list3.get(i).getSpecialCodeS())) {
 					return InvokeResult.failure(subject.getSubjectCode()+"科目请确认专项信息是否正确！");
 				}

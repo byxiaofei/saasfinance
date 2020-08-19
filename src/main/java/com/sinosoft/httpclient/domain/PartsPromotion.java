@@ -1,6 +1,7 @@
 package com.sinosoft.httpclient.domain;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "bz_partspromotion")
@@ -31,9 +32,9 @@ public class PartsPromotion {
     //  Parts 分析代码
     private String partsAnalysisCode;
     //  数量
-    private String quantity;
+    private BigDecimal quantity;
     //  配件单位成本
-    private String partsUnitCost;
+    private BigDecimal partsUnitCost;
 
     public Integer getId() {
         return id;
@@ -123,19 +124,19 @@ public class PartsPromotion {
         this.partsAnalysisCode = partsAnalysisCode;
     }
 
-    public String getQuantity() {
+    public BigDecimal getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(String quantity) {
+    public void setQuantity(BigDecimal quantity) {
         this.quantity = quantity;
     }
 
-    public String getPartsUnitCost() {
+    public BigDecimal getPartsUnitCost() {
         return partsUnitCost;
     }
 
-    public void setPartsUnitCost(String partsUnitCost) {
+    public void setPartsUnitCost(BigDecimal partsUnitCost) {
         this.partsUnitCost = partsUnitCost;
     }
 

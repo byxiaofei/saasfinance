@@ -1,7 +1,5 @@
 package com.sinosoft.httpclient.service.impl;
 
-import com.sinosoft.common.WebServiceResult;
-import com.sinosoft.domain.InterfaceInfo;
 import com.sinosoft.domain.SubjectInfo;
 import com.sinosoft.dto.VoucherDTO;
 import com.sinosoft.httpclient.domain.ConfigureManage;
@@ -14,9 +12,7 @@ import com.sinosoft.repository.BranchInfoRepository;
 import com.sinosoft.repository.SubjectRepository;
 import com.sinosoft.repository.account.AccMonthTraceRespository;
 import com.sinosoft.service.VoucherService;
-import com.sinosoft.service.impl.DataDockingServiceImpl;
 import com.sinosoft.util.DateUtil;
-import com.sinosoft.util.XMLUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -31,7 +27,7 @@ import java.util.Map;
 @Service
 public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
 
-    private Logger logger = LoggerFactory.getLogger(DataDockingServiceImpl.class);
+    private Logger logger = LoggerFactory.getLogger(VehicleInvoiceServiceImpl.class);
 
     @Resource
     private VehicleInvoiceRespository vehicleInvoiceRespository;
@@ -57,7 +53,7 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
     private TaskSchedulingDetailsInfoRespository taskSchedulingDetailsInfoRespository;
 
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public String saveVehicleInvoiceList(List<VehicleInvoice> vehicleInvoiceList) {
         // 拿到解析数据，直接进行解析处理
@@ -243,7 +239,6 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
         // 如果没问题，校验的同时就生成了凭证号了。 这里把createBy 创建人 设置为001 默认系统了
         VoucherDTO voucherDTO = voucherService.setVoucher1(yearMonth, centerCode, branchCode, accbookCode, accbookType,"001");
         if(voucherDTO.getYearMonth() == null || "".equals(voucherDTO.getYearMonth())){
-//            errorMsg = errorMsg + "当前账套信息下没有对应的凭证月"+",";
             errorMsg.append("当前账套信息下没有对应的凭证月");
             resultMap.put("resultMsg",errorMsg.toString());
             return resultMap;
@@ -251,7 +246,6 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
         // 传过来的年月，需要判断当前月是否已经结转。
         List<?> objects = accMonthTraceRespository.queryAccMonthTraceByChooseMessage(centerCode, yearMonth, accbookType, accbookCode);
         if(objects.size() > 0){
-//            errorMsg = errorMsg + "当前月已经进行结转不能再新增凭证"+",";
             errorMsg.append("当前月已经进行结转不能再新增凭证");
             resultMap.put("resultMsg",errorMsg.toString());
             return resultMap;
@@ -283,7 +277,7 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
         // 这里给1/2 来判断生成那个类型的数据凭证信息。
         // 开始科目代码和专项信息存放整理，方便后续直接保存入库。
         // 之前是通过科目代码找专项一级，在通过专项一级找对应的字段，来拿到对接文档中的数据，并拿到数据再去数据库中比对信息是否存在。
-        List<ConfigureManage> configureManages = configureManageRespository.queryConfigureManagesByInterfaceInfoAndInterfaceType(interfaceInfo, interfaceType);
+        List<ConfigureManage> configureManages = configureManageRespository.queryConfigureManagesByInterfaceInfoAndInterfaceTypeAndBranchCode(interfaceInfo, interfaceType,branchCode);
         // 这里科目信息开始已经有顺序了。直接按照顺序给值即可。 （即为：分录的形式）
         for (int i = 0; i < configureManages.size(); i++) {
             // 当前这里意为：entry的分录信息一样
@@ -424,7 +418,7 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
                 }
             }
 
-            voucherDTO1.setRemarkName(vehicleInvoice.getDescription());
+            voucherDTO1.setRemarkName(vehicleInvoice.getVin());
             voucherDTO1.setSubjectCode(subjectInfo);
             voucherDTO1.setSubjectName(subjectName);
 

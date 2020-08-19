@@ -26,8 +26,8 @@ public interface ConfigureManageRespository extends BaseRepository<ConfigureMana
      * @param interfaceType
      * @return
      */
-    @Query(value = "select * from bz_configuremanage  where interface_info = ?1 and interface_type = ?2 order by interface_type,temp1 asc",nativeQuery = true)
-    List<ConfigureManage> queryConfigureManagesByInterfaceInfoAndInterfaceType(String interfaceInfo,String interfaceType);
+    @Query(value = "select * from bz_configuremanage  where interface_info = ?1 and interface_type = ?2  and branch_code = ?3 order by interface_type,temp1 asc",nativeQuery = true)
+    List<ConfigureManage> queryConfigureManagesByInterfaceInfoAndInterfaceTypeAndBranchCode(String interfaceInfo,String interfaceType,String branchCode);
     /**
      * 根据接口信息和接口类型查找对应的科目代码信息
      * @param interfaceInfo
