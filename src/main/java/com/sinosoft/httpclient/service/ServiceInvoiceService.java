@@ -15,8 +15,4 @@ public interface ServiceInvoiceService {
     String getServiceInvoiceService(List<ServiceInvoiceDTO> ServiceInvoiceDTOList);
 
 
-    /**
-     * 保存业务数据信息
-     */
-    void  saveServiceInvoiceService();
 }

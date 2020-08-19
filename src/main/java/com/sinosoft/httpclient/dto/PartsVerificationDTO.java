@@ -35,8 +35,8 @@ public class PartsVerificationDTO {
     private BigDecimal acceptTotalAmount;
     //  操作日期
     private String operationDate;
-
-
+    //发票金额(不含税)
+    private BigDecimal purchaseInvoiceNet;
     public Integer getId() {
         return id;
     }
@@ -142,5 +142,13 @@ public class PartsVerificationDTO {
 
     public void setBatch(Integer batch) {
         this.batch = batch;
+    }
+
+    public BigDecimal getPurchaseInvoiceNet() {
+        return purchaseInvoiceNet;
+    }
+
+    public void setPurchaseInvoiceNet(BigDecimal purchaseInvoiceNet) {
+        this.purchaseInvoiceNet = purchaseInvoiceNet;
     }
 }
