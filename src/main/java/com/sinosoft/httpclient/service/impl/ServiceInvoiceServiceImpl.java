@@ -52,8 +52,5 @@ public class ServiceInvoiceServiceImpl implements ServiceInvoiceService {
         return "success";
     }
 
-    @Override
-    public void saveServiceInvoiceService() {
 
-    }
 }
