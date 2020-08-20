@@ -24,21 +24,21 @@ public class WarrantyConfirmController {
     @RequestMapping(value = "/1")
     public void getWarrantyConfirm(){
         String url = "https://otrplus-cn-test.api.mercedes-benz.com.cn/api/accounting/warranty-confirm";
-        //Ìí¼Ó²ÎÊı
+        //æ·»åŠ å‚æ•°
         Map<String,Long> uriMap = new HashMap<>(6);
-        Long startTime = new Date().getTime();//¿ªÊ¼Ê±¼äĞèÒª´«µİ
+        Long startTime = new Date().getTime();//å¼€å§‹æ—¶é—´éœ€è¦ä¼ é€’
         Long endTime = new Date().getTime();
         uriMap.put("startTime",Long.parseLong("1574647200000"));
         uriMap.put("endTime",endTime);
-        //Í¨¹ıurlºÍuriMapÆ´½Óµ÷ÓÃÔ¶¶ËµÄ½Ó¿Ú£¬·µ»Ø½á¹û
+        //é€šè¿‡urlå’ŒuriMapæ‹¼æ¥è°ƒç”¨è¿œç«¯çš„æ¥å£ï¼Œè¿”å›ç»“æœ
         String returnMessage = httpClient.sendGet(url,uriMap);
         System.out.println(returnMessage);
         String message;
-        if(returnMessage.equals("½Ó¿Úµ÷ÓÃÊ§°Ü")){
-            message = "½Ó¿Úµ÷ÓÃÊ§°Ü";  //TODO Ñ­»·ÇëÇó...
+        if(returnMessage.equals("æ¥å£è°ƒç”¨å¤±è´¥")){
+            message = "æ¥å£è°ƒç”¨å¤±è´¥";  //TODO å¾ªç¯è¯·æ±‚...
         }else{
             List<JsonToWarrantyConfirm> jsonToWarrantyConfirms = JSONArray.parseArray(returnMessage, JsonToWarrantyConfirm.class);
-            //±£´æÈë¿â
+            //ä¿å­˜å…¥åº“
             message = warrantyConfirmService.saveWarrantyConfirmList(jsonToWarrantyConfirms);
         }
         System.out.println(message);
