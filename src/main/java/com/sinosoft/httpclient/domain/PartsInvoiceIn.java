@@ -9,6 +9,8 @@ public class PartsInvoiceIn {
     private String line;
     //零件编号
     private String partsNo;
+    //说明
+    private String description;
     //parts分析代码
     private String partsAnalysisCode;
     //部门代码
@@ -50,6 +52,14 @@ public class PartsInvoiceIn {
 
     public void setPartsNo(String partsNo) {
         this.partsNo = partsNo;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getPartsAnalysisCode() {
@@ -161,6 +171,7 @@ public class PartsInvoiceIn {
         return "PartsInvoiceIn{" +
                 "line='" + line + '\'' +
                 ", partsNo='" + partsNo + '\'' +
+                ", description='" + description + '\'' +
                 ", partsAnalysisCode='" + partsAnalysisCode + '\'' +
                 ", departmentCode='" + departmentCode + '\'' +
                 ", quantity=" + quantity +

@@ -5,47 +5,47 @@ import java.util.Date;
 import java.util.List;
 
 public class JsonToWarrantyConfirm {
-    //½»Ò×Êı¾İÎ¨Ò»±êÊ¶
+    //äº¤æ˜“æ•°æ®å”¯ä¸€æ ‡è¯†
     private Long id;
-    //¾­ÏúÉÌ GSSN ºÅ
+    //ç»é”€å•† GSSN å·
     private String dealerNo;
-    //¼ÇÕË¹«Ë¾ GSSN ºÅ
+    //è®°è´¦å…¬å¸ GSSN å·
     private String companyNo;
-    //claim±àºÅ-OTR
+    //claimç¼–å·-OTR
     private String claimNoOfOtr;
-    //claimÎ¨Ò»±êÊ¶
+    //claimå”¯ä¸€æ ‡è¯†
     private String claimId;
-    //ÕËµ¥±àºÅ
+    //è´¦å•ç¼–å·
     private String invoiceNo;
-    //ÕËµ¥ÈÕÆÚ
+    //è´¦å•æ—¥æœŸ
     private Date invoiceDate;
-    //È·ÈÏÈÕÆÚ
+    //ç¡®è®¤æ—¥æœŸ
     private Date confirmDate;
-    //¿Í»§ÀàĞÍ±àºÅ
+    //å®¢æˆ·ç±»å‹ç¼–å·
     private String customerTypeNo;
-    //¿Í»§ÀàĞÍ±àºÅÃèÊö
+    //å®¢æˆ·ç±»å‹ç¼–å·æè¿°
     private String customerTypeNoDescription;
-    //RWO¹¤µ¥ºÅ
+    //RWOå·¥å•å·
     private String rwoNo;
-    //¿Í»§Ãû³Æ
+    //å®¢æˆ·åç§°
     private String customerName;
-    //¹«Ë¾Ãû³Æ
+    //å…¬å¸åç§°
     private String companyName;
-    //³µÅÆºÅ
+    //è½¦ç‰Œå·
     private String registrationNo;
-    //Å·°æµ×ÅÌºÅ
+    //æ¬§ç‰ˆåº•ç›˜å·
     private String fin;
-    //ÏµÍ³ÕËµ¥×Ü¼Æ£¨²»º¬Ë°£©
+    //ç³»ç»Ÿè´¦å•æ€»è®¡ï¼ˆä¸å«ç¨ï¼‰
     private BigDecimal invoiceTotal;
-    //ÏµÍ³Áã¼ş×Ü¼Æ
+    //ç³»ç»Ÿé›¶ä»¶æ€»è®¡
     private BigDecimal partsTotal;
-    //ÏµÍ³¹¤Ê±×Ü¼Æ
+    //ç³»ç»Ÿå·¥æ—¶æ€»è®¡
     private BigDecimal laborTotal;
-    //ÏµÍ³ÔÓÏî×Ü¼Æ
+    //ç³»ç»Ÿæ‚é¡¹æ€»è®¡
     private BigDecimal sundriesTotal;
-    //ÏµÍ³ÊÖĞø·Ñ×Ü¼Æ
+    //ç³»ç»Ÿæ‰‹ç»­è´¹æ€»è®¡
     private BigDecimal handlingFeeTotal;
-    //Warranty creditnote ¼¯ºÏ
+    //Warranty creditnote é›†åˆ
     private List<WarrantyCreditNote> warrantyCreditNotes;
 
     public Long getId() {

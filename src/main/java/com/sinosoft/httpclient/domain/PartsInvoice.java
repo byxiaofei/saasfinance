@@ -52,6 +52,8 @@ public class PartsInvoice {
     private String line;
     //零件编号
     private String partsNo;
+    //摘要
+    private String description;
     //parts分析代码
     private String partsAnalysisCode;
     //部门代码
@@ -214,18 +216,31 @@ public class PartsInvoice {
     public void setOperationDate(Date operationDate) {
         this.operationDate = operationDate;
     }
+
     public String getLine() {
         return line;
     }
+
     public void setLine(String line) {
         this.line = line;
     }
+
     public String getPartsNo() {
         return partsNo;
     }
+
     public void setPartsNo(String partsNo) {
         this.partsNo = partsNo;
     }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public String getPartsAnalysisCode() {
         return partsAnalysisCode;
     }
@@ -233,78 +248,104 @@ public class PartsInvoice {
     public void setPartsAnalysisCode(String partsAnalysisCode) {
         this.partsAnalysisCode = partsAnalysisCode;
     }
+
     public String getDepartmentCode() {
         return departmentCode;
     }
+
     public void setDepartmentCode(String departmentCode) {
         this.departmentCode = departmentCode;
     }
+
     public BigDecimal getQuantity() {
         return quantity;
     }
+
     public void setQuantity(BigDecimal quantity) {
         this.quantity = quantity;
     }
+
     public BigDecimal getPartsUnitCost() {
         return partsUnitCost;
     }
+
     public void setPartsUnitCost(BigDecimal partsUnitCost) {
         this.partsUnitCost = partsUnitCost;
     }
+
     public BigDecimal getUnitSellingPrice() {
         return unitSellingPrice;
     }
+
     public void setUnitSellingPrice(BigDecimal unitSellingPrice) {
         this.unitSellingPrice = unitSellingPrice;
     }
+
     public BigDecimal getTotalPrice() {
         return totalPrice;
     }
+
     public void setTotalPrice(BigDecimal totalPrice) {
         this.totalPrice = totalPrice;
     }
+
     public BigDecimal getDiscountRate() {
         return discountRate;
     }
+
     public void setDiscountRate(BigDecimal discountRate) {
         this.discountRate = discountRate;
     }
+
     public BigDecimal getDiscountAmount() {
         return discountAmount;
     }
+
     public void setDiscountAmount(BigDecimal discountAmount) {
         this.discountAmount = discountAmount;
     }
+
     public BigDecimal getContribution() {
         return contribution;
     }
+
     public void setContribution(BigDecimal contribution) {
         this.contribution = contribution;
     }
+
     public BigDecimal getNetValue() {
         return netValue;
     }
+
     public void setNetValue(BigDecimal netValue) {
         this.netValue = netValue;
     }
+
     public BigDecimal getVatRate() {
         return vatRate;
     }
+
     public void setVatRate(BigDecimal vatRate) {
         this.vatRate = vatRate;
     }
+
     public BigDecimal getVatAmount() {
         return vatAmount;
     }
+
     public void setVatAmount(BigDecimal vatAmount) {
         this.vatAmount = vatAmount;
     }
+
     public String getCustomerTypeNo() {
         return customerTypeNo;
     }
+
     public void setCustomerTypeNo(String customerTypeNo) {
         this.customerTypeNo = customerTypeNo;
     }
+
+    @Override
     public String toString() {
         return "PartsInvoice{" +
                 "id=" + id +
@@ -326,6 +367,7 @@ public class PartsInvoice {
                 ", operationDate=" + operationDate +
                 ", line='" + line + '\'' +
                 ", partsNo='" + partsNo + '\'' +
+                ", description='" + description + '\'' +
                 ", partsAnalysisCode='" + partsAnalysisCode + '\'' +
                 ", departmentCode='" + departmentCode + '\'' +
                 ", quantity=" + quantity +

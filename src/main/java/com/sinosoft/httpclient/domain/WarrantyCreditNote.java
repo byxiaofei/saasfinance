@@ -4,17 +4,17 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 public class WarrantyCreditNote {
-    //Credit noteºÅ
+    //Credit noteå·
     private Integer creditNoteNo;
-    //Credit noteÈÕÆÚ
+    //Credit noteæ—¥æœŸ
     private Date creditNoteDate;
-    //Åâ¸¶µÄÁã¼ş½ğ¶î£¨²»º¬Ë°£©
+    //èµ”ä»˜çš„é›¶ä»¶é‡‘é¢ï¼ˆä¸å«ç¨ï¼‰
     private BigDecimal compensateParts;
-    //Åâ¸¶µÄ¹¤Ê±½ğ¶î£¨²»º¬Ë°£©
+    //èµ”ä»˜çš„å·¥æ—¶é‡‘é¢ï¼ˆä¸å«ç¨ï¼‰
     private BigDecimal compensateLabor;
-    //Åâ¸¶µÄÔÓÏî½ğ¶î£¨²»º¬Ë°£©
+    //èµ”ä»˜çš„æ‚é¡¹é‡‘é¢ï¼ˆä¸å«ç¨ï¼‰
     private BigDecimal compensateSundries;
-    //Åâ¸¶µÄÊÖĞø½ğ¶î£¨²»º¬Ë°£©
+    //èµ”ä»˜çš„æ‰‹ç»­é‡‘é¢ï¼ˆä¸å«ç¨ï¼‰
     private BigDecimal compensateHandlingFee;
 
     public Integer getCreditNoteNo() {

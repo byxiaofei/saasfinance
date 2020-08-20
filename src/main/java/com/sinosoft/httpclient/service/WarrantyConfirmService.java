@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface WarrantyConfirmService {
     /**
-     * 获取上次调用时间到当前时间，所有索赔确认的数据
+     * 鑾峰彇涓婃璋冪敤鏃堕棿鍒板綋鍓嶆椂闂达紝鎵�鏈夌储璧旂‘璁ょ殑鏁版嵁
      * @param jsonToWarrantyConfirmList
      * @return
      */

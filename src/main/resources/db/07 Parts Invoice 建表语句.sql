@@ -15,6 +15,7 @@ CREATE TABLE `bz_partsinvoice`  (
   `operation_date` date DEFAULT NULL COMMENT '操作日期',
   `line` varchar(50) DEFAULT NULL COMMENT '行号',
   `parts_no` varchar(50)  DEFAULT NULL COMMENT '零件编号',
+  `description` varchar(50)  DEFAULT NULL COMMENT '说明',
   `parts_analysis_code` varchar(50)  DEFAULT NULL COMMENT 'parts分析代码',
   `department_code` varchar(50)  DEFAULT NULL COMMENT '部门代码',
   `quantity` decimal(14, 0)  DEFAULT NULL COMMENT '数量',
