@@ -48,6 +48,9 @@ public class PartsPromotionServiceImpl implements PartsPromotionService {
     private AccMonthTraceRespository accMonthTraceRespository;
 
     @Resource
+    private VehicleInvoiceServiceImpl VehicleInvoiceServiceImpl;
+
+    @Resource
     private SubjectRepository subjectRepository;
 
     // 任务调度明细表
@@ -282,7 +285,7 @@ public class PartsPromotionServiceImpl implements PartsPromotionService {
             // 对科目的校验
             String subjectName = configureManages.get(i).getSubjectName();
             String subjectInfo = configureManages.get(i).getId().getSubjectCode();
-            String resultCode = new VehicleInvoiceServiceImpl().checkSubjectCodePassMusterBySubjectCodeAll(subjectInfo, accbookCode);
+            String resultCode = VehicleInvoiceServiceImpl.checkSubjectCodePassMusterBySubjectCodeAll(subjectInfo, accbookCode);
             if (resultCode != null && !"".equals(resultCode)) {
                 if ("notExist".equals(resultCode)) {
                     errorMsg.append(subjectInfo + "不存在，请重新输入！");

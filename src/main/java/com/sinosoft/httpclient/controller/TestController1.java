@@ -120,7 +120,7 @@ public class TestController1 {
             long time = date.getTime();
             System.out.println(time);
 
-            String yearMonth = "2020-08-10 00:00:00";
+            String yearMonth = "2020-08-14 00:00:00";
             String yearMonthLast = "2020-08-10 23:59:59";
             Date parse = sdf.parse(yearMonth);
             Date parse1 = sdf.parse(yearMonthLast);
