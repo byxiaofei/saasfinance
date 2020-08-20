@@ -93,7 +93,8 @@ public class PartsPromotionServiceImpl implements PartsPromotionService {
                 BigDecimal quantity = promotionParts.getQuantity();
                 BigDecimal partsUnitCost = promotionParts.getPartsUnitCost().setScale(2, RoundingMode.HALF_UP);
 
-                finalAmount = quantity.setScale(2, RoundingMode.HALF_UP).multiply(partsUnitCost);
+                BigDecimal amountTime = quantity.setScale(2, RoundingMode.HALF_UP).multiply(partsUnitCost);
+                finalAmount = finalAmount.add(amountTime);
 
             }
             partsPromotionList.add(partsPromotion);
@@ -246,6 +247,7 @@ public class PartsPromotionServiceImpl implements PartsPromotionService {
 
         // 存放到dto中。
         //  凭证号
+        dto.setVoucherDate(operationDate);
         dto.setVoucherNo(voucherDTO.getVoucherNo());
         //  年月
         dto.setYearMonth(yearMonth);

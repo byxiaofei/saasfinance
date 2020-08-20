@@ -109,7 +109,8 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
                 BigDecimal quantity = requisitionParts.getQuantity();
                 BigDecimal partsUnitCost = requisitionParts.getPartsUnitCost().setScale(2, RoundingMode.HALF_UP);
 
-                finalAmount = quantity.setScale(2, RoundingMode.HALF_UP).multiply(partsUnitCost);
+                BigDecimal amountTime = quantity.setScale(2, RoundingMode.HALF_UP).multiply(partsUnitCost);
+                finalAmount = finalAmount.add(amountTime);
 
             }
             partsRequisitions.add(partsRequisition);
@@ -262,6 +263,7 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
 
         // 存放到dto中。
         //  凭证号
+        dto.setVoucherDate(operationDate);
         dto.setVoucherNo(voucherDTO.getVoucherNo());
         //  年月
         dto.setYearMonth(yearMonth);
