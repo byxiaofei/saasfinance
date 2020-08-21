@@ -47,6 +47,8 @@ public class ServiceInvoiceController {
             str =  serviceInvoiceService.getServiceInvoiceService(serviceInvoiceDTOList);
         }
 
+
+        System.out.println(str);
     }
     //http://192.168.43.139:8081/serviceInvoice/get_service_invoice
 

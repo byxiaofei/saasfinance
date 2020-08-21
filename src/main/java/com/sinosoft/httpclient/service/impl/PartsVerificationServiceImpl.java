@@ -39,13 +39,20 @@ public class PartsVerificationServiceImpl implements PartsVerificationService {
         //获取时间区间所有的发票信息
         List<PartsVerification> partsVerificationEntityList = new ArrayList<>();
 
+        // 拿到解析数据，直接进行解析处理
+        List<Map<String, Object>> listResultMaps = new ArrayList<>();
+        // 用于存放处理数据的金额。
+        Map<String,BigDecimal> mapsAboutAmount = new HashMap<>();
+        // 错误日志返回信息。
+        StringBuilder errorAllMessage = new StringBuilder();
+
         for (PartsVerificationDTO partsVerificationDTO : partsVerificationList) {
             // 校验当前业务数据是否满足生账条件。
             String judgeMsg = judgeInterfaceInfoQuerstion(partsVerificationDTO, errorMsg);
             if (!"".equals(judgeMsg)) {
-                //TODO 将错误信息保存在错误日志信息表中。
                 logger.error(judgeMsg);
-                return "fail";
+                errorAllMessage.append("第i" + 1 + "的错误问题为：" + judgeMsg);
+                continue;
             }
             //账单金额放方向
             BigDecimal variance = new BigDecimal("0.00");
@@ -103,6 +110,18 @@ public class PartsVerificationServiceImpl implements PartsVerificationService {
         if (partsVerificationDTO.getVerifyDate() == null || "".equals(partsVerificationDTO.getVerifyDate())) {
             errorMsg.append("业务日期不能为空");
         }
+        if(partsVerificationDTO.getAcceptTotalAmount().compareTo(BigDecimal.ZERO) == 0){
+            errorMsg.append("配件采购总价不能为空");
+        }
+        if(partsVerificationDTO.getVariance().compareTo(BigDecimal.ZERO) == 0 ){
+            errorMsg.append("差价不能为空");
+        }
+        List<InvoiceVerifyDTO> verifyInvoices = partsVerificationDTO.getVerifyInvoices();
+        for (InvoiceVerifyDTO invoiceVerifyDTO : verifyInvoices){
+            if(invoiceVerifyDTO.getPurchaseInvoiceNet().compareTo(BigDecimal.ZERO) == 0){
+                errorMsg.append("发票金额不能为空");
+            }
+        }
         return errorMsg.toString();
     }
 
@@ -120,6 +139,7 @@ public class PartsVerificationServiceImpl implements PartsVerificationService {
         VoucherDTO voucherDTO = (VoucherDTO) informationVerificationtMap.get("voucherDTO");
         //2.存放凭证头部信息到dto中
         //  凭证号
+        dto.setVoucherDate(partsVerificationDTO.getVerifyDate());
         dto.setVoucherNo(voucherDTO.getVoucherNo());
         //  年月
         dto.setYearMonth(yearMonth);
@@ -138,7 +158,7 @@ public class PartsVerificationServiceImpl implements PartsVerificationService {
         resultMap.put("dto", dto);
         resultMap.put("accountingEntry", partsVerificationDTO);
         //3.获取生成凭证的分录信息
-        Map<String, Object> vocherInformation = accountingMethod.AccountingEntryInformation(resultMap, invoicePrintType, interfaceType, errorMsg, accbookCode);
+        Map<String, Object> vocherInformation = accountingMethod.AccountingEntryInformation(resultMap, invoicePrintType, interfaceType, errorMsg, accbookCode,branchCode);
         vocherInformation.put("dto", dto);
         return vocherInformation;
     }

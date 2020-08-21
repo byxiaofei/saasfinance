@@ -61,15 +61,18 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
     @Override
     public String saveVehicleInvoiceList(List<VehicleInvoice> vehicleInvoiceList) {
         // 拿到解析数据，直接进行解析处理
+        List<Map<String,Object>> listResultMaps = new ArrayList<>();
+        // 错误日志返回信息。
+        StringBuilder errorAllMessage = new StringBuilder();
         for(int i = 0 ; i < vehicleInvoiceList.size();i++){
             VehicleInvoice vehicleInvoice = vehicleInvoiceList.get(i);
             StringBuilder errorMsg = new StringBuilder();
             // 看当前必要信息是否都不为空。
             String judgeMsg = judgeInterfaceInfoQuerstion(vehicleInvoice, errorMsg);
             if(!"".equals(judgeMsg)){
-                //TODO 将错误信息保存在错误日志信息表中。
                 logger.error(judgeMsg);
-                return "fail";
+                errorAllMessage.append("第i"+1+"的错误问题为："+judgeMsg);
+                continue;
             }
             // 1. 看当前信息是什么类型的
             String invoiceType = vehicleInvoice.getInvoiceType();
@@ -81,16 +84,8 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
                 String resultMsg = (String) stringObjectMap.get("resultMsg");
                 if (!"success".equals(resultMsg)){
                     logger.error(resultMsg);
-                    // 写个方法直接插入扔库里信息。
-                    return "fail";
-                }
-                List<VoucherDTO> list2 = (List<VoucherDTO>) stringObjectMap.get("list2");
-                List<VoucherDTO> list3 = (List<VoucherDTO>) stringObjectMap.get("list3");
-                VoucherDTO dto1 = (VoucherDTO) stringObjectMap.get("dto");
-                String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto1);
-                if(!"success".equals(voucherNo)){
-                    logger.error(voucherNo);
-                    return "fail";
+                    errorAllMessage.append("第i"+1+"Invoice类型错误问题为："+judgeMsg);
+                    continue;
                 }
                 // 变为第二个接口信息
                 interfaceType = "2";
@@ -98,17 +93,14 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
                 String resultMsg1 = (String) stringObjectMap1.get("resultMsg");
                 if (!"success".equals(resultMsg1)){
                     logger.error(resultMsg1);
-                    // 写个方法直接插入扔库里信息。
-                    return "fail";
+                    errorAllMessage.append("第i"+1+"Invoice类型错误问题为："+judgeMsg);
+                    continue;
                 }
-                List<VoucherDTO> list4 = (List<VoucherDTO>) stringObjectMap1.get("list2");
-                List<VoucherDTO> list5 = (List<VoucherDTO>) stringObjectMap1.get("list3");
-                VoucherDTO dto2 = (VoucherDTO) stringObjectMap1.get("dto");
-                String voucherNo1 = voucherService.saveVoucherForFourS(list4, list5, dto2);
-                if(!"success".equals(voucherNo1)){
-                    logger.error(voucherNo1);
-                    return "fail";
-                }
+
+                // 把两个东西都放入到List集合中
+                listResultMaps.add(stringObjectMap);
+                listResultMaps.add(stringObjectMap1);
+
             }else{
                 // 退账 找接口2. 类型3/4 (科目与结账相同，金额方向不同)
                 String interfaceType = "3";
@@ -117,42 +109,59 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
                 if (!"success".equals(resultMsg)){
                     logger.error(resultMsg);
                     // 写个方法直接插入扔库里信息。
+                    errorAllMessage.append("第i"+1+"Credit类型错误问题为："+judgeMsg);
                     return "fail";
                 }
-                List<VoucherDTO> list2 = (List<VoucherDTO>) stringObjectMap.get("list2");
-                List<VoucherDTO> list3 = (List<VoucherDTO>) stringObjectMap.get("list3");
-                VoucherDTO dto1 = (VoucherDTO) stringObjectMap.get("dto");
-                String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto1);
-                if(!"success".equals(voucherNo)){
-                    logger.error(voucherNo);
-                    return "fail";
-                }
+//                List<VoucherDTO> list2 = (List<VoucherDTO>) stringObjectMap.get("list2");
+//                List<VoucherDTO> list3 = (List<VoucherDTO>) stringObjectMap.get("list3");
+//                VoucherDTO dto1 = (VoucherDTO) stringObjectMap.get("dto");
+//                String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto1);
+//                if(!"success".equals(voucherNo)){
+//                    logger.error(voucherNo);
+//                    return "fail";
+//                }
                 // 变为第二个接口信息
                 interfaceType = "4";
                 Map<String,Object> stringObjectMap1 = convertBussinessToAccounting(vehicleInvoice,errorMsg,interfaceInfo,interfaceType);
                 String resultMsg1 = (String) stringObjectMap1.get("resultMsg");
                 if (!"success".equals(resultMsg1)){
                     logger.error(resultMsg1);
-                    // 写个方法直接插入扔库里信息。
+                    errorAllMessage.append("第i"+1+"Credit类型错误问题为："+judgeMsg);
                     return "fail";
                 }
-                List<VoucherDTO> list4 = (List<VoucherDTO>) stringObjectMap1.get("list2");
-                List<VoucherDTO> list5 = (List<VoucherDTO>) stringObjectMap1.get("list3");
-                VoucherDTO dto2 = (VoucherDTO) stringObjectMap1.get("dto");
-                String voucherNo1 = voucherService.saveVoucherForFourS(list4, list5, dto2);
-                if(!"success".equals(voucherNo1)){
-                    logger.error(voucherNo1);
-                    return "fail";
-                }
+//                List<VoucherDTO> list4 = (List<VoucherDTO>) stringObjectMap1.get("list2");
+//                List<VoucherDTO> list5 = (List<VoucherDTO>) stringObjectMap1.get("list3");
+//                VoucherDTO dto2 = (VoucherDTO) stringObjectMap1.get("dto");
+//                String voucherNo1 = voucherService.saveVoucherForFourS(list4, list5, dto2);
+//                if(!"success".equals(voucherNo1)){
+//                    logger.error(voucherNo1);
+//                    return "fail";
+//                }
+                listResultMaps.add(stringObjectMap);
+                listResultMaps.add(stringObjectMap1);
             }
         }
-        System.out.println("---------------《当前时间范围内的数据，已全部保存到凭证表中，入库成功！》------------------");
+        System.out.println("---------------《当前时间范围内的正确的数据，已全部保存到List集合中，下面开始保存入库！》------------------");
         // 当前时间范围内解析到的所以数据放入到对应的对接接口表中存放信息。
+        for(int i = 0 ; i < listResultMaps.size(); i++ ){
+            Map<String, Object> stringObjectMap = listResultMaps.get(i);
+            List<VoucherDTO> list2 = (List<VoucherDTO>) stringObjectMap.get("list2");
+            List<VoucherDTO> list3 = (List<VoucherDTO>) stringObjectMap.get("list3");
+            VoucherDTO dto = (VoucherDTO) stringObjectMap.get("dto");
+            String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto);
+            if(!"success".equals(voucherNo)){
+                logger.error(voucherNo);
+                errorAllMessage.append("保存凭证出错");
+            }
+        }
+        System.out.println("--------------------  上述已经对正确的所有数据进行了入库保存！  ----------------------------");
         vehicleInvoiceRespository.saveAll(vehicleInvoiceList);
         vehicleInvoiceRespository.flush();
         System.out.println("---------------------当前时间范围内的数据，已经全部保存到对接接口表中---------------------------");
-        // TODO  最后接口改造，需要传入--> 起止时间 ，并把起止时间保存到 任务调度明细表中 (taskschedulingdetailsinfo)。
-        return "success";
+        if("".equals(errorAllMessage.toString())){
+            return "success";
+        }
+        return errorAllMessage.toString();
     }
 
     @Override

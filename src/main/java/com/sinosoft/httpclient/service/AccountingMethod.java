@@ -23,7 +23,7 @@ public interface AccountingMethod {
      * @param accbookCode
      * @return
      */
-     Map<String,Object> AccountingEntryInformation(Map<String,Object>map, String interfaceInfo, String interfaceType, StringBuilder errorMsg, String accbookCode );
+     Map<String,Object> AccountingEntryInformation(Map<String,Object>map, String interfaceInfo, String interfaceType, StringBuilder errorMsg, String accbookCode,String branchCode );
 
 
 }

@@ -50,7 +50,7 @@ public class PartsVerificationController {
             System.out.println(partsVerificationList);
             str =  partsVerificationService.getPartsVerification(partsVerificationList);
         }
-
+        System.out.println(str);
 
     }
 //http://192.168.43.139:8081/partsVerification/test

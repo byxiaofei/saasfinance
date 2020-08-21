@@ -64,6 +64,11 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
     @Override
     public String savePartsRequisitionList(List<JsonToPartsRequisition> jsonToPartsRequisitionList) {
         List<PartsRequisition> partsRequisitions = new ArrayList<>();
+        // 拿到解析数据，直接进行解析处理
+        List<Map<String,Object>> listResultMaps = new ArrayList<>();
+        // 错误日志返回信息。
+        StringBuilder errorAllMessage = new StringBuilder();
+
         for(int i= 0; i<jsonToPartsRequisitionList.size(); i++){
             JsonToPartsRequisition jsonToPartsRequisition = jsonToPartsRequisitionList.get(i);
             PartsRequisition partsRequisition = new PartsRequisition();
@@ -86,9 +91,9 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
             // 看当前必要信息是否都不为空。
             String judgeMsg = judgeInterfaceInfoQuerstion(jsonToPartsRequisition, errorMsg);
             if(!"".equals(judgeMsg)){
-                //TODO 将错误信息保存在错误日志信息表中。
                 logger.error(judgeMsg);
-                return "fail";
+                errorAllMessage.append("第i"+1+"的错误问题为："+judgeMsg);
+                continue;
             }
             // 用于最后的当前金额的累加。
             BigDecimal finalAmount = new BigDecimal("0.00");
@@ -116,7 +121,6 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
             partsRequisitions.add(partsRequisition);
             System.out.println("以上是对信息的拉取处理，为最后凭证生成后能直接入库信息。");
 
-            // TODO 从这里开始进行编写
             // 1. 看当前信息是什么类型的
             String docType = jsonToPartsRequisition.getDocType();
             String interfaceInfo = "6";
@@ -126,25 +130,20 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
                 String resultMsg = (String) stringObjectMap.get("resultMsg");
                 if (!"success".equals(resultMsg)){
                     logger.error(resultMsg);
-                    // 写个方法直接插入扔库里信息。
-                    return "fail";
+                    errorAllMessage.append("第i"+1+"的错误问题为："+judgeMsg);
+                    continue;
                 }
-                List<VoucherDTO> list2 = (List<VoucherDTO>) stringObjectMap.get("list2");
-                List<VoucherDTO> list3 = (List<VoucherDTO>) stringObjectMap.get("list3");
-                VoucherDTO dto1 = (VoucherDTO) stringObjectMap.get("dto");
-                String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto1);
-                if(!"success".equals(voucherNo)){
-                    logger.error(voucherNo);
-                    return "fail";
-                }
+
+                listResultMaps.add(stringObjectMap);
+
             }else{
                 String interfaceType = "2";
                 Map<String,Object> stringObjectMap = convertBussinessToAccounting(jsonToPartsRequisition,errorMsg,interfaceInfo,interfaceType,finalAmount);
                 String resultMsg = (String) stringObjectMap.get("resultMsg");
                 if (!"success".equals(resultMsg)){
                     logger.error(resultMsg);
-                    // 写个方法直接插入扔库里信息。
-                    return "fail";
+                    errorAllMessage.append("第i"+1+"的错误问题为："+judgeMsg);
+                    continue;
                 }
                 List<VoucherDTO> list2 = (List<VoucherDTO>) stringObjectMap.get("list2");
                 List<VoucherDTO> list3 = (List<VoucherDTO>) stringObjectMap.get("list3");
@@ -154,15 +153,36 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
                     logger.error(voucherNo);
                     return "fail";
                 }
+
+                listResultMaps.add(stringObjectMap);
+
             }
         }
+
+        System.out.println("---------------《当前时间范围内的正确的数据，已全部保存到List集合中，下面开始保存入库！》------------------");
+        // 当前时间范围内解析到的所以数据放入到对应的对接接口表中存放信息。
+        for(int i = 0 ; i < listResultMaps.size(); i++ ){
+            Map<String, Object> stringObjectMap = listResultMaps.get(i);
+            List<VoucherDTO> list2 = (List<VoucherDTO>) stringObjectMap.get("list2");
+            List<VoucherDTO> list3 = (List<VoucherDTO>) stringObjectMap.get("list3");
+            VoucherDTO dto = (VoucherDTO) stringObjectMap.get("dto");
+            String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto);
+            if(!"success".equals(voucherNo)){
+                logger.error(voucherNo);
+                errorAllMessage.append("保存凭证出错");
+            }
+        }
+        System.out.println("--------------------  上述已经对正确的所有数据进行了入库保存！  ----------------------------");
 
         partsRequisitionRespository.saveAll(partsRequisitions);
         partsRequisitionRespository.flush();
 
         //  保存日志
 
-        return "success";
+        if("".equals(errorAllMessage.toString())){
+            return "success";
+        }
+        return errorAllMessage.toString();
     }
 
 
@@ -288,7 +308,6 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
         // 这里给1/2 来判断生成那个类型的数据凭证信息。
         // 开始科目代码和专项信息存放整理，方便后续直接保存入库。
         // 之前是通过科目代码找专项一级，在通过专项一级找对应的字段，来拿到对接文档中的数据，并拿到数据再去数据库中比对信息是否存在。
-        // TODO 这个地方需要去进行修改一下。
         List<ConfigureManage> configureManages = configureManageRespository.queryConfigureManagesByInterfaceInfoAndInterfaceTypeAndBranchCode(interfaceInfo, interfaceType,branchCode);
         for(int i = 0 ; i < configureManages.size() ; i++){
             // 当前这里以为：entry

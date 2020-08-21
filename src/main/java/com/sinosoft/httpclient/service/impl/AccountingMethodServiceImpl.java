@@ -115,20 +115,16 @@ public class AccountingMethodServiceImpl implements AccountingMethod {
     }
 
     @Override
-    public Map<String, Object> AccountingEntryInformation(Map<String,Object> map,String interfaceInfo, String interfaceType, StringBuilder errorMsg, String accbookCode) {
+    public Map<String, Object> AccountingEntryInformation(Map<String,Object> map,String interfaceInfo, String interfaceType, StringBuilder errorMsg, String accbookCode , String branchCode) {
         Map<String,Object> resultMap = new HashMap<>();
         List<VoucherDTO> list2 = new ArrayList<>();
         List<VoucherDTO> list3 = new ArrayList<>();
         PartsVerificationDTO  partsVerification;
         ServiceInvoiceDTO serviceInvoiceDTO;
-        //根据接口获取dto信息
-        if ("4".equals(interfaceInfo)){
-
-        }
         // 这里给1/2 来判断生成那个类型的数据凭证信息。
         // 开始科目代码和专项信息存放整理，方便后续直接保存入库。
         // 之前是通过科目代码找专项一级，在通过专项一级找对应的字段，来拿到对接文档中的数据，并拿到数据再去数据库中比对信息是否存在。
-        List<ConfigureManage> configureManages = configureManageRespository.queryConfigureManagesByInterfaceInfoAndInterfaceTypeAndBranchCode(interfaceInfo, interfaceType,"");
+        List<ConfigureManage> configureManages = configureManageRespository.queryConfigureManagesByInterfaceInfoAndInterfaceTypeAndBranchCode(interfaceInfo, interfaceType,branchCode);
         // 这里科目信息开始已经有顺序了。直接按照顺序给值即可。 （即为：分录的形式）
         for (int i = 0; i < configureManages.size(); i++) {
             // 当前这里意为：entry的分录信息一样
