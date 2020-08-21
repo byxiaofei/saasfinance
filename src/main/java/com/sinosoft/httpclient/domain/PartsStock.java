@@ -28,7 +28,7 @@ public class PartsStock {
     private String description;
     //原厂配件标记 长度 10
     private String genuineFlag;
-    //parts分析代码
+    //parts 分析代码
     private String partsAnalysisCode;
     //业务发生日期
     private String businessDate;

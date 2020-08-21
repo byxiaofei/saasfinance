@@ -22,9 +22,9 @@ public class VehicleStock {
     private String stockChangeDate;
     //生产号
     private String commissionNo;
-    //美版底盘 号
+    //美版底盘号
     private String vin;
-    //欧版底盘 号
+    //欧版底盘号
     private String fin;
     private String baumuster;
     private String nst;
