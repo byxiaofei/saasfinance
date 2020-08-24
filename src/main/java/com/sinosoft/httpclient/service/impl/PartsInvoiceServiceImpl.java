@@ -115,7 +115,7 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService
                 VoucherDTO dto1 = (VoucherDTO) objectMap.get("dto");
                 //生成保存凭证
                 String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto1);
-                if("success".equals(voucherNo)){
+                if(!"success".equals(voucherNo)){
                     logger.error(voucherNo);
                     return "fail";
                 }
@@ -133,7 +133,7 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService
                 VoucherDTO dto1 = (VoucherDTO) objectMap.get("dto");
                 //生成保存凭证
                 String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto1);
-                if("success".equals(voucherNo)){
+                if(!"success".equals(voucherNo)){
                     logger.error(voucherNo);
                     return "fail";
                 }
@@ -246,6 +246,7 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService
 
         // 存放到dto中。
         //  凭证号
+        dto.setVoucherDate(date);
         dto.setVoucherNo(voucherDTO.getVoucherNo());
         //  年月
         dto.setYearMonth(yearMonth);
