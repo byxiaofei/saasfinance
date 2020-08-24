@@ -35,9 +35,6 @@ public class OptionChangeServiceImpl implements OptionChangeService {
     private BranchInfoRepository branchInfoRepository;
 
     @Resource
-    private OptionChange optionChange;
-
-    @Resource
     private AccMonthTraceRespository accMonthTraceRespository;
 
     @Resource
