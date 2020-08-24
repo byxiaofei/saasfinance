@@ -50,7 +50,7 @@ public class PartsRequisitionController {
             }else{
                 List<JsonToPartsRequisition> jsonToPartsRequisitions = JSONArray.parseArray(returnStr, JsonToPartsRequisition.class);
                 //  保存入库
-                string = partsRequisitionService.savePartsRequisitionList(jsonToPartsRequisitions);
+                string = partsRequisitionService.savePartsRequisitionList(jsonToPartsRequisitions,"1597039093220");
             }
             System.out.println(string);
         } catch (Exception e) {

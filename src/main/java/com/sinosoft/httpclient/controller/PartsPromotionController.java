@@ -47,7 +47,7 @@ public class PartsPromotionController {
             }else{
                 List<JsonToPartsPromotion> jsonToPartsPromotion = JSONArray.parseArray(returnStr, JsonToPartsPromotion.class);
                 // 保存入库
-                str = partsPromotionService.savePartsPromotionList(jsonToPartsPromotion);
+                str = partsPromotionService.savePartsPromotionList(jsonToPartsPromotion,"1597039093220");
             }
             System.out.println(str);
         } catch (Exception e) {

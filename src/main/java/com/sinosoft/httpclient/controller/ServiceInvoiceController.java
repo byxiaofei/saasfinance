@@ -50,7 +50,7 @@ public class ServiceInvoiceController {
                 List<ServiceInvoiceDTO> serviceInvoiceDTOList = JSONArray.parseArray(returnStr, ServiceInvoiceDTO.class);
                 //保存入库
                 System.out.println(serviceInvoiceDTOList);
-                str =  serviceInvoiceService.getServiceInvoiceService(serviceInvoiceDTOList);
+                str =  serviceInvoiceService.getServiceInvoiceService(serviceInvoiceDTOList,"1597039093220");
             }
 
             System.out.println(str);

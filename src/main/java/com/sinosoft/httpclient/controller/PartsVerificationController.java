@@ -54,7 +54,7 @@ public class PartsVerificationController {
                 List<PartsVerificationDTO> partsVerificationList = JSONArray.parseArray(returnStr, PartsVerificationDTO.class);
                 //保存入库
                 System.out.println(partsVerificationList);
-                str =  partsVerificationService.getPartsVerification(partsVerificationList);
+                str =  partsVerificationService.getPartsVerification(partsVerificationList,"1597039093220");
             }
             System.out.println(str);
         } catch (Exception e) {
