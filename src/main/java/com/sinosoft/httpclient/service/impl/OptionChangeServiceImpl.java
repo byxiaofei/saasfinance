@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -311,18 +312,22 @@ public class OptionChangeServiceImpl implements OptionChangeService {
                     }
                 }
                 // 通过接口类型来区分，金额的走向。
+                BigDecimal currentQuantity = optionChange.getCurrentQuantity();
+                BigDecimal currentActualCost = optionChange.getCurrentActualCost();
+                BigDecimal result = currentActualCost.multiply(currentQuantity);
+                String resultMoney = result.toString();
                 if ("P2".equals(interfaceType)){
-                        voucherDTO1.setDebit("1956.00");
+                        voucherDTO1.setDebit(resultMoney);
                         voucherDTO1.setCredit("0.0");
                     }else if ("P1".equals(interfaceType)){
                         voucherDTO1.setDebit("0.0");
-                        voucherDTO1.setCredit("1956.00");
+                        voucherDTO1.setCredit(resultMoney);
                     }
                 if ("F1".equals(interfaceType)){
                         voucherDTO1.setDebit("0.0");
-                        voucherDTO1.setCredit("1500.00");
+                        voucherDTO1.setCredit(resultMoney);
                     }else if ("F2".equals(interfaceType)){
-                        voucherDTO1.setDebit("1500.00");
+                        voucherDTO1.setDebit(resultMoney);
                         voucherDTO1.setCredit("0.0");
                     }
                 voucherDTO1.setRemarkName(optionChange.getVin());
