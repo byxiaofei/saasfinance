@@ -499,7 +499,7 @@ public class QueryDetailAccountServiceImpl implements QueryDetailAccountService 
         sql.append(sql2);
         sql.append(" ORDER BY voucherDate,voucherNo");
 
-        String tempSql = "select cast(IFNULL(a.balance_dest,0.00) as char) AS 'initialBalance',cast(IFNULL(a.debit_dest_year,0.00) as char) AS 'debitYearTotal',cast(IFNULL(a.credit_dest_year,0.00) as char) AS 'creditYearTotal'";
+        String tempSql = "SELECT CAST(IFNULL(SUM(a.balance_dest),0.00) AS CHAR) AS 'initialBalance',CAST(IFNULL(SUM(a.debit_dest_year),0.00) AS CHAR) AS 'debitYearTotal',CAST(IFNULL(SUM(a.credit_dest_year),0.00) AS CHAR) AS 'creditYearTotal'";
         List<?> listByInitialBalanceSql = voucherRepository.queryBySqlSC(tempSql + "from (" + initialBalanceSql.toString() + ") a", params);
         List<?> listBySql = voucherRepository.queryBySqlSC(sql.toString(), params2);
 
