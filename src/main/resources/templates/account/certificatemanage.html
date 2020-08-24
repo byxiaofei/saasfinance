@@ -537,9 +537,8 @@
                             if(r)   addTab(row.voucherNo + '编辑', '/voucher/autoedit?voucherNo=' + row.voucherNo + '&yearMonth=' + row.yearMonthDate + '&specialNameP=' + $('#specialNameP').combobox('getValue'));
                         });
                     }else if(row.voucherType == 1){
-                        /*$.messager.alert('提示','此凭证为<span style="color: red;">决算自动生成</span>凭证,不可进行修改！','warning'); return false;*/
                         $.messager.confirm('提示','此凭证为<span style="color: red;">决算自动生成</span>凭证,确认修改？',function (r) {
-                            if(r)   addTab(row.voucherNo + '编辑', '/voucher/autoedit?voucherNo=' + row.voucherNo + '&yearMonth=' + row.yearMonthDate + '&specialNameP=' + $('#specialNameP').combobox('getValue'));
+                            if(r)   addTab(row.voucherNo + '编辑', '/voucher/edit?voucherNo=' + row.voucherNo + '&yearMonth=' + row.yearMonthDate + '&specialNameP=' + $('#specialNameP').combobox('getValue'));
                         });
                     }else if(row.voucherType == 7){
                         /*$.messager.alert('提示','此凭证为<span style="color: red;">费用分摊</span>凭证,不可进行修改！','warning'); return false;*/

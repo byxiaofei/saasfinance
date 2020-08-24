@@ -1268,42 +1268,22 @@
     function addSub() {
         var rows=$("#dg").datagrid('getRows');
         var rowSs=$("#dgS").datagrid('getRows');
-        if(rows.length!=0){
-            $('#dg').datagrid('endEdit',rows.length-1);
-            var row =  rows[rows.length-1]
-            $('#dg').datagrid('appendRow', {
-                tagCode : '',
-                remarkName : row.remarkName,
-                subjectCode : row.subjectCode,
-                subjectName : row.subjectName,
-                debit : '',
-                credit : ''
-            });
-            var rowS =  rowSs[rowSs.length-1]
-            $('#dgS').datagrid('appendRow', {
-                subjectCodeS : rowS.subjectCodeS,
-                subjectNameS : rowS.subjectNameS,
-                specialCodeS : rowS.specialCodeS,
-                specialNameS : rowS.specialNameS
-            });
-            $('#dg').datagrid('clearSelections');
-            $('#dgS').datagrid('clearSelections');
-        }else{
-            $('#dg').datagrid('appendRow', {
-                tagCode : '',
-                remarkName : '',
-                subjectCode : '',
-                subjectName : '',
-                debit : '',
-                credit : ''
-            });
-            $('#dgS').datagrid('appendRow', {
-                subjectCodeS : '',
-                subjectNameS : '',
-                specialCodeS : '',
-                specialNameS : ''
-            });
-        }
+
+        $('#dg').datagrid('appendRow', {
+            tagCode : '',
+            remarkName : '',
+            subjectCode : '',
+            subjectName : '',
+            debit : '',
+            credit : ''
+        });
+        $('#dgS').datagrid('appendRow', {
+            subjectCodeS : '',
+            subjectNameS : '',
+            specialCodeS : '',
+            specialNameS : ''
+        });
+
     }
     function lookS() {
 

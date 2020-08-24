@@ -121,7 +121,7 @@ public class QueryDetailAccountServiceImpl implements QueryDetailAccountService 
         }
         if (StringUtils.isNotEmpty(beginDate)) {
             //判断当beginDate为决算月时，initialBalanceSql是当月凭证子表与凭证主表联查；sql是当月明细账余额表
-           //beginDate在决算月之前时，
+            //beginDate在决算月之前时，
             initialBalanceSql.append(" AND a.year_month_date = ?" + paramsNo);
             params.put(paramsNo, getLastYearMonthByBeginDate(beginDate));
             paramsNo++;
@@ -309,7 +309,7 @@ public class QueryDetailAccountServiceImpl implements QueryDetailAccountService 
         String accBookType = CurrentUser.getCurrentLoginAccountType();//session获取
         String accBookCode = CurrentUser.getCurrentLoginAccount();//session获取
 
-        StringBuffer initialBalanceSql = new StringBuffer("SELECT DISTINCT cast(IFNULL(a.balance_dest,0.00) as char) AS 'initialBalance',cast(IFNULL(a.debit_dest_year,0.00) as char) AS 'debitYearTotal',cast(IFNULL(a.credit_dest_year,0.00) as char) AS 'creditYearTotal' FROM accarticlebalance a WHERE 1=1");
+        StringBuffer initialBalanceSql = new StringBuffer("SELECT * FROM accarticlebalance a WHERE 1=1");
         StringBuffer sql = new StringBuffer("SELECT DISTINCT am.voucher_date AS 'voucherDate',am.voucher_no AS 'voucherNo',am.year_month_date AS 'yearMonthDate',ac.suffix_no AS 'suffixNo',ac.remark AS 'remark',ac.direction_other AS directionOther,ac.d01 AS 'unitPrice',ac.d02 AS 'amount',CAST(IFNULL(ac.debit_dest,0.00) AS char) AS 'debitDest',CAST(IFNULL(ac.credit_dest,0.00) AS char) AS 'creditDest',CAST((IFNULL(ac.debit_dest,0.00)-IFNULL(ac.credit_dest,0.00)) AS char) AS 'balanceDest' FROM accsubvoucher ac LEFT JOIN accmainvoucher am ON am.center_code = ac.center_code AND am.branch_code = ac.branch_code AND am.acc_book_type = ac.acc_book_type AND am.acc_book_code = ac.acc_book_code AND am.year_month_date = ac.year_month_date AND am.voucher_no = ac.voucher_no WHERE 1=1");
 
         int paramsNo = 1;
@@ -499,7 +499,8 @@ public class QueryDetailAccountServiceImpl implements QueryDetailAccountService 
         sql.append(sql2);
         sql.append(" ORDER BY voucherDate,voucherNo");
 
-        List<?> listByInitialBalanceSql = voucherRepository.queryBySqlSC(initialBalanceSql.toString(), params);
+        String tempSql = "select cast(IFNULL(a.balance_dest,0.00) as char) AS 'initialBalance',cast(IFNULL(a.debit_dest_year,0.00) as char) AS 'debitYearTotal',cast(IFNULL(a.credit_dest_year,0.00) as char) AS 'creditYearTotal'";
+        List<?> listByInitialBalanceSql = voucherRepository.queryBySqlSC(tempSql + "from (" + initialBalanceSql.toString() + ") a", params);
         List<?> listBySql = voucherRepository.queryBySqlSC(sql.toString(), params2);
 
         //期初余额
@@ -844,7 +845,7 @@ public class QueryDetailAccountServiceImpl implements QueryDetailAccountService 
     }
     @Override
     public void exportDatafz(HttpServletRequest request, HttpServletResponse response,String yearMonth, String beginDate, String endDate, String directionIdx,
-                      String specialNameP,String specialSuperCodeS,String directionOther,String itemName,String dateText,String otherName,String directionOtherName,String directionOthers){
+                             String specialNameP,String specialSuperCodeS,String directionOther,String itemName,String dateText,String otherName,String directionOtherName,String directionOthers){
         List<?> result = queryAssistList( yearMonth,  beginDate,  endDate,  directionIdx,  directionOther,  specialSuperCodeS,  specialNameP);
         ExcelUtil excelUtil = new ExcelUtil();
         excelUtil.exportDatadetailaccountfz(request,response,result, itemName, dateText, otherName, directionOtherName, directionOthers,directionIdx, Constant.MODELPATH);
