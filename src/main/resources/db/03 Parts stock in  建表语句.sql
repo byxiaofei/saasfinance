@@ -13,6 +13,7 @@ CREATE TABLE `bz_partsstock` (
                                `parts_analysis_code` VARCHAR(10) DEFAULT NULL COMMENT 'parts分析代码',
                                `business_date` VARCHAR(10) DEFAULT NULL  COMMENT '业务发生日期',
                                `po_no` VARCHAR(50) DEFAULT NULL COMMENT '采购订单编号',
+                               `dn_no` VARCHAR(50) DEFAULT NULL COMMENT 'DN号',
                                `quantity` DECIMAL(14,0) DEFAULT NULL COMMENT '入库数量',
                                `parts_unit_cost` DECIMAL(14,2) DEFAULT NULL COMMENT '配件单位成本',
                                `supplier_no` VARCHAR(50) DEFAULT NULL COMMENT '供应商编号',

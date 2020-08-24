@@ -34,6 +34,12 @@ public class PartsStock {
     private String businessDate;
     // 采购订单编号
     private String poNo;
+    // DN号
+    private String dnNo;
+
+
+
+
     //入库数量
     private Integer quantity;
     //配件单位成本
@@ -165,9 +171,13 @@ public class PartsStock {
     public void setOperationDate(String operationDate) {
         this.operationDate = operationDate;
     }
+    public String getDnNo() {
+        return dnNo;
+    }
 
-
-
+    public void setDnNo(String dnNo) {
+        this.dnNo = dnNo;
+    }
 
     @Override
     public String toString() {
@@ -183,12 +193,14 @@ public class PartsStock {
                 ", partsAnalysisCode='" + partsAnalysisCode + '\'' +
                 ", businessDate='" + businessDate + '\'' +
                 ", poNo='" + poNo + '\'' +
+                ", dnNo='" + dnNo + '\'' +
                 ", quantity=" + quantity +
                 ", partsUnitCost=" + partsUnitCost +
                 ", supplierNo='" + supplierNo + '\'' +
                 ", supplierDescription='" + supplierDescription + '\'' +
                 '}';
     }
+
 
 }
 

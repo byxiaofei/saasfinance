@@ -23,12 +23,12 @@ public class Constant {
     /**
      * 接口3  接收入库
      */
-    public static String RECEIVE_3= "Receive";
+    public static String RECEIVE_3= "RECEIVE";
 
     /**
      * 接口3  取消接收入库
      */
-    public static String UNRECEIVE_3= "UnReceive";
+    public static String UNRECEIVE_3= "UNRECEIVE";
 
 
     /**
@@ -71,29 +71,31 @@ public class Constant {
      * 接口数据的位置 行数
      * 表示 N 在 接口 3 的第一行
      */
-    public static Integer PARTSANALYSISCODE_N_NUM_3 = 1;
+    public static Integer PARTSANALYSISCODE_N_NUM_3 = 1-1;
     /**
      * 接口3 partsAnalysisCode = 'N'
      * 轮胎W
      */
     public static String PARTSANALYSISCODE_W_3 = "W";
-    public static Integer PARTSANALYSISCODE_W_NUM_3 = 2;
+    public static Integer PARTSANALYSISCODE_W_NUM_3 = 2-1;
 
     /**
      * 接口3 partsAnalysisCode = 'N'
      * 配件P
      */
     public static String PARTSANALYSISCODE_P_3 = "P";
-    public static Integer PARTSANALYSISCODE_P_NUM_3 = 3;
+    public static Integer PARTSANALYSISCODE_P_NUM_3 = 3-1;
 
     /**
      * 接口3 partsAnalysisCode = 'N'
      * 精品配件Z
      */
     public static String PARTSANALYSISCODE_Z_3 = "Z";
-    public static Integer PARTSANALYSISCODE_Z_NUM_3 = 4;
-
-
+    public static Integer PARTSANALYSISCODE_Z_NUM_3 = 4-1;
+    /**
+     * 接口 3 的第5行
+     */
+    public static Integer PARTSANALYSISCODE_5_NUM_3 = 5-1;
 
 
 }

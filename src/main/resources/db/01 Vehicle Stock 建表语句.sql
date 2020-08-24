@@ -75,7 +75,7 @@ VALUES('GS0036160','1243/12/10/','库存商品-配件-非MB件-油料','BM0000',
 INSERT INTO bz_configureManage(branch_code,subject_code,subject_name,special_code,special_super_code,interface_info,interface_type,create_time,temp1)
 VALUES('GS0036160','1243/11/20/','库存商品-配件-MB配件-精品件','BM0000','BM','3','1','2020-08-12 18:00:00','4');
 INSERT INTO bz_configureManage(branch_code,subject_code,subject_name,special_code,special_super_code,interface_info,interface_type,create_time,temp1)
-VALUES('GS0036160','21/21/02/10/','应付账款-系统用户-GRIR-配件','BM1001','BM','3','1','2020-08-12 18:00:00','5');
+VALUES('GS0036160','2121/02/10/','应付账款-系统用户-GRIR-配件','BM1001','BM','3','1','2020-08-12 18:00:00','5');
 
 
 
@@ -89,6 +89,6 @@ VALUES('GS0036160','1243/12/10/','库存商品-配件-非MB件-油料','BM0000',
 INSERT INTO bz_configureManage(branch_code,subject_code,subject_name,special_code,special_super_code,interface_info,interface_type,create_time,temp1)
 VALUES('GS0036160','1243/11/20/','库存商品-配件-MB配件-精品件','BM0000','BM','3','2','2020-08-12 18:00:00','4');
 INSERT INTO bz_configureManage(branch_code,subject_code,subject_name,special_code,special_super_code,interface_info,interface_type,create_time,temp1)
-VALUES('GS0036160','21/21/02/10/','应付账款-系统用户-GRIR-配件','BM1001','BM','3','2','2020-08-12 18:00:00','5');
+VALUES('GS0036160','2121/02/10/','应付账款-系统用户-GRIR-配件','BM1001','BM','3','2','2020-08-12 18:00:00','5');
 
 

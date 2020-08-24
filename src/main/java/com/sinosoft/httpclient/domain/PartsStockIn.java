@@ -6,6 +6,10 @@ public class PartsStockIn {
 
     //零件编号
     private String partsNo;
+
+    //DN 号
+    private String dnNo;
+
     //说明 长度200
     private String description;
     //原厂配件标记 长度 10
@@ -106,6 +110,14 @@ public class PartsStockIn {
         this.supplierDescription = supplierDescription;
     }
 
+    public String getDnNo() {
+        return dnNo;
+    }
+
+    public void setDnNo(String dnNo) {
+        this.dnNo = dnNo;
+    }
+
     @Override
     public String toString() {
         return "PartsStockIn{" +
@@ -115,6 +127,7 @@ public class PartsStockIn {
                 ", partsAnalysisCode='" + partsAnalysisCode + '\'' +
                 ", businessDate='" + businessDate + '\'' +
                 ", poNo='" + poNo + '\'' +
+                ", dnNo='" + dnNo + '\'' +
                 ", quantity=" + quantity +
                 ", partsUnitCost=" + partsUnitCost +
                 ", supplierNo='" + supplierNo + '\'' +

@@ -32,8 +32,11 @@ public class PartsStockController {
         Map<String, Long> uriMap = new HashMap<>(6);
         Long startTime = new Date().getTime();   //开始时间需要传参
         Long endTime = new Date().getTime();
-        uriMap.put("startTime", Long.parseLong("1596001003220"));
-        uriMap.put("endTime", endTime);
+        //uriMap.put("startTime",endTime-86400000*4); //86400000 为一天的毫秒数
+        //uriMap.put("endTime", endTime);
+        uriMap.put("startTime",endTime-86400000*7);
+        uriMap.put("endTime",endTime-86400000*5);
+
 
         String returnStr = httpClient.sendGet(url, uriMap);
         System.out.println(returnStr);

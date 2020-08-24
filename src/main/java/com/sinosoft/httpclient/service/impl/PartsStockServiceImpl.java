@@ -12,6 +12,7 @@ import com.sinosoft.util.DateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+
 public class PartsStockServiceImpl implements PartsStockService {
     @Resource
     private PartsStockRespository partsStockRespository;
@@ -47,8 +49,10 @@ public class PartsStockServiceImpl implements PartsStockService {
      * @return
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public String savePartsStockListList(List<JsonToPartsStock> jsonTopartsStockList) {
         saveinterface(jsonTopartsStockList);
+
         // 1 拿到解析数据，直接进行解析处理
         for(JsonToPartsStock jsonToPartsStock : jsonTopartsStockList ){
             errorMsg = new StringBuilder();
@@ -96,6 +100,7 @@ public class PartsStockServiceImpl implements PartsStockService {
                 partsStock.setPartsNo(temp1.getPartsNo());
                 partsStock.setPartsUnitCost(temp1.getPartsUnitCost());
                 partsStock.setPoNo(temp1.getPoNo());
+                partsStock.setDnNo(temp1.getDnNo());
                 partsStock.setQuantity(temp1.getQuantity());
                 partsStock.setSupplierDescription(temp1.getSupplierDescription());
                 partsStock.setSupplierNo(temp1.getSupplierNo());
@@ -258,7 +263,7 @@ public class PartsStockServiceImpl implements PartsStockService {
     private void processData(JsonToPartsStock jsonToPartsStock ,List<PartsStockIn> partsStockIns, String interfaceInfo, String interfaceType, String branchCode, List<VoucherDTO> list2, List<VoucherDTO> list3) {
         //获取数据再去数据库中比对信息是否存在。
         List<ConfigureManage> configureManages = configureManageRespository.queryConfigureManagesByInterfaceInfoAndInterfaceTypeAndBranchCode(interfaceInfo, interfaceType,branchCode);
-
+        BigDecimal cost2 =BigDecimal.ZERO;
 
         for(int count = 0 ;count<partsStockIns.size()+1; count++){  //w p n
 
@@ -268,7 +273,6 @@ public class PartsStockServiceImpl implements PartsStockService {
             String subjectInfo = "";
             String specialSuperCodes = "";
             String specialCode = "";
-            BigDecimal cost2 =BigDecimal.ZERO;
             PartsStockIn partsStockIn ;
             if(count < partsStockIns.size()){
                  partsStockIn = partsStockIns.get(count);
@@ -287,29 +291,29 @@ public class PartsStockServiceImpl implements PartsStockService {
                     subjectInfo = configureManages.get(Constant.PARTSANALYSISCODE_W_NUM_3).getId().getSubjectCode();
                     specialSuperCodes = configureManages.get(Constant.PARTSANALYSISCODE_W_NUM_3).getSpecialSuperCode().trim();
                     specialCode = configureManages.get(Constant.PARTSANALYSISCODE_W_NUM_3).getSpecialCode();
-                }else if(partsStockIn.getPartsAnalysisCode().equals(Constant.PARTSANALYSISCODE_Z_3)){
+                }else { //测试是 发现有 W 出现 ，暂时先这么处理
                     subjectName = configureManages.get(Constant.PARTSANALYSISCODE_Z_NUM_3).getSubjectName();
                     subjectInfo = configureManages.get(Constant.PARTSANALYSISCODE_Z_NUM_3).getId().getSubjectCode();
                     specialSuperCodes = configureManages.get(Constant.PARTSANALYSISCODE_Z_NUM_3).getSpecialSuperCode().trim();
                     specialCode = configureManages.get(Constant.PARTSANALYSISCODE_Z_NUM_3).getSpecialCode();
                 }
                 String cost = new BigDecimal(partsStockIn.getQuantity()).multiply(partsStockIn.getPartsUnitCost()).toString();
-                cost2.add(new BigDecimal(cost));
+                cost2 = cost2.add(new BigDecimal(cost));
                 voucherDTO1.setDebit(cost);
                 voucherDTO1.setCredit("0.00");
             }else{
                  partsStockIn = partsStockIns.get(0);
-                subjectName = configureManages.get(5).getSubjectName();
-                subjectInfo = configureManages.get(5).getId().getSubjectCode();
-                specialSuperCodes = configureManages.get(5).getSpecialSuperCode().trim();
-                specialCode = configureManages.get(5).getSpecialCode();
+                subjectName = configureManages.get(Constant.PARTSANALYSISCODE_5_NUM_3).getSubjectName();
+                subjectInfo = configureManages.get(Constant.PARTSANALYSISCODE_5_NUM_3).getId().getSubjectCode();
+                specialSuperCodes = configureManages.get(Constant.PARTSANALYSISCODE_5_NUM_3).getSpecialSuperCode().trim();
+                specialCode = configureManages.get(Constant.PARTSANALYSISCODE_5_NUM_3).getSpecialCode();
                 //循环累加
                 voucherDTO1.setDebit("0.00");
                 voucherDTO1.setCredit(cost2.toString());
             }
 
             //TODO 可能需要替换
-            voucherDTO1.setRemarkName(partsStockIn.getPoNo());
+            voucherDTO1.setRemarkName(partsStockIn.getDnNo() == null ? "Dn号为空，请手工填入！" : partsStockIn.getDnNo());
 
             voucherDTO1.setSubjectCode(subjectInfo);
             voucherDTO1.setSubjectName(subjectName);
@@ -339,6 +343,7 @@ public class PartsStockServiceImpl implements PartsStockService {
         }
 
     }
+
 
 
     /**
@@ -396,18 +401,19 @@ public class PartsStockServiceImpl implements PartsStockService {
             errorMsg.append("业务日期不能为空");
         }
         if(jsonToPartsStock.getTransactionType() == null || "".equals(jsonToPartsStock.getTransactionType())){
-            errorMsg.append("业务类型不能为空");
+            errorMsg.append("业务类型不能为空|");
         }
-        if(partsStockIn.getQuantity() == null || partsStockIn.getQuantity()>= 0){
-            errorMsg.append("入库数量不能为空");
+        if(partsStockIn.getQuantity() == null ){
+            errorMsg.append("入库数量不能为空|");
         }
-        if(partsStockIn.getPartsUnitCost() == null || partsStockIn.getPartsUnitCost().compareTo(BigDecimal.ZERO) == 1 ){
-            errorMsg.append("配件单位成本不能为空");
+        // || partsStockIn.getPartsUnitCost().compareTo(BigDecimal.ZERO) == -1
+        if(partsStockIn.getPartsUnitCost() == null  ){
+            errorMsg.append("配件单位成本不能为空|");
         }
-        //dnNo（DN 号） TODO 如果有 dnNo 需要修改过来 DN号
-        if(partsStockIn.getPoNo()== null || "".equals(partsStockIn.getPoNo())){
-            errorMsg.append("DN号不能为空");
-        }
+        //dnNo（DN 号）
+       /* if(partsStockIn.getDnNo()== null || "".equals(partsStockIn.getDnNo())){
+            errorMsg.append("DN号不能为空|");
+        }*/
 
         return  errorMsg.toString();
     }
