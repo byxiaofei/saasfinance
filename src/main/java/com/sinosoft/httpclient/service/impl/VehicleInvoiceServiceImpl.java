@@ -13,6 +13,7 @@ import com.sinosoft.httpclient.service.VehicleInvoiceService;
 import com.sinosoft.repository.BranchInfoRepository;
 import com.sinosoft.repository.SubjectRepository;
 import com.sinosoft.repository.account.AccMonthTraceRespository;
+import com.sinosoft.service.InterfaceInfoService;
 import com.sinosoft.service.VoucherService;
 import com.sinosoft.service.impl.DataDockingServiceImpl;
 import com.sinosoft.util.DateUtil;
@@ -56,112 +57,108 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
     @Resource
     private TaskSchedulingDetailsInfoRespository taskSchedulingDetailsInfoRespository;
 
+    @Resource
+    private InterfaceInfoService interfaceInfoService;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public String saveVehicleInvoiceList(List<VehicleInvoice> vehicleInvoiceList) {
+    public String saveVehicleInvoiceList(List<VehicleInvoice> vehicleInvoiceList,String loadTime) {
         // 拿到解析数据，直接进行解析处理
-        List<Map<String,Object>> listResultMaps = new ArrayList<>();
-        // 错误日志返回信息。
-        StringBuilder errorAllMessage = new StringBuilder();
-        for(int i = 0 ; i < vehicleInvoiceList.size();i++){
-            VehicleInvoice vehicleInvoice = vehicleInvoiceList.get(i);
-            StringBuilder errorMsg = new StringBuilder();
-            // 看当前必要信息是否都不为空。
-            String judgeMsg = judgeInterfaceInfoQuerstion(vehicleInvoice, errorMsg);
-            if(!"".equals(judgeMsg)){
-                logger.error(judgeMsg);
-                errorAllMessage.append("第i"+1+"的错误问题为："+judgeMsg);
-                continue;
-            }
-            // 1. 看当前信息是什么类型的
-            String invoiceType = vehicleInvoice.getInvoiceType();
-            String interfaceInfo = "2";
-            if("Invoice".equals(invoiceType)){
-                // 结账 找接口2 。类型1/2 (科目与退账相同，金额方向不同)
-                String interfaceType = "1";
-                Map<String,Object> stringObjectMap = convertBussinessToAccounting(vehicleInvoice,errorMsg,interfaceInfo,interfaceType);
-                String resultMsg = (String) stringObjectMap.get("resultMsg");
-                if (!"success".equals(resultMsg)){
-                    logger.error(resultMsg);
-                    errorAllMessage.append("第i"+1+"Invoice类型错误问题为："+judgeMsg);
+        try {
+            List<Map<String,Object>> listResultMaps = new ArrayList<>();
+            // 错误日志返回信息。
+            String branchInfo = null;
+            StringBuilder errorAllMessage = new StringBuilder();
+            for(int i = 0 ; i < vehicleInvoiceList.size();i++){
+                VehicleInvoice vehicleInvoice = vehicleInvoiceList.get(i);
+                StringBuilder errorMsg = new StringBuilder();
+                branchInfo = vehicleInvoice.getCompanyNo();
+                // 看当前必要信息是否都不为空。
+                String judgeMsg = judgeInterfaceInfoQuerstion(vehicleInvoice, errorMsg);
+                if(!"".equals(judgeMsg)){
+                    logger.error(judgeMsg);
+                    errorAllMessage.append("第"+(i+1)+"的错误问题为："+judgeMsg);
                     continue;
                 }
-                // 变为第二个接口信息
-                interfaceType = "2";
-                Map<String,Object> stringObjectMap1 = convertBussinessToAccounting(vehicleInvoice,errorMsg,interfaceInfo,interfaceType);
-                String resultMsg1 = (String) stringObjectMap1.get("resultMsg");
-                if (!"success".equals(resultMsg1)){
-                    logger.error(resultMsg1);
-                    errorAllMessage.append("第i"+1+"Invoice类型错误问题为："+judgeMsg);
-                    continue;
-                }
+                // 1. 看当前信息是什么类型的
+                String invoiceType = vehicleInvoice.getInvoiceType();
+                String interfaceInfo = "2";
+                if("Invoice".equals(invoiceType)){
+                    // 结账 找接口2 。类型1/2 (科目与退账相同，金额方向不同)
+                    String interfaceType = "1";
+                    Map<String,Object> stringObjectMap = convertBussinessToAccounting(vehicleInvoice,errorMsg,interfaceInfo,interfaceType);
+                    String resultMsg = (String) stringObjectMap.get("resultMsg");
+                    if (!"success".equals(resultMsg)){
+                        logger.error(resultMsg);
+                        errorAllMessage.append("第"+(i+1)+"Invoice类型错误问题为："+judgeMsg);
+                        continue;
+                    }
+                    // 变为第二个接口信息
+                    interfaceType = "2";
+                    Map<String,Object> stringObjectMap1 = convertBussinessToAccounting(vehicleInvoice,errorMsg,interfaceInfo,interfaceType);
+                    String resultMsg1 = (String) stringObjectMap1.get("resultMsg");
+                    if (!"success".equals(resultMsg1)){
+                        logger.error(resultMsg1);
+                        errorAllMessage.append("第"+(i+1)+"Invoice类型错误问题为："+judgeMsg);
+                        continue;
+                    }
 
-                // 把两个东西都放入到List集合中
-                listResultMaps.add(stringObjectMap);
-                listResultMaps.add(stringObjectMap1);
+                    // 把两个东西都放入到List集合中
+                    listResultMaps.add(stringObjectMap);
+                    listResultMaps.add(stringObjectMap1);
 
-            }else{
-                // 退账 找接口2. 类型3/4 (科目与结账相同，金额方向不同)
-                String interfaceType = "3";
-                Map<String,Object> stringObjectMap = convertBussinessToAccounting(vehicleInvoice,errorMsg,interfaceInfo,interfaceType);
-                String resultMsg = (String) stringObjectMap.get("resultMsg");
-                if (!"success".equals(resultMsg)){
-                    logger.error(resultMsg);
-                    // 写个方法直接插入扔库里信息。
-                    errorAllMessage.append("第i"+1+"Credit类型错误问题为："+judgeMsg);
-                    return "fail";
+                }else{
+                    // 退账 找接口2. 类型3/4 (科目与结账相同，金额方向不同)
+                    String interfaceType = "3";
+                    Map<String,Object> stringObjectMap = convertBussinessToAccounting(vehicleInvoice,errorMsg,interfaceInfo,interfaceType);
+                    String resultMsg = (String) stringObjectMap.get("resultMsg");
+                    if (!"success".equals(resultMsg)){
+                        logger.error(resultMsg);
+                        // 写个方法直接插入扔库里信息。
+                        errorAllMessage.append("第"+(i+1)+"个Credit类型错误问题为："+judgeMsg);
+                        continue;
+                    }
+                    // 变为第二个接口信息
+                    interfaceType = "4";
+                    Map<String,Object> stringObjectMap1 = convertBussinessToAccounting(vehicleInvoice,errorMsg,interfaceInfo,interfaceType);
+                    String resultMsg1 = (String) stringObjectMap1.get("resultMsg");
+                    if (!"success".equals(resultMsg1)){
+                        logger.error(resultMsg1);
+                        errorAllMessage.append("第"+(i+1)+"个Credit类型错误问题为："+judgeMsg);
+                        continue;
+                    }
+                    listResultMaps.add(stringObjectMap);
+                    listResultMaps.add(stringObjectMap1);
                 }
-//                List<VoucherDTO> list2 = (List<VoucherDTO>) stringObjectMap.get("list2");
-//                List<VoucherDTO> list3 = (List<VoucherDTO>) stringObjectMap.get("list3");
-//                VoucherDTO dto1 = (VoucherDTO) stringObjectMap.get("dto");
-//                String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto1);
-//                if(!"success".equals(voucherNo)){
-//                    logger.error(voucherNo);
-//                    return "fail";
-//                }
-                // 变为第二个接口信息
-                interfaceType = "4";
-                Map<String,Object> stringObjectMap1 = convertBussinessToAccounting(vehicleInvoice,errorMsg,interfaceInfo,interfaceType);
-                String resultMsg1 = (String) stringObjectMap1.get("resultMsg");
-                if (!"success".equals(resultMsg1)){
-                    logger.error(resultMsg1);
-                    errorAllMessage.append("第i"+1+"Credit类型错误问题为："+judgeMsg);
-                    return "fail";
+            }
+            System.out.println("---------------《当前时间范围内的正确的数据，已全部保存到List集合中，下面开始保存入库！》------------------");
+            // 当前时间范围内解析到的所以数据放入到对应的对接接口表中存放信息。
+            for(int i = 0 ; i < listResultMaps.size(); i++ ){
+                Map<String, Object> stringObjectMap = listResultMaps.get(i);
+                List<VoucherDTO> list2 = (List<VoucherDTO>) stringObjectMap.get("list2");
+                List<VoucherDTO> list3 = (List<VoucherDTO>) stringObjectMap.get("list3");
+                VoucherDTO dto = (VoucherDTO) stringObjectMap.get("dto");
+                String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto);
+                if(!"success".equals(voucherNo)){
+                    logger.error(voucherNo);
+                    errorAllMessage.append("保存当前"+loadTime+"的"+(i+1)+"数据凭证出错");
                 }
-//                List<VoucherDTO> list4 = (List<VoucherDTO>) stringObjectMap1.get("list2");
-//                List<VoucherDTO> list5 = (List<VoucherDTO>) stringObjectMap1.get("list3");
-//                VoucherDTO dto2 = (VoucherDTO) stringObjectMap1.get("dto");
-//                String voucherNo1 = voucherService.saveVoucherForFourS(list4, list5, dto2);
-//                if(!"success".equals(voucherNo1)){
-//                    logger.error(voucherNo1);
-//                    return "fail";
-//                }
-                listResultMaps.add(stringObjectMap);
-                listResultMaps.add(stringObjectMap1);
             }
-        }
-        System.out.println("---------------《当前时间范围内的正确的数据，已全部保存到List集合中，下面开始保存入库！》------------------");
-        // 当前时间范围内解析到的所以数据放入到对应的对接接口表中存放信息。
-        for(int i = 0 ; i < listResultMaps.size(); i++ ){
-            Map<String, Object> stringObjectMap = listResultMaps.get(i);
-            List<VoucherDTO> list2 = (List<VoucherDTO>) stringObjectMap.get("list2");
-            List<VoucherDTO> list3 = (List<VoucherDTO>) stringObjectMap.get("list3");
-            VoucherDTO dto = (VoucherDTO) stringObjectMap.get("dto");
-            String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto);
-            if(!"success".equals(voucherNo)){
-                logger.error(voucherNo);
-                errorAllMessage.append("保存凭证出错");
+            System.out.println("--------------------  上述已经对正确的所有数据进行了入库保存！  ----------------------------");
+            vehicleInvoiceRespository.saveAll(vehicleInvoiceList);
+            vehicleInvoiceRespository.flush();
+            System.out.println("---------------------当前时间范围内的数据，已经全部保存到对接接口表中---------------------------");
+            if("".equals(errorAllMessage.toString())){
+                interfaceInfoService.successSave(branchInfo,loadTime,"当前时间段内的数据没有问题，全部入库！");
+                return "success";
             }
+            interfaceInfoService.failSave(branchInfo,loadTime,"当前时间段内的信息个别信息有问题"+errorAllMessage.toString());
+            return "halfsuccess";
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("当前错误信息为:"+e);
+            return "fali";
         }
-        System.out.println("--------------------  上述已经对正确的所有数据进行了入库保存！  ----------------------------");
-        vehicleInvoiceRespository.saveAll(vehicleInvoiceList);
-        vehicleInvoiceRespository.flush();
-        System.out.println("---------------------当前时间范围内的数据，已经全部保存到对接接口表中---------------------------");
-        if("".equals(errorAllMessage.toString())){
-            return "success";
-        }
-        return errorAllMessage.toString();
     }
 
     @Override
@@ -179,13 +176,13 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
         if(vehicleInvoice.getOperationDate() == null || "".equals(vehicleInvoice.getOperationDate())){
             errorMsg.append("业务日期不能为空");
         }
-        if(vehicleInvoice.getVehicleCost() == null || "".equals(vehicleInvoice.getVehicleCost())){
+        if(vehicleInvoice.getVehicleCost().toString() == null || "".equals(vehicleInvoice.getVehicleCost().toString())){
             errorMsg.append("车辆成本金额不能为空");
         }
-        if(vehicleInvoice.getVehiclePrice() == null || "".equals(vehicleInvoice.getVehiclePrice())){
+        if(vehicleInvoice.getVehiclePrice().toString() == null || "".equals(vehicleInvoice.getVehiclePrice().toString())){
             errorMsg.append("车辆价格合计金额不能为空");
         }
-        if(vehicleInvoice.getVatTax() == null || "".equals(vehicleInvoice.getVatTax())){
+        if(vehicleInvoice.getVatTax().toString() == null || "".equals(vehicleInvoice.getVatTax().toString())){
             errorMsg.append("增值税金额不能为空");
         }
         if(vehicleInvoice.getInvoiceType() == null || "".equals(vehicleInvoice.getInvoiceType())){
@@ -291,164 +288,170 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
         // 这里给1/2 来判断生成那个类型的数据凭证信息。
         // 开始科目代码和专项信息存放整理，方便后续直接保存入库。
         // 之前是通过科目代码找专项一级，在通过专项一级找对应的字段，来拿到对接文档中的数据，并拿到数据再去数据库中比对信息是否存在。
-        List<ConfigureManage> configureManages = configureManageRespository.queryConfigureManagesByInterfaceInfoAndInterfaceTypeAndBranchCode(interfaceInfo, interfaceType,branchCode);
+        List<ConfigureManage> configureManages = configureManageRespository.queryConfigureManagesByInterfaceInfoAndInterfaceTypeAndBranchCode(interfaceInfo, interfaceType, branchCode);
         // 这里科目信息开始已经有顺序了。直接按照顺序给值即可。 （即为：分录的形式）
-        for (int i = 0; i < configureManages.size(); i++) {
-            // 当前这里意为：entry的分录信息一样
-            VoucherDTO voucherDTO1 = new VoucherDTO();
-            VoucherDTO voucherDTO2 = new VoucherDTO();
-            // 对科目的校验
-            String subjectName = configureManages.get(i).getSubjectName();
-            String subjectInfo = configureManages.get(i).getId().getSubjectCode();
-            String resultCode = checkSubjectCodePassMusterBySubjectCodeAll(subjectInfo, accbookCode);
-            if (resultCode != null && !"".equals(resultCode)) {
-                if ("notExist".equals(resultCode)) {
-                    errorMsg.append(subjectInfo + "不存在，请重新输入！");
-                    resultMap.put("resultMsg", errorMsg.toString());
-                    return resultMap;
-                }
-                if ("notEnd".equals(resultCode)) {
-                    errorMsg.append(subjectInfo + "不是末级科目，请重新输入！");
-                    resultMap.put("resultMsg", errorMsg.toString());
-                    return resultMap;
-                }
-                if ("notUse".equals(resultCode)) {
-                    errorMsg.append(subjectInfo + "已停用，请重新输入！");
-                    resultMap.put("resultMsg", errorMsg.toString());
-                    return resultMap;
-                }
-            }
+        if (configureManages.size() > 0) {
 
-            // 当前配置表中的专项字段为专项信息的末级代码，并非一级。
-            // 之前由科目代码找到挂接的一级专项，再由一级专项去找s段，并在s段取出专项末级信息。
-            // 当前直接用配置好的专项信息，校验是否启用即可， 不校验配置的专项信息是否符合科目挂接的一级专项。
-            String specialInfo = configureManages.get(i).getSpecialCode();
-            if (specialInfo != null && !"".equals(specialInfo)) {
-                String[] specialInfos = specialInfo.split(",");
-                for (int j = 0; j < specialInfos.length; j++) {
-                    String specialJudgeInfo = voucherService.checkSpecialCodePassMusterBySpecialCode(specialInfos[j], accbookCode);
-                    if (specialJudgeInfo != null && !"".equals(specialJudgeInfo)) {
-                        if ("notExist".equals(specialJudgeInfo)) {
-                            errorMsg.append("专项：" + specialInfos[j] + " 不存在，请重新输入！");
-                            resultMap.put("resultMsg", errorMsg.toString());
-                            return resultMap;
-                        }
-                        if ("notEnd".equals(specialJudgeInfo)) {
-                            errorMsg.append(specialInfos[j] + "不是末级专项，请重新输入！");
-                            resultMap.put("resultMsg", errorMsg.toString());
-                            return resultMap;
-                        }
-                        if ("notUse".equals(specialJudgeInfo)) {
-                            errorMsg.append(specialInfos[j] + "专项已停用，请重新输入！");
-                            resultMap.put("resultMsg", errorMsg.toString());
-                            return resultMap;
+            for (int i = 0; i < configureManages.size(); i++) {
+                // 当前这里意为：entry的分录信息一样
+                VoucherDTO voucherDTO1 = new VoucherDTO();
+                VoucherDTO voucherDTO2 = new VoucherDTO();
+                // 对科目的校验
+                String subjectName = configureManages.get(i).getSubjectName();
+                String subjectInfo = configureManages.get(i).getId().getSubjectCode();
+                String resultCode = checkSubjectCodePassMusterBySubjectCodeAll(subjectInfo, accbookCode);
+                if (resultCode != null && !"".equals(resultCode)) {
+                    if ("notExist".equals(resultCode)) {
+                        errorMsg.append(subjectInfo + "不存在，请重新输入！");
+                        resultMap.put("resultMsg", errorMsg.toString());
+                        return resultMap;
+                    }
+                    if ("notEnd".equals(resultCode)) {
+                        errorMsg.append(subjectInfo + "不是末级科目，请重新输入！");
+                        resultMap.put("resultMsg", errorMsg.toString());
+                        return resultMap;
+                    }
+                    if ("notUse".equals(resultCode)) {
+                        errorMsg.append(subjectInfo + "已停用，请重新输入！");
+                        resultMap.put("resultMsg", errorMsg.toString());
+                        return resultMap;
+                    }
+                }
+
+                // 当前配置表中的专项字段为专项信息的末级代码，并非一级。
+                // 之前由科目代码找到挂接的一级专项，再由一级专项去找s段，并在s段取出专项末级信息。
+                // 当前直接用配置好的专项信息，校验是否启用即可， 不校验配置的专项信息是否符合科目挂接的一级专项。
+                String specialInfo = configureManages.get(i).getSpecialCode();
+                if (specialInfo != null && !"".equals(specialInfo)) {
+                    String[] specialInfos = specialInfo.split(",");
+                    for (int j = 0; j < specialInfos.length; j++) {
+                        String specialJudgeInfo = voucherService.checkSpecialCodePassMusterBySpecialCode(specialInfos[j], accbookCode);
+                        if (specialJudgeInfo != null && !"".equals(specialJudgeInfo)) {
+                            if ("notExist".equals(specialJudgeInfo)) {
+                                errorMsg.append("专项：" + specialInfos[j] + " 不存在，请重新输入！");
+                                resultMap.put("resultMsg", errorMsg.toString());
+                                return resultMap;
+                            }
+                            if ("notEnd".equals(specialJudgeInfo)) {
+                                errorMsg.append(specialInfos[j] + "不是末级专项，请重新输入！");
+                                resultMap.put("resultMsg", errorMsg.toString());
+                                return resultMap;
+                            }
+                            if ("notUse".equals(specialJudgeInfo)) {
+                                errorMsg.append(specialInfos[j] + "专项已停用，请重新输入！");
+                                resultMap.put("resultMsg", errorMsg.toString());
+                                return resultMap;
+                            }
                         }
                     }
                 }
+
+                // 通过接口类型来区分，金额的走向。
+                if ("1".equals(interfaceType)) {
+                    // 不一样的接口+接口类型，这里判断的金额不同。
+                    if (i + 1 == 1) {
+                        voucherDTO1.setDebit(vehicleInvoice.getVehiclePrice().toString());
+                        voucherDTO1.setCredit("0.00");
+                    } else if (i + 1 == 2) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit(vehicleInvoice.getVehiclePrice().toString());
+                    } else if (i + 1 == 3) {
+                        voucherDTO1.setDebit(vehicleInvoice.getVehicleCost().toString());
+                        voucherDTO1.setCredit("0.00");
+                    } else if (i + 1 == 4) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit(vehicleInvoice.getVehicleCost().toString());
+                    } else if (i + 1 == 5) {
+                        voucherDTO1.setDebit("1.00");
+                        voucherDTO1.setCredit("0.00");
+                    } else if (i + 1 == 6) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit("1.00");
+                    } else if (i + 1 == 7) {
+                        voucherDTO1.setDebit("1.00");
+                        voucherDTO1.setCredit("0.00");
+                    } else if (i + 1 == 8) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit("1.00");
+                    }
+                } else if ("2".equals(interfaceType)) {
+                    // 不一样的接口+接口类型，这里判断的金额不同。
+                    if (i == 0) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit(vehicleInvoice.getVehiclePrice().toString());
+                    } else if (i == 1) {
+                        // 当前为1131/11/01 金额为求和
+                        String sumAmount = vehicleInvoice.getVehiclePrice().add(vehicleInvoice.getVatTax()).toString();
+                        voucherDTO1.setDebit(sumAmount);
+                        voucherDTO1.setCredit("0.00");
+                    } else if (i == 2) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit(vehicleInvoice.getVatTax().toString());
+                    }
+                } else if ("3".equals(interfaceType)) {
+                    if (i + 1 == 1) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit(vehicleInvoice.getVehiclePrice().toString());
+                    } else if (i + 1 == 2) {
+                        voucherDTO1.setDebit(vehicleInvoice.getVehiclePrice().toString());
+                        voucherDTO1.setCredit("0.00");
+                    } else if (i + 1 == 3) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit(vehicleInvoice.getVehicleCost().toString());
+                    } else if (i + 1 == 4) {
+                        voucherDTO1.setDebit(vehicleInvoice.getVehicleCost().toString());
+                        voucherDTO1.setCredit("0.00");
+                    } else if (i + 1 == 5) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit("1.00");
+                    } else if (i + 1 == 6) {
+                        voucherDTO1.setDebit("1.00");
+                        voucherDTO1.setCredit("0.00");
+                    } else if (i + 1 == 7) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit("1.00");
+                    } else if (i + 1 == 8) {
+                        voucherDTO1.setDebit("1.00");
+                        voucherDTO1.setCredit("0.00");
+                    }
+                } else if ("4".equals(interfaceType)) {
+                    // 不一样的接口+接口类型，这里判断的金额不同。
+                    if (i == 0) {
+                        voucherDTO1.setDebit(vehicleInvoice.getVehiclePrice().toString());
+                        voucherDTO1.setCredit("0.00");
+                    } else if (i == 1) {
+                        // 当前为1131/11/01 金额为求和
+                        String sumAmount = vehicleInvoice.getVehiclePrice().add(vehicleInvoice.getVatTax()).toString();
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit(sumAmount);
+                    } else if (i == 2) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setDebit(vehicleInvoice.getVatTax().toString());
+                        voucherDTO1.setCredit("0.00");
+                    }
+                }
+
+                voucherDTO1.setRemarkName(vehicleInvoice.getVin());
+                voucherDTO1.setSubjectCode(subjectInfo);
+                voucherDTO1.setSubjectName(subjectName);
+
+                voucherDTO2.setSubjectCodeS(subjectInfo);
+                voucherDTO2.setSubjectNameS(subjectName);
+
+                // 一级专项集合。专项信息配置一定注意顺序问题。
+                String specialSuperCodes = configureManages.get(i).getSpecialSuperCode().trim();
+                String specialCode = configureManages.get(i).getSpecialCode();
+                voucherDTO2.setSpecialSuperCodeS(specialSuperCodes);
+                // 当前 专项信息配置一定注意顺序问题末级、一级一致。
+                voucherDTO2.setSpecialCodeS(specialCode);
+                list2.add(voucherDTO1);
+                list3.add(voucherDTO2);
             }
-
-            // 通过接口类型来区分，金额的走向。
-            if ("1".equals(interfaceType)) {
-                // 不一样的接口+接口类型，这里判断的金额不同。
-                if (i + 1 == 1) {
-                    voucherDTO1.setDebit(vehicleInvoice.getVehiclePrice().toString());
-                    voucherDTO1.setCredit("0.00");
-                } else if (i + 1 == 2) {
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit(vehicleInvoice.getVehiclePrice().toString());
-                } else if (i + 1 == 3) {
-                    voucherDTO1.setDebit(vehicleInvoice.getVehicleCost().toString());
-                    voucherDTO1.setCredit("0.00");
-                } else if (i + 1 == 4) {
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit(vehicleInvoice.getVehicleCost().toString());
-                } else if (i + 1 == 5) {
-                    voucherDTO1.setDebit("1.00");
-                    voucherDTO1.setCredit("0.00");
-                } else if (i + 1 == 6) {
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit("1.00");
-                } else if (i + 1 == 7) {
-                    voucherDTO1.setDebit("1.00");
-                    voucherDTO1.setCredit("0.00");
-                } else if (i + 1 == 8) {
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit("1.00");
-                }
-            } else if ("2".equals(interfaceType)) {
-                // 不一样的接口+接口类型，这里判断的金额不同。
-                if (i == 0) {
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit(vehicleInvoice.getVehiclePrice().toString());
-                } else if (i == 1) {
-                    // 当前为1131/11/01 金额为求和
-                    String sumAmount = vehicleInvoice.getVehiclePrice().add(vehicleInvoice.getVatTax()).toString();
-                    voucherDTO1.setDebit(sumAmount);
-                    voucherDTO1.setCredit("0.00");
-                } else if (i == 2) {
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit(vehicleInvoice.getVatTax().toString());
-                }
-            }else if ("3".equals(interfaceType)){
-                if (i + 1 == 1) {
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit(vehicleInvoice.getVehiclePrice().toString());
-                } else if (i + 1 == 2) {
-                    voucherDTO1.setDebit(vehicleInvoice.getVehiclePrice().toString());
-                    voucherDTO1.setCredit("0.00");
-                } else if (i + 1 == 3) {
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit(vehicleInvoice.getVehicleCost().toString());
-                } else if (i + 1 == 4) {
-                    voucherDTO1.setDebit(vehicleInvoice.getVehicleCost().toString());
-                    voucherDTO1.setCredit("0.00");
-                } else if (i + 1 == 5) {
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit("1.00");
-                } else if (i + 1 == 6) {
-                    voucherDTO1.setDebit("1.00");
-                    voucherDTO1.setCredit("0.00");
-                } else if (i + 1 == 7) {
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit("1.00");
-                } else if (i + 1 == 8) {
-                    voucherDTO1.setDebit("1.00");
-                    voucherDTO1.setCredit("0.00");
-                }
-            }else if ("4".equals(interfaceType)){
-                // 不一样的接口+接口类型，这里判断的金额不同。
-                if (i == 0) {
-                    voucherDTO1.setDebit(vehicleInvoice.getVehiclePrice().toString());
-                    voucherDTO1.setCredit("0.00");
-                } else if (i == 1) {
-                    // 当前为1131/11/01 金额为求和
-                    String sumAmount = vehicleInvoice.getVehiclePrice().add(vehicleInvoice.getVatTax()).toString();
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit(sumAmount);
-                } else if (i == 2) {
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setDebit(vehicleInvoice.getVatTax().toString());
-                    voucherDTO1.setCredit("0.00");
-                }
-            }
-
-            voucherDTO1.setRemarkName(vehicleInvoice.getVin());
-            voucherDTO1.setSubjectCode(subjectInfo);
-            voucherDTO1.setSubjectName(subjectName);
-
-            voucherDTO2.setSubjectCodeS(subjectInfo);
-            voucherDTO2.setSubjectNameS(subjectName);
-
-            // 一级专项集合。专项信息配置一定注意顺序问题。
-            String specialSuperCodes = configureManages.get(i).getSpecialSuperCode().trim();
-            String specialCode = configureManages.get(i).getSpecialCode();
-            voucherDTO2.setSpecialSuperCodeS(specialSuperCodes);
-            // 当前 专项信息配置一定注意顺序问题末级、一级一致。
-            voucherDTO2.setSpecialCodeS(specialCode);
-            list2.add(voucherDTO1);
-            list3.add(voucherDTO2);
+        }else{
+            errorMsg.append("没有对应的configuremanage表中的管理信息。");
+            resultMap.put("resultMsg", errorMsg.toString());
+            return resultMap;
         }
-
         // 以上已经对一条凭证处理校验完毕
         resultMap.put("list2", list2);
         resultMap.put("list3", list3);

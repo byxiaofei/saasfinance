@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface PartsRequisitionService {
 
-    String savePartsRequisitionList(List<JsonToPartsRequisition> jsonToPartsRequisitionList);
+    String savePartsRequisitionList(List<JsonToPartsRequisition> jsonToPartsRequisitionList,String loadTime);
 }

@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 @Entity
-@Table(name = "bz_parts_verification")
+@Table(name = "bz_partsverification")
 public class PartsVerification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

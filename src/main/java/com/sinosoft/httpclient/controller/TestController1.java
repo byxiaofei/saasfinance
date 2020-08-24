@@ -112,6 +112,13 @@ public class TestController1 {
         System.out.println("当前为四位小数："+bigDecimal);
         System.out.println("当前为四舍五入小数:"+bigDecimal1.toString());
 
+        System.out.println("---------测试默认 StringBuilder 是什么状态----------");
+        StringBuilder stringBuilder = new StringBuilder();
+        System.out.println(stringBuilder);
+        System.out.println("---------结束测试 StringBuilder 是什么状态----------");
+
+
+
         try {
             Date date = new Date();
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -120,12 +127,24 @@ public class TestController1 {
             long time = date.getTime();
             System.out.println(time);
 
-            String yearMonth = "2020-08-14 00:00:00";
+            String yearMonth = "2020-08-06 00:00:00";
             String yearMonthLast = "2020-08-10 23:59:59";
             Date parse = sdf.parse(yearMonth);
             Date parse1 = sdf.parse(yearMonthLast);
-            System.out.println(parse.getTime());
-            System.out.println(parse1.getTime());
+            System.out.println("开始时间为:"+parse.getTime());
+            System.out.println("结束时间为:"+parse1.getTime());
+
+            System.out.println("----- 时间转换 --------");
+            String secondStartTime = String.valueOf(Long.valueOf("1595841099999"));
+
+            String secondEndTime = String.valueOf(Long.valueOf("1597039093220"));
+            Date date1 = new Date(Long.valueOf("1595241003220"));
+            String format1 = sdf.format(date1);
+            System.out.println(format1);
+            Date date2 = new Date(Long.valueOf("1597039093220"));
+            String format2 = sdf.format(date2);
+            System.out.println(format2);
+
         } catch (ParseException e) {
             e.printStackTrace();
         }

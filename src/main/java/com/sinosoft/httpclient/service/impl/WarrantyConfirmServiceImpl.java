@@ -5,6 +5,7 @@ import com.sinosoft.httpclient.domain.WarrantyConfirm;
 import com.sinosoft.httpclient.domain.WarrantyCreditNote;
 import com.sinosoft.httpclient.repository.WarrantyConfirmRespository;
 import com.sinosoft.httpclient.service.WarrantyConfirmService;
+import com.sinosoft.service.InterfaceInfoService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -14,6 +15,9 @@ import java.util.List;
 public class WarrantyConfirmServiceImpl implements WarrantyConfirmService {
     @Resource
     WarrantyConfirmRespository warrantyConfirmRespository;
+
+    @Resource
+    private InterfaceInfoService interfaceInfoService;
 
     @Override
     public String saveWarrantyConfirmList(List<JsonToWarrantyConfirm> jsonToWarrantyConfirmList) {

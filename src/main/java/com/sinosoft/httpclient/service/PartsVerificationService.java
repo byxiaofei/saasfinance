@@ -14,6 +14,6 @@ public interface PartsVerificationService {
      * @param partsVerificationList
      * @return
      */
-    String getPartsVerification(List<PartsVerificationDTO> partsVerificationList);
+    String getPartsVerification(List<PartsVerificationDTO> partsVerificationList,String loadTime);
 
 }

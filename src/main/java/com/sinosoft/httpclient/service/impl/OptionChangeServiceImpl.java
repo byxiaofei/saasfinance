@@ -11,14 +11,15 @@ import com.sinosoft.httpclient.service.OptionChangeService;
 import com.sinosoft.repository.BranchInfoRepository;
 import com.sinosoft.repository.SubjectRepository;
 import com.sinosoft.repository.account.AccMonthTraceRespository;
+import com.sinosoft.service.InterfaceInfoService;
 import com.sinosoft.service.VoucherService;
 import com.sinosoft.util.DateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import javax.transaction.Transactional;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -33,9 +34,6 @@ public class OptionChangeServiceImpl implements OptionChangeService {
 
     @Resource
     private BranchInfoRepository branchInfoRepository;
-
-//    @Resource  实体类禁止注入
-//    private OptionChange optionChange;
 
     @Resource
     private AccMonthTraceRespository accMonthTraceRespository;
@@ -53,7 +51,9 @@ public class OptionChangeServiceImpl implements OptionChangeService {
     @Resource
     private ConfigureManageRespository configureManageRespository;
 
-    @Transactional
+    @Resource
+    private InterfaceInfoService interfaceInfoService;
+
     @Override
     public String saveoptionChangeListTest(List<OptionChange> optionChangeList) {
         optionChangeRespository.saveAll(optionChangeList);
@@ -61,76 +61,83 @@ public class OptionChangeServiceImpl implements OptionChangeService {
         return "success";
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public String saveoptionChangeList(List<OptionChange> optionChangeList){
-        List<Map<String,Object>> listResultMap = new ArrayList<>();
-        StringBuilder errorMsg = new StringBuilder();
-        for (int i=0;i<optionChangeList.size();i++){
-            OptionChange optionChange = optionChangeList.get(i);
-            String judgeMsg =judgeInterfaceInfoQuerstion(optionChange,errorMsg);
-            if (!"".equals(judgeMsg)){
-                //TODO 将错误信息保存在错误日志信息表中。
-                logger.error(judgeMsg);
-                errorMsg.append("第i"+1+"的错误问题为："+judgeMsg);
-                continue;
-            }
-            String sourceCode = optionChange.getSourceCode();
-            String interfaceInfo ="9";
-            if ("P".equals(sourceCode)){
-                String interfaceType ="P1";
-                Map<String,Object> stringObjectMap =converBussinessToAccounting(optionChange,errorMsg,interfaceInfo,interfaceType);
-                String resultMsg =(String)stringObjectMap.get("resultMsg");
-                if (!"success".equals(resultMsg)){
-                    errorMsg.append("第i"+1+"Invoice类型错误问题为："+judgeMsg);
-                    return "fail";
+        try {
+            List<Map<String,Object>> listResultMap = new ArrayList<>();
+            StringBuilder errorMsg = new StringBuilder();
+            for (int i=0;i<optionChangeList.size();i++){
+                OptionChange optionChange = optionChangeList.get(i);
+                String judgeMsg =judgeInterfaceInfoQuerstion(optionChange,errorMsg);
+                if (!"".equals(judgeMsg)){
+                    logger.error(judgeMsg);
+                    errorMsg.append("第"+(i+1)+"个的错误问题为："+judgeMsg);
+
+                    continue;
                 }
-                interfaceType = "P2";
-                Map<String,Object> stringObjectMap1 = converBussinessToAccounting(optionChange,errorMsg,interfaceInfo,interfaceType);
-                String resultMsg1 = (String) stringObjectMap1.get("resultMsg");
-                if (!"success".equals(resultMsg1)){
-                    logger.error(resultMsg1);
-                    // 写个方法直接插入扔库里信息。
-                    return "fail";
-                }
-                listResultMap.add(stringObjectMap);
-                listResultMap.add(stringObjectMap1);
-            }else {
-                    String interfaceType = "F1";
-                    Map<String,Object> stringObjectMap = converBussinessToAccounting(optionChange,errorMsg,interfaceInfo,interfaceType);
+                String sourceCode = optionChange.getSourceCode();
+                String interfaceInfo ="9";
+                if ("P".equals(sourceCode)){
+                    String interfaceType ="P1";
+                    Map<String,Object> stringObjectMap =converBussinessToAccounting(optionChange,errorMsg,interfaceInfo,interfaceType);
                     String resultMsg =(String)stringObjectMap.get("resultMsg");
                     if (!"success".equals(resultMsg)){
-                        logger.error(resultMsg);
+                        errorMsg.append("第"+(i+1)+"个Invoice类型错误问题为："+judgeMsg);
                         return "fail";
                     }
-                interfaceType = "F2";
-                Map<String,Object> stringObjectMap1 = converBussinessToAccounting(optionChange,errorMsg,interfaceInfo,interfaceType);
-                String resultMsg1 =(String)stringObjectMap1.get("resultMsg");
-                if (!"success".equals(resultMsg1)){
-                    logger.error(resultMsg1);
-                    return "fail";
+                    interfaceType = "P2";
+                    Map<String,Object> stringObjectMap1 = converBussinessToAccounting(optionChange,errorMsg,interfaceInfo,interfaceType);
+                    String resultMsg1 = (String) stringObjectMap1.get("resultMsg");
+                    if (!"success".equals(resultMsg1)){
+                        logger.error(resultMsg1);
+                        // 写个方法直接插入扔库里信息。
+                        return "fail";
+                    }
+                    listResultMap.add(stringObjectMap);
+                    listResultMap.add(stringObjectMap1);
+                }else {
+                        String interfaceType = "F1";
+                        Map<String,Object> stringObjectMap = converBussinessToAccounting(optionChange,errorMsg,interfaceInfo,interfaceType);
+                        String resultMsg =(String)stringObjectMap.get("resultMsg");
+                        if (!"success".equals(resultMsg)){
+                            logger.error(resultMsg);
+                            return "fail";
+                        }
+                    interfaceType = "F2";
+                    Map<String,Object> stringObjectMap1 = converBussinessToAccounting(optionChange,errorMsg,interfaceInfo,interfaceType);
+                    String resultMsg1 =(String)stringObjectMap1.get("resultMsg");
+                    if (!"success".equals(resultMsg1)){
+                        logger.error(resultMsg1);
+                        return "fail";
+                    }
+                    listResultMap.add(stringObjectMap);
+                    listResultMap.add(stringObjectMap1);
                 }
-                listResultMap.add(stringObjectMap);
-                listResultMap.add(stringObjectMap1);
             }
-        }
-        System.out.println("---------------《当前时间范围内的正确的数据，已全部保存到List集合中，下面开始保存入库！》------------------");
-        // 当前时间范围内解析到的所以数据放入到对应的对接接口表中存放信息。
-        for(int i = 0 ; i < listResultMap.size(); i++ ){
-            Map<String, Object> stringObjectMap = listResultMap.get(i);
-            List<VoucherDTO> list2 = (List<VoucherDTO>) stringObjectMap.get("list2");
-            List<VoucherDTO> list3 = (List<VoucherDTO>) stringObjectMap.get("list3");
-            VoucherDTO dto = (VoucherDTO) stringObjectMap.get("dto");
-            String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto);
-            if(!"success".equals(voucherNo)){
-                logger.error(voucherNo);
-                errorMsg.append("保存凭证出错");
+            System.out.println("---------------《当前时间范围内的正确的数据，已全部保存到List集合中，下面开始保存入库！》------------------");
+            // 当前时间范围内解析到的所以数据放入到对应的对接接口表中存放信息。
+            for(int i = 0 ; i < listResultMap.size(); i++ ){
+                Map<String, Object> stringObjectMap = listResultMap.get(i);
+                List<VoucherDTO> list2 = (List<VoucherDTO>) stringObjectMap.get("list2");
+                List<VoucherDTO> list3 = (List<VoucherDTO>) stringObjectMap.get("list3");
+                VoucherDTO dto = (VoucherDTO) stringObjectMap.get("dto");
+                String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto);
+                if(!"success".equals(voucherNo)){
+                    logger.error(voucherNo);
+                    errorMsg.append("保存凭证出错");
+                }
             }
+            optionChangeRespository.saveAll(optionChangeList);
+            optionChangeRespository.flush();
+            System.out.println("---------------------当前时间范围内的数据，已经全部保存到对接接口表中---------------------------");
+            // TODO  最后接口改造，需要传入--> 起止时间 ，并把起止时间保存到 任务调度明细表中 (taskschedulingdetailsinfo)。
+            return "success";
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("当前异常信息为："+e);
+            return "error";
         }
-        optionChangeRespository.saveAll(optionChangeList);
-        optionChangeRespository.flush();
-        System.out.println("---------------------当前时间范围内的数据，已经全部保存到对接接口表中---------------------------");
-        // TODO  最后接口改造，需要传入--> 起止时间 ，并把起止时间保存到 任务调度明细表中 (taskschedulingdetailsinfo)。
-        return "success";
     }
 
     private String judgeInterfaceInfoQuerstion(OptionChange optionChange,StringBuilder errorMsg){

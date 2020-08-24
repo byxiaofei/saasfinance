@@ -10,6 +10,7 @@ import com.sinosoft.httpclient.repository.VehicleStockRespository;
 import com.sinosoft.httpclient.service.VehicleStockService;
 import com.sinosoft.repository.BranchInfoRepository;
 import com.sinosoft.repository.account.AccMonthTraceRespository;
+import com.sinosoft.service.InterfaceInfoService;
 import com.sinosoft.service.VoucherService;
 import com.sinosoft.util.DateUtil;
 import org.slf4j.Logger;
@@ -28,6 +29,9 @@ import java.util.Map;
 @Service
 public class VehicleStockServiceImpl implements VehicleStockService {
 
+
+    private Logger logger = LoggerFactory.getLogger(VehicleStockServiceImpl.class);
+
     @Resource
     private VehicleStockRespository vehicleStockRespository;
 
@@ -40,8 +44,8 @@ public class VehicleStockServiceImpl implements VehicleStockService {
     @Resource
     private ConfigureManageRespository configureManageRespository;
 
-    private Logger logger = LoggerFactory.getLogger(VehicleStockServiceImpl.class);
-
+    @Resource
+    private InterfaceInfoService interfaceInfoService;
 
     Map<String,Object> resultMap = new HashMap<>();
     VoucherDTO voucherDTO = new VoucherDTO();

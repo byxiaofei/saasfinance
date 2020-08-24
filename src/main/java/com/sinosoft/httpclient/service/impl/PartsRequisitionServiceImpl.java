@@ -9,6 +9,7 @@ import com.sinosoft.httpclient.service.PartsRequisitionService;
 import com.sinosoft.repository.BranchInfoRepository;
 import com.sinosoft.repository.SubjectRepository;
 import com.sinosoft.repository.account.AccMonthTraceRespository;
+import com.sinosoft.service.InterfaceInfoService;
 import com.sinosoft.service.VoucherService;
 import com.sinosoft.util.DateUtil;
 import org.slf4j.Logger;
@@ -52,6 +53,9 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
     @Resource
     private SubjectRepository subjectRepository;
 
+    @Resource
+    private InterfaceInfoService interfaceInfoService;
+
     // 任务调度明细表
     @Resource
     private TaskSchedulingDetailsInfoRespository taskSchedulingDetailsInfoRespository;
@@ -62,13 +66,13 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
      */
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public String savePartsRequisitionList(List<JsonToPartsRequisition> jsonToPartsRequisitionList) {
+    public String savePartsRequisitionList(List<JsonToPartsRequisition> jsonToPartsRequisitionList,String loadTime) {
         List<PartsRequisition> partsRequisitions = new ArrayList<>();
         // 拿到解析数据，直接进行解析处理
         List<Map<String,Object>> listResultMaps = new ArrayList<>();
         // 错误日志返回信息。
         StringBuilder errorAllMessage = new StringBuilder();
-
+        String branchInfo = null;
         for(int i= 0; i<jsonToPartsRequisitionList.size(); i++){
             JsonToPartsRequisition jsonToPartsRequisition = jsonToPartsRequisitionList.get(i);
             PartsRequisition partsRequisition = new PartsRequisition();
@@ -86,13 +90,13 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
             partsRequisition.setDocDate(jsonToPartsRequisition.getDocDate());
             partsRequisition.setOperationDate(jsonToPartsRequisition.getOperationDate());
             partsRequisition.setOrderNo(jsonToPartsRequisition.getOrderNo());
-
+            branchInfo = jsonToPartsRequisition.getCompanyNo();
             StringBuilder errorMsg = new StringBuilder();
             // 看当前必要信息是否都不为空。
             String judgeMsg = judgeInterfaceInfoQuerstion(jsonToPartsRequisition, errorMsg);
             if(!"".equals(judgeMsg)){
                 logger.error(judgeMsg);
-                errorAllMessage.append("第i"+1+"的错误问题为："+judgeMsg);
+                errorAllMessage.append("第"+i+1+"的错误问题为："+judgeMsg);
                 continue;
             }
             // 用于最后的当前金额的累加。
@@ -145,14 +149,6 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
                     errorAllMessage.append("第i"+1+"的错误问题为："+judgeMsg);
                     continue;
                 }
-                List<VoucherDTO> list2 = (List<VoucherDTO>) stringObjectMap.get("list2");
-                List<VoucherDTO> list3 = (List<VoucherDTO>) stringObjectMap.get("list3");
-                VoucherDTO dto1 = (VoucherDTO) stringObjectMap.get("dto");
-                String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto1);
-                if(!"success".equals(voucherNo)){
-                    logger.error(voucherNo);
-                    return "fail";
-                }
 
                 listResultMaps.add(stringObjectMap);
 
@@ -179,10 +175,13 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
 
         //  保存日志
 
+
         if("".equals(errorAllMessage.toString())){
+            interfaceInfoService.successSave(branchInfo,loadTime,"当前时间段内的数据没有问题，全部入库！");
             return "success";
         }
-        return errorAllMessage.toString();
+        interfaceInfoService.failSave(branchInfo,loadTime,"当前时间段内的信息个别信息有问题"+errorAllMessage.toString());
+        return "halfsuccess";
     }
 
 
@@ -201,7 +200,7 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
             if(requisitionParts.get(i).getQuantity().toString() == null || "".equals(requisitionParts.get(i).getQuantity().toString())){
                 errorMsg.append("当前集合中，第："+i+1+"的数量，不能为空或为0！");
             }
-            if(requisitionParts.get(i).getPartsUnitCost().compareTo(BigDecimal.ZERO) == 0){
+            if(requisitionParts.get(i).getPartsUnitCost().toString() == null || "".equals(requisitionParts.get(i).getPartsUnitCost().toString())){
                 errorMsg.append("当前集合中，第："+i+1+"的金额，不能为0");
             }
         }
@@ -308,96 +307,103 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
         // 这里给1/2 来判断生成那个类型的数据凭证信息。
         // 开始科目代码和专项信息存放整理，方便后续直接保存入库。
         // 之前是通过科目代码找专项一级，在通过专项一级找对应的字段，来拿到对接文档中的数据，并拿到数据再去数据库中比对信息是否存在。
-        List<ConfigureManage> configureManages = configureManageRespository.queryConfigureManagesByInterfaceInfoAndInterfaceTypeAndBranchCode(interfaceInfo, interfaceType,branchCode);
-        for(int i = 0 ; i < configureManages.size() ; i++){
-            // 当前这里以为：entry
-            VoucherDTO voucherDTO1 = new VoucherDTO();
-            VoucherDTO voucherDTO2 = new VoucherDTO();
-            // 对科目的校验
-            String subjectName = configureManages.get(i).getSubjectName();
-            String subjectInfo = configureManages.get(i).getId().getSubjectCode();
-            String resultCode = vehicleInvoiceServiceImpl.checkSubjectCodePassMusterBySubjectCodeAll(subjectInfo, accbookCode);
-            if (resultCode != null && !"".equals(resultCode)) {
-                if ("notExist".equals(resultCode)) {
-                    errorMsg.append(subjectInfo + "不存在，请重新输入！");
-                    resultMap.put("resultMsg", errorMsg.toString());
-                    return resultMap;
-                }
-                if ("notEnd".equals(resultCode)) {
-                    errorMsg.append(subjectInfo + "不是末级科目，请重新输入！");
-                    resultMap.put("resultMsg", errorMsg.toString());
-                    return resultMap;
-                }
-                if ("notUse".equals(resultCode)) {
-                    errorMsg.append(subjectInfo + "已停用，请重新输入！");
-                    resultMap.put("resultMsg", errorMsg.toString());
-                    return resultMap;
-                }
-            }
+        List<ConfigureManage> configureManages = configureManageRespository.queryConfigureManagesByInterfaceInfoAndInterfaceTypeAndBranchCode(interfaceInfo, interfaceType, branchCode);
+        if (configureManages.size() > 0) {
 
-            // 当前配置表中的专项字段为专项信息的末级代码，并非一级。
-            // 之前由科目代码找到挂接的一级专项，再由一级专项去找s段，并在s段取出专项末级信息。
-            // 当前直接用配置好的专项信息，校验是否启用即可， 不校验配置的专项信息是否符合科目挂接的一级专项。
-            String specialInfo = configureManages.get(i).getSpecialCode();
-            if (specialInfo != null && !"".equals(specialInfo)) {
-                String[] specialInfos = specialInfo.split(",");
-                for (int j = 0; j < specialInfos.length; j++) {
-                    String specialJudgeInfo = voucherService.checkSpecialCodePassMusterBySpecialCode(specialInfos[j], accbookCode);
-                    if (specialJudgeInfo != null && !"".equals(specialJudgeInfo)) {
-                        if ("notExist".equals(specialJudgeInfo)) {
-                            errorMsg.append("专项：" + specialInfos[j] + " 不存在，请重新输入！");
-                            resultMap.put("resultMsg", errorMsg.toString());
-                            return resultMap;
-                        }
-                        if ("notEnd".equals(specialJudgeInfo)) {
-                            errorMsg.append(specialInfos[j] + "不是末级专项，请重新输入！");
-                            resultMap.put("resultMsg", errorMsg.toString());
-                            return resultMap;
-                        }
-                        if ("notUse".equals(specialJudgeInfo)) {
-                            errorMsg.append(specialInfos[j] + "专项已停用，请重新输入！");
-                            resultMap.put("resultMsg", errorMsg.toString());
-                            return resultMap;
+            for (int i = 0; i < configureManages.size(); i++) {
+                // 当前这里以为：entry
+                VoucherDTO voucherDTO1 = new VoucherDTO();
+                VoucherDTO voucherDTO2 = new VoucherDTO();
+                // 对科目的校验
+                String subjectName = configureManages.get(i).getSubjectName();
+                String subjectInfo = configureManages.get(i).getId().getSubjectCode();
+                String resultCode = vehicleInvoiceServiceImpl.checkSubjectCodePassMusterBySubjectCodeAll(subjectInfo, accbookCode);
+                if (resultCode != null && !"".equals(resultCode)) {
+                    if ("notExist".equals(resultCode)) {
+                        errorMsg.append(subjectInfo + "不存在，请重新输入！");
+                        resultMap.put("resultMsg", errorMsg.toString());
+                        return resultMap;
+                    }
+                    if ("notEnd".equals(resultCode)) {
+                        errorMsg.append(subjectInfo + "不是末级科目，请重新输入！");
+                        resultMap.put("resultMsg", errorMsg.toString());
+                        return resultMap;
+                    }
+                    if ("notUse".equals(resultCode)) {
+                        errorMsg.append(subjectInfo + "已停用，请重新输入！");
+                        resultMap.put("resultMsg", errorMsg.toString());
+                        return resultMap;
+                    }
+                }
+
+                // 当前配置表中的专项字段为专项信息的末级代码，并非一级。
+                // 之前由科目代码找到挂接的一级专项，再由一级专项去找s段，并在s段取出专项末级信息。
+                // 当前直接用配置好的专项信息，校验是否启用即可， 不校验配置的专项信息是否符合科目挂接的一级专项。
+                String specialInfo = configureManages.get(i).getSpecialCode();
+                if (specialInfo != null && !"".equals(specialInfo)) {
+                    String[] specialInfos = specialInfo.split(",");
+                    for (int j = 0; j < specialInfos.length; j++) {
+                        String specialJudgeInfo = voucherService.checkSpecialCodePassMusterBySpecialCode(specialInfos[j], accbookCode);
+                        if (specialJudgeInfo != null && !"".equals(specialJudgeInfo)) {
+                            if ("notExist".equals(specialJudgeInfo)) {
+                                errorMsg.append("专项：" + specialInfos[j] + " 不存在，请重新输入！");
+                                resultMap.put("resultMsg", errorMsg.toString());
+                                return resultMap;
+                            }
+                            if ("notEnd".equals(specialJudgeInfo)) {
+                                errorMsg.append(specialInfos[j] + "不是末级专项，请重新输入！");
+                                resultMap.put("resultMsg", errorMsg.toString());
+                                return resultMap;
+                            }
+                            if ("notUse".equals(specialJudgeInfo)) {
+                                errorMsg.append(specialInfos[j] + "专项已停用，请重新输入！");
+                                resultMap.put("resultMsg", errorMsg.toString());
+                                return resultMap;
+                            }
                         }
                     }
                 }
-            }
 
-            if ("1".equals(interfaceType)){
-                if(i == 0){
-                    voucherDTO1.setDebit(finalAmount.toString());
-                    voucherDTO1.setCredit("0.00");
-                }else if (i == 1){
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit(finalAmount.toString());
+                if ("1".equals(interfaceType)) {
+                    if (i == 0) {
+                        voucherDTO1.setDebit(finalAmount.toString());
+                        voucherDTO1.setCredit("0.00");
+                    } else if (i == 1) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit(finalAmount.toString());
+                    }
+                } else {
+                    if (i == 0) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit(finalAmount.toString());
+                    } else if (i == 1) {
+                        voucherDTO1.setDebit(finalAmount.toString());
+                        voucherDTO1.setCredit("0.00");
+                    }
                 }
-            }else{
-                if(i == 0){
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit(finalAmount.toString());
-                }else if( i == 1){
-                    voucherDTO1.setDebit(finalAmount.toString());
-                    voucherDTO1.setCredit("0.00");
-                }
+
+                //  当前描述字段无法进行选取的问题。
+                voucherDTO1.setRemarkName(jsonToPartsRequisition.getDocNo());
+                voucherDTO1.setSubjectCode(subjectInfo);
+                voucherDTO1.setSubjectName(subjectName);
+
+                voucherDTO2.setSubjectCodeS(subjectInfo);
+                voucherDTO2.setSubjectNameS(subjectName);
+
+                // 一级专项集合。专项信息配置一定注意顺序问题。
+                String specialSuperCodes = configureManages.get(i).getSpecialSuperCode().trim();
+                String specialCode = configureManages.get(i).getSpecialCode();
+                voucherDTO2.setSpecialSuperCodeS(specialSuperCodes);
+                // 当前 专项信息配置一定注意顺序问题末级、一级一致。
+                voucherDTO2.setSpecialCodeS(specialCode);
+                list2.add(voucherDTO1);
+                list3.add(voucherDTO2);
+
             }
-
-            //  当前描述字段无法进行选取的问题。
-            voucherDTO1.setRemarkName(jsonToPartsRequisition.getDocNo());
-            voucherDTO1.setSubjectCode(subjectInfo);
-            voucherDTO1.setSubjectName(subjectName);
-
-            voucherDTO2.setSubjectCodeS(subjectInfo);
-            voucherDTO2.setSubjectNameS(subjectName);
-
-            // 一级专项集合。专项信息配置一定注意顺序问题。
-            String specialSuperCodes = configureManages.get(i).getSpecialSuperCode().trim();
-            String specialCode = configureManages.get(i).getSpecialCode();
-            voucherDTO2.setSpecialSuperCodeS(specialSuperCodes);
-            // 当前 专项信息配置一定注意顺序问题末级、一级一致。
-            voucherDTO2.setSpecialCodeS(specialCode);
-            list2.add(voucherDTO1);
-            list3.add(voucherDTO2);
-
+        } else {
+            errorMsg.append("configuremanage表中无配置映射信息！");
+            resultMap.put("resultMsg", errorMsg.toString());
+            return resultMap;
         }
 
         // 以上已经对一条凭证处理校验完毕

@@ -12,7 +12,7 @@ public interface ServiceInvoiceService {
     /**
      *获取业务数据信息
      */
-    String getServiceInvoiceService(List<ServiceInvoiceDTO> ServiceInvoiceDTOList);
+    String getServiceInvoiceService(List<ServiceInvoiceDTO> ServiceInvoiceDTOList,String loadTime);
 
 
 }

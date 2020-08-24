@@ -11,7 +11,7 @@ public interface VehicleInvoiceService {
      * @param vehicleInvoiceList
      * @return
      */
-    String saveVehicleInvoiceList(List<VehicleInvoice> vehicleInvoiceList);
+    String saveVehicleInvoiceList(List<VehicleInvoice> vehicleInvoiceList,String loadTime);
 
 
     /**

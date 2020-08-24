@@ -9,6 +9,7 @@ import com.sinosoft.httpclient.service.PartsInvoiceService;
 import com.sinosoft.repository.BranchInfoRepository;
 import com.sinosoft.repository.SubjectRepository;
 import com.sinosoft.repository.account.AccMonthTraceRespository;
+import com.sinosoft.service.InterfaceInfoService;
 import com.sinosoft.service.VoucherService;
 import com.sinosoft.service.impl.DataDockingServiceImpl;
 import com.sinosoft.util.DateUtil;
@@ -18,13 +19,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import javax.lang.model.type.ArrayType;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
-public class PartsInvoiceServiceImpl implements PartsInvoiceService
-{
+public class PartsInvoiceServiceImpl implements PartsInvoiceService {
+
+    private Logger logger = LoggerFactory.getLogger(DataDockingServiceImpl.class);
+
     @Resource
     private PartsInvoiceRespository partsInvoiceRespository;
 
@@ -44,107 +48,128 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService
     @Resource
     private SubjectRepository subjectRepository;
 
-    private Logger logger = LoggerFactory.getLogger(DataDockingServiceImpl.class);
+    @Resource
+    private InterfaceInfoService interfaceInfoService;
+
+
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public String savePartsInvoiceList(List<JsonToPartsInvoice> jsonToPartsInvoicesList) {
-        List<PartsInvoice> partsInvoices = new ArrayList<>();
-        for(int i = 0;i < jsonToPartsInvoicesList.size();i++){
-            JsonToPartsInvoice temp = jsonToPartsInvoicesList.get(i);
-            PartsInvoice partsInvoice = new PartsInvoice();
-            partsInvoice.setCompanyNo(temp.getCompanyNo());
-            partsInvoice.setDealerNo(temp.getDealerNo());
-            partsInvoice.setDocType(temp.getDocType());
-            partsInvoice.setDocNo(temp.getDocNo());
-            partsInvoice.setBizType(temp.getBizType());
-            partsInvoice.setDocDate(temp.getDocDate());
-            partsInvoice.setCustomerName(temp.getCustomerName());
-            partsInvoice.setCompanyName(temp.getCompanyName());
-            partsInvoice.setFranchise(temp.getFranchise());
-            partsInvoice.setOrderNo(temp.getOrderNo());
-            partsInvoice.setOperationDate(temp.getOperationDate());
-            for(int j = 0;j < temp.getInvoiceParts().size();j++){
-                PartsInvoiceIn temp1= temp.getInvoiceParts().get(j);
-                partsInvoice.setLine(temp1.getLine());
-                partsInvoice.setPartsNo(temp1.getPartsNo());
-                partsInvoice.setDescription(temp1.getDescription());
-                partsInvoice.setPartsAnalysisCode(temp1.getPartsAnalysisCode());
-                partsInvoice.setDepartmentCode(temp1.getDepartmentCode());
-                partsInvoice.setQuantity(temp1.getQuantity());
-                partsInvoice.setPartsUnitCost(temp1.getPartsUnitCost());
-                partsInvoice.setUnitSellingPrice(temp1.getUnitSellingPrice());
-                partsInvoice.setTotalPrice(temp1.getTotalPrice());
-                partsInvoice.setDiscountRate(temp1.getDiscountRate());
-                partsInvoice.setDiscountAmount(temp1.getDiscountAmount());
-                partsInvoice.setContribution(temp1.getContribution());
-                partsInvoice.setNetValue(temp1.getNetValue());
-                partsInvoice.setVatRate(temp1.getVatRate());
-                partsInvoice.setVatAmount(temp1.getVatAmount());
-                partsInvoice.setCustomerTypeNo(temp1.getCustomerTypeNo());
+        try {
+            List<PartsInvoice> partsInvoices = new ArrayList<>();
+            List<Map<String,Object>> listResultMaps = new ArrayList<>();
+            StringBuilder errorAllMessage = new StringBuilder();
+
+
+            for(int i = 0;i < jsonToPartsInvoicesList.size();i++){
+                JsonToPartsInvoice temp = jsonToPartsInvoicesList.get(i);
+                PartsInvoice partsInvoice = new PartsInvoice();
+                partsInvoice.setCompanyNo(temp.getCompanyNo());
+                partsInvoice.setDealerNo(temp.getDealerNo());
+                partsInvoice.setDocType(temp.getDocType());
+                partsInvoice.setDocNo(temp.getDocNo());
+                partsInvoice.setBizType(temp.getBizType());
+                partsInvoice.setDocDate(temp.getDocDate());
+                partsInvoice.setCustomerName(temp.getCustomerName());
+                partsInvoice.setCompanyName(temp.getCompanyName());
+                partsInvoice.setFranchise(temp.getFranchise());
+                partsInvoice.setOrderNo(temp.getOrderNo());
+                partsInvoice.setOperationDate(temp.getOperationDate());
+
+                BigDecimal sum = new BigDecimal("0.00");
+                for(int j = 0;j < temp.getInvoiceParts().size();j++){
+                    PartsInvoiceIn temp1= temp.getInvoiceParts().get(j);
+                    partsInvoice.setLine(temp1.getLine());
+                    partsInvoice.setPartsNo(temp1.getPartsNo());
+                    partsInvoice.setDescription(temp1.getDescription());
+                    partsInvoice.setPartsAnalysisCode(temp1.getPartsAnalysisCode());
+                    partsInvoice.setDepartmentCode(temp1.getDepartmentCode());
+                    partsInvoice.setQuantity(temp1.getQuantity());
+                    partsInvoice.setPartsUnitCost(temp1.getPartsUnitCost());
+                    partsInvoice.setUnitSellingPrice(temp1.getUnitSellingPrice());
+                    partsInvoice.setTotalPrice(temp1.getTotalPrice());
+                    partsInvoice.setDiscountRate(temp1.getDiscountRate());
+                    partsInvoice.setDiscountAmount(temp1.getDiscountAmount());
+                    partsInvoice.setContribution(temp1.getContribution());
+                    partsInvoice.setNetValue(temp1.getNetValue());
+                    partsInvoice.setVatRate(temp1.getVatRate());
+                    partsInvoice.setVatAmount(temp1.getVatAmount());
+                    partsInvoice.setCustomerTypeNo(temp1.getCustomerTypeNo());
+                    partsInvoices.add(partsInvoice);
+
+                }
+
+             //TODO .. 校验，入库。
+
+
+
             }
-            partsInvoices.add(partsInvoice);
+            //得到业务数据进行业务处理
+            //TODO ..
+            for(int a = 0;a < partsInvoices.size(); a++){
+                //取值对象
+                PartsInvoice partsInvoice = partsInvoices.get(a);
+                StringBuilder errorMsg = new StringBuilder();
+                //看当前必要信息是否都不为空。
+                String judgeMsg = judgeInterfaceInfoQuerstion(partsInvoice, errorMsg);
+                if(!"".equals(judgeMsg)){
+                   logger.error(judgeMsg);
+                    errorAllMessage.append("第"+(a+1)+"Invoice类型错误问题为："+judgeMsg);
+                   continue;
+                }
+                //看当前数据是什么类型
+                String docType = partsInvoice.getDocType();
+                //I -- 打印账单
+                //C -- 退款账单
+                String interfaceInfo = "7";
+                if("I".equals(docType)){
+                    //配件销售分录  interfaceType --->1
+                    String interfacetype = "1";
+                    Map<String,Object> objectMap = convertBussinessToAccounting(partsInvoice,errorMsg,interfaceInfo,interfacetype);
+                    String resultMsg = (String)objectMap.get("resultMsg");
+                    if(!"success".equals(resultMsg)){
+                        logger.error(resultMsg);
+                        return "fail";
+                    }
+                    List<VoucherDTO> list2 = (List<VoucherDTO>) objectMap.get("list2");
+                    List<VoucherDTO> list3 = (List<VoucherDTO>) objectMap.get("list3");
+                    VoucherDTO dto1 = (VoucherDTO) objectMap.get("dto");
+                    //生成保存凭证
+                    String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto1);
+                    if(!"success".equals(voucherNo)){
+                        logger.error(voucherNo);
+                        return "fail";
+                    }
+                }else{
+                    //配件销售分录  interfaceType --->2
+                    String interfacetype = "2";
+                    Map<String,Object> objectMap = convertBussinessToAccounting(partsInvoice,errorMsg,interfaceInfo,interfacetype);
+                    String resultMsg = (String)objectMap.get("resultMsg");
+                    if(!"success".equals(resultMsg)){
+                        logger.error(resultMsg);
+                        return "fail";
+                    }
+                    List<VoucherDTO> list2 = (List<VoucherDTO>) objectMap.get("list2");
+                    List<VoucherDTO> list3 = (List<VoucherDTO>) objectMap.get("list3");
+                    VoucherDTO dto1 = (VoucherDTO) objectMap.get("dto");
+                    //生成保存凭证
+                    String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto1);
+                    if(!"success".equals(voucherNo)){
+                        logger.error(voucherNo);
+                        return "fail";
+                    }
+                }
+            }
+            System.out.println("------------->当前时间范围内的数据，已全部保存到凭证表中，入库成功<-------------");
+            partsInvoiceRespository.saveAll(partsInvoices);
+            partsInvoiceRespository.flush();
+            System.out.println("------------->当前时间范围内的数据，已全部保存到凭证表中，入库成功<-------------");
+            return "success";
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("当前错误信息为:"+e);
+            return "fali";
         }
-        //得到业务数据进行业务处理
-        for(int a = 0;a < partsInvoices.size(); a++){
-            //取值对象
-            PartsInvoice partsInvoice = partsInvoices.get(a);
-            StringBuilder errorMsg = new StringBuilder();
-            //看当前必要信息是否都不为空。
-            String judgeMsg = judgeInterfaceInfoQuerstion(partsInvoice, errorMsg);
-            if(!"".equals(judgeMsg)){
-                //TODO 将错误信息保存在错误日志信息表中
-               logger.error(judgeMsg);
-               return "fail";
-            }
-            //看当前数据是什么类型
-            String docType = partsInvoice.getDocType();
-            //I -- 打印账单
-            //C -- 退款账单
-            String interfaceInfo = "7";
-            if("I".equals(docType)){
-                //配件销售分录  interfaceType --->1
-                String interfacetype = "1";
-                Map<String,Object> objectMap = convertBussinessToAccounting(partsInvoice,errorMsg,interfaceInfo,interfacetype);
-                String resultMsg = (String)objectMap.get("resultMsg");
-                if(!"success".equals(resultMsg)){
-                    logger.error(resultMsg);
-                    return "fail";
-                }
-                List<VoucherDTO> list2 = (List<VoucherDTO>) objectMap.get("list2");
-                List<VoucherDTO> list3 = (List<VoucherDTO>) objectMap.get("list3");
-                VoucherDTO dto1 = (VoucherDTO) objectMap.get("dto");
-                //生成保存凭证
-                String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto1);
-                if(!"success".equals(voucherNo)){
-                    logger.error(voucherNo);
-                    return "fail";
-                }
-            }else{
-                //配件销售分录  interfaceType --->2
-                String interfacetype = "2";
-                Map<String,Object> objectMap = convertBussinessToAccounting(partsInvoice,errorMsg,interfaceInfo,interfacetype);
-                String resultMsg = (String)objectMap.get("resultMsg");
-                if(!"success".equals(resultMsg)){
-                    logger.error(resultMsg);
-                    return "fail";
-                }
-                List<VoucherDTO> list2 = (List<VoucherDTO>) objectMap.get("list2");
-                List<VoucherDTO> list3 = (List<VoucherDTO>) objectMap.get("list3");
-                VoucherDTO dto1 = (VoucherDTO) objectMap.get("dto");
-                //生成保存凭证
-                String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto1);
-                if(!"success".equals(voucherNo)){
-                    logger.error(voucherNo);
-                    return "fail";
-                }
-            }
-        }
-        System.out.println("------------->当前时间范围内的数据，已全部保存到凭证表中，入库成功<-------------");
-        partsInvoiceRespository.saveAll(partsInvoices);
-        partsInvoiceRespository.flush();
-        System.out.println("------------->当前时间范围内的数据，已全部保存到凭证表中，入库成功<-------------");
-        // TODO  最后接口改造，需要传入--> 起止时间 ，并把起止时间保存到 任务调度明细表中 (taskschedulingdetailsinfo)。
-        return "success";
     }
 
     //判断当前必要信息是否为空实现

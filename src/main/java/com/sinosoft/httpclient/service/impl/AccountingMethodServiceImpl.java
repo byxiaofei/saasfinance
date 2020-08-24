@@ -90,7 +90,6 @@ public class AccountingMethodServiceImpl implements AccountingMethod {
         // 如果没问题，校验的同时就生成了凭证号了。 这里把createBy 创建人 设置为001 默认系统了
         VoucherDTO voucherDTO = voucherService.setVoucher1(yearMonth, companyNo, companyNo, accbookCode, accbookType,"001");
         if(voucherDTO.getYearMonth() == null || "".equals(voucherDTO.getYearMonth())){
-//            errorMsg = errorMsg + "当前账套信息下没有对应的凭证月"+",";
             errorMsg.append("当前账套信息下没有对应的凭证月");
             resultMap.put("resultMsg",errorMsg.toString());
             return resultMap;
@@ -98,7 +97,6 @@ public class AccountingMethodServiceImpl implements AccountingMethod {
         // 传过来的年月，需要判断当前月是否已经结转。
         List<?> objects = accMonthTraceRespository.queryAccMonthTraceByChooseMessage(companyNo, yearMonth, accbookType, accbookCode);
         if(objects.size() > 0){
-//            errorMsg = errorMsg + "当前月已经进行结转不能再新增凭证"+",";
             errorMsg.append("当前月已经进行结转不能再新增凭证");
             resultMap.put("resultMsg",errorMsg.toString());
             return resultMap;

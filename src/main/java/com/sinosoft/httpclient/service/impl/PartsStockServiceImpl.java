@@ -7,6 +7,7 @@ import com.sinosoft.httpclient.repository.PartsStockRespository;
 import com.sinosoft.httpclient.service.PartsStockService;
 import com.sinosoft.repository.BranchInfoRepository;
 import com.sinosoft.repository.account.AccMonthTraceRespository;
+import com.sinosoft.service.InterfaceInfoService;
 import com.sinosoft.service.VoucherService;
 import com.sinosoft.util.DateUtil;
 import org.slf4j.Logger;
@@ -24,6 +25,10 @@ import java.util.Map;
 @Service
 
 public class PartsStockServiceImpl implements PartsStockService {
+
+    private Logger logger = LoggerFactory.getLogger(PartsStockServiceImpl.class);
+
+
     @Resource
     private PartsStockRespository partsStockRespository;
 
@@ -36,8 +41,8 @@ public class PartsStockServiceImpl implements PartsStockService {
     @Resource
     private ConfigureManageRespository configureManageRespository;
 
-    private Logger logger = LoggerFactory.getLogger(VehicleStockServiceImpl.class);
-
+    @Resource
+    private InterfaceInfoService interfaceInfoService;
 
     Map<String,Object> resultMap = new HashMap<>();
     VoucherDTO voucherDTO = new VoucherDTO();
@@ -62,6 +67,7 @@ public class PartsStockServiceImpl implements PartsStockService {
                 String judgeMsg = judgeInterfaceInfoQuerstion(jsonToPartsStock,partsStockIn);
                 if (returnErrorInfo(judgeMsg)) {
                     //记录失败日志
+                    logger.error("");
                     flag = false;
                 }
             }

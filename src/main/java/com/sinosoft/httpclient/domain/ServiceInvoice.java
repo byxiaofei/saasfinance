@@ -10,7 +10,7 @@ import java.util.List;
  * 所有售后结账、退账的相关数据
  */
 @Entity
-@Table(name = "bz_service_invoice")
+@Table(name = "bz_serviceinvoice")
 public class ServiceInvoice {
 
     // 所有售后结账、退账的相关数据唯一标识

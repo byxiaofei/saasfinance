@@ -9,6 +9,7 @@ import com.sinosoft.httpclient.service.PartsPromotionService;
 import com.sinosoft.repository.BranchInfoRepository;
 import com.sinosoft.repository.SubjectRepository;
 import com.sinosoft.repository.account.AccMonthTraceRespository;
+import com.sinosoft.service.InterfaceInfoService;
 import com.sinosoft.service.VoucherService;
 import com.sinosoft.util.DateUtil;
 import org.slf4j.Logger;
@@ -53,13 +54,16 @@ public class PartsPromotionServiceImpl implements PartsPromotionService {
     @Resource
     private SubjectRepository subjectRepository;
 
+    @Resource
+    private InterfaceInfoService interfaceInfoService;
+
     // 任务调度明细表
     @Resource
     private TaskSchedulingDetailsInfoRespository taskSchedulingDetailsInfoRespository;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public String savePartsPromotionList(List<JsonToPartsPromotion> jsonToPartsPromotionList) {
+    public String savePartsPromotionList(List<JsonToPartsPromotion> jsonToPartsPromotionList,String laodTime) {
         List<PartsPromotion> partsPromotionList = new ArrayList<>();
         // 拿到解析数据，直接进行解析处理。
         for(int i = 0 ;i <jsonToPartsPromotionList.size(); i++){
@@ -70,7 +74,7 @@ public class PartsPromotionServiceImpl implements PartsPromotionService {
             partsPromotion.setTransactionType(jsonToPartsPromotion.getTransactionType());
             partsPromotion.setPromotionDate(jsonToPartsPromotion.getPromotionDate());
             partsPromotion.setOperationDate(jsonToPartsPromotion.getOperationDate());
-
+            List<PromotionParts> promotionParts1 = jsonToPartsPromotion.getPromotionParts();
             StringBuilder errorMsg = new StringBuilder();
             // 看当前必要信息是否都不为空。
             String judgeMsg = judgeInterfaceInfoQuerstion(jsonToPartsPromotion, errorMsg);
@@ -82,7 +86,7 @@ public class PartsPromotionServiceImpl implements PartsPromotionService {
             // 用于最后的当前金额的累加。
             BigDecimal finalAmount = new BigDecimal("0.00");
             // 这里塞值的同时，把集合中对象的：数量×金额 = 金额 ——》 在金额累加
-            for(int j = 0 ;j <jsonToPartsPromotion.getPromotionParts().size(); j++){
+            for(int j = 0 ;j <promotionParts1.size(); j++){
                 PromotionParts promotionParts = jsonToPartsPromotion.getPromotionParts().get(j);
 
                 partsPromotion.setPartsNo(promotionParts.getPartsNo());
@@ -169,7 +173,7 @@ public class PartsPromotionServiceImpl implements PartsPromotionService {
             if(promotionParts.get(i).getQuantity().toString() == null || "".equals(promotionParts.get(i).getQuantity().toString())){
                 errorMsg.append("当前集合中，第："+i+1+"的数量，不能为空或为0！");
             }
-            if(promotionParts.get(i).getPartsUnitCost().compareTo(BigDecimal.ZERO) == 0){
+            if(promotionParts.get(i).getPartsUnitCost().toString() == null || "".equals(promotionParts.get(i).getPartsUnitCost().toString())){
                 errorMsg.append("当前集合中，第："+i+1+"的金额，不能为0");
             }
         }

@@ -14,6 +14,7 @@ import com.sinosoft.httpclient.utils.DtoToEntity;
 import com.sinosoft.repository.BranchInfoRepository;
 import com.sinosoft.repository.SubjectRepository;
 import com.sinosoft.repository.account.AccMonthTraceRespository;
+import com.sinosoft.service.InterfaceInfoService;
 import com.sinosoft.service.VoucherService;
 import com.sinosoft.util.DateUtil;
 import org.slf4j.Logger;
@@ -58,154 +59,171 @@ public class ServiceInvoiceServiceImpl implements ServiceInvoiceService {
     @Resource
     private TaskSchedulingDetailsInfoRespository taskSchedulingDetailsInfoRespository;
 
+    @Resource
+    private InterfaceInfoService interfaceInfoService;
+
+
     @Override
-    public String getServiceInvoiceService(List<ServiceInvoiceDTO> ServiceInvoiceDTOList) {
+    public String getServiceInvoiceService(List<ServiceInvoiceDTO> ServiceInvoiceDTOList,String loadTime) {
 
-        List<ServiceInvoice> serviceInvoiceList = new ArrayList<>();
+        try {
+            List<ServiceInvoice> serviceInvoiceList = new ArrayList<>();
 
-        // 拿到解析数据，直接进行解析处理
-        List<Map<String, Object>> listResultMaps = new ArrayList<>();
-        // 用于存放处理数据的金额。
-        Map<String,BigDecimal> mapsAboutAmount = new HashMap<>();
-        // 错误日志返回信息。
-        StringBuilder errorAllMessage = new StringBuilder();
-        for (ServiceInvoiceDTO serviceInvoiceDTO : ServiceInvoiceDTOList) {
-            serviceInvoiceDTO.setBatch(serviceInvoiceDTO.getId());
-            List<ServicePartsInvoiceDTO> invoiceVerifyDTOList = serviceInvoiceDTO.getInvoiceServiceParts();
-            List<ServiceLaborInvoiceDTO> DnVerifyDTOList = serviceInvoiceDTO.getInvoiceServiceLabors();
+            // 拿到解析数据，直接进行解析处理
+            List<Map<String, Object>> listResultMaps = new ArrayList<>();
+            // 用于存放处理数据的金额。
+            Map<String,BigDecimal> mapsAboutAmount = new HashMap<>();
+            // 错误日志返回信息。
+            StringBuilder errorAllMessage = new StringBuilder();
 
-            // 配件 销售汇总总价Parts
-            BigDecimal totalPriceParts = new BigDecimal("0.00");
-            // 配件 折旧汇总金额
-            BigDecimal discountAmountParts = new BigDecimal("0.00");
-            // 配件 数量*配件的单位成本汇总金额
-            BigDecimal partsUnitCosts = new BigDecimal("0.00");
+            String branchInfo = null;
+            for (int i = 0 ; i<ServiceInvoiceDTOList.size();i++) {
+                ServiceInvoiceDTO serviceInvoiceDTO = ServiceInvoiceDTOList.get(i);
+                serviceInvoiceDTO.setBatch(serviceInvoiceDTO.getId());
+                List<ServicePartsInvoiceDTO> invoiceVerifyDTOList = serviceInvoiceDTO.getInvoiceServiceParts();
+                List<ServiceLaborInvoiceDTO> DnVerifyDTOList = serviceInvoiceDTO.getInvoiceServiceLabors();
+                branchInfo = serviceInvoiceDTO.getCompanyNo();
+                // 配件 销售汇总总价Parts
+                BigDecimal totalPriceParts = new BigDecimal("0.00");
+                // 配件 折旧汇总金额
+                BigDecimal discountAmountParts = new BigDecimal("0.00");
+                // 配件 数量*配件的单位成本汇总金额
+                BigDecimal partsUnitCosts = new BigDecimal("0.00");
 
-            // 配件+工时的增值税汇总总额
-            BigDecimal vatAmountSum = new BigDecimal("0.00");
-            if (!invoiceVerifyDTOList.isEmpty()) {
-                for (ServicePartsInvoiceDTO servicePartsInvoiceDTO : invoiceVerifyDTOList) {
-                    ServiceInvoice ServicePartsInvoice = new ServiceInvoice();
-                    ServicePartsInvoice = (ServiceInvoice) DtoToEntity.populate(serviceInvoiceDTO, ServicePartsInvoice);
-                    ServicePartsInvoice = (ServiceInvoice) DtoToEntity.populate(servicePartsInvoiceDTO, ServicePartsInvoice);
-                    serviceInvoiceList.add(ServicePartsInvoice);
+                // 配件+工时的增值税汇总总额
+                BigDecimal vatAmountSum = new BigDecimal("0.00");
+                if (!invoiceVerifyDTOList.isEmpty()) {
+                    for (ServicePartsInvoiceDTO servicePartsInvoiceDTO : invoiceVerifyDTOList) {
+                        ServiceInvoice ServicePartsInvoice = new ServiceInvoice();
+                        ServicePartsInvoice = (ServiceInvoice) DtoToEntity.populate(serviceInvoiceDTO, ServicePartsInvoice);
+                        ServicePartsInvoice = (ServiceInvoice) DtoToEntity.populate(servicePartsInvoiceDTO, ServicePartsInvoice);
+                        serviceInvoiceList.add(ServicePartsInvoice);
 
-                    BigDecimal totalPriceMore = servicePartsInvoiceDTO.getTotalPrice();
-                    totalPriceParts = totalPriceParts.add(totalPriceMore);// 销售汇总总价
+                        BigDecimal totalPriceMore = servicePartsInvoiceDTO.getTotalPrice();
+                        totalPriceParts = totalPriceParts.add(totalPriceMore);// 销售汇总总价
 
-                    BigDecimal discountAmountMore = servicePartsInvoiceDTO.getDiscountAmount();
-                    discountAmountParts = discountAmountParts.add(discountAmountMore);// 折旧汇总金额
+                        BigDecimal discountAmountMore = servicePartsInvoiceDTO.getDiscountAmount();
+                        discountAmountParts = discountAmountParts.add(discountAmountMore);// 折旧汇总金额
 
-                    Integer quantity = servicePartsInvoiceDTO.getQuantity();// 这里修改一下类型。
-                    BigDecimal partsUnitCost = servicePartsInvoiceDTO.getPartsUnitCost();// 金额
+                        Integer quantity = servicePartsInvoiceDTO.getQuantity();// 这里修改一下类型。
+                        BigDecimal partsUnitCost = servicePartsInvoiceDTO.getPartsUnitCost();// 金额
 
-                    partsUnitCosts = partsUnitCosts.add(new BigDecimal(quantity.toString()).multiply(partsUnitCost));//数量*配件的单位成本
+                        partsUnitCosts = partsUnitCosts.add(new BigDecimal(quantity.toString()).multiply(partsUnitCost));//数量*配件的单位成本
 
-                    BigDecimal vatAmount = servicePartsInvoiceDTO.getVatAmount();
-                    vatAmountSum = vatAmountSum.add(vatAmount);
+                        BigDecimal vatAmount = servicePartsInvoiceDTO.getVatAmount();
+                        vatAmountSum = vatAmountSum.add(vatAmount);
+
+                    }
 
                 }
 
-            }
+                //    销售汇总价格Labor
+                BigDecimal totalPriceLabor = new BigDecimal("0.00");
+                // 折旧汇总j金额
+                BigDecimal discountAmountLabor = new BigDecimal("0.00");
+                if (!DnVerifyDTOList.isEmpty()) {
+                    for (ServiceLaborInvoiceDTO serviceLaborInvoiceDTO : DnVerifyDTOList) {
+                        ServiceInvoice ServiceLaborInvoice = new ServiceInvoice();
+                        ServiceLaborInvoice = (ServiceInvoice) DtoToEntity.populate(serviceInvoiceDTO, ServiceLaborInvoice);
+                        ServiceLaborInvoice = (ServiceInvoice) DtoToEntity.populate(serviceLaborInvoiceDTO, ServiceLaborInvoice);
+                        serviceInvoiceList.add(ServiceLaborInvoice);
 
-            //    销售汇总价格Labor
-            BigDecimal totalPriceLabor = new BigDecimal("0.00");
-            // 折旧汇总j金额
-            BigDecimal discountAmountLabor = new BigDecimal("0.00");
-            if (!DnVerifyDTOList.isEmpty()) {
-                for (ServiceLaborInvoiceDTO serviceLaborInvoiceDTO : DnVerifyDTOList) {
-                    ServiceInvoice ServiceLaborInvoice = new ServiceInvoice();
-                    ServiceLaborInvoice = (ServiceInvoice) DtoToEntity.populate(serviceInvoiceDTO, ServiceLaborInvoice);
-                    ServiceLaborInvoice = (ServiceInvoice) DtoToEntity.populate(serviceLaborInvoiceDTO, ServiceLaborInvoice);
-                    serviceInvoiceList.add(ServiceLaborInvoice);
+                        BigDecimal totalPrice = serviceLaborInvoiceDTO.getTotalPrice();
+                        totalPriceLabor = totalPriceLabor.add(totalPrice);
 
-                    BigDecimal totalPrice = serviceLaborInvoiceDTO.getTotalPrice();
-                    totalPriceLabor = totalPriceLabor.add(totalPrice);
+                        BigDecimal discountAmount = serviceLaborInvoiceDTO.getDiscountAmount();
+                        discountAmountLabor = discountAmountLabor.add(discountAmount);
 
-                    BigDecimal discountAmount = serviceLaborInvoiceDTO.getDiscountAmount();
-                    discountAmountLabor = discountAmountLabor.add(discountAmount);
-
-                    BigDecimal vatAmount = serviceLaborInvoiceDTO.getVatAmount();
-                    vatAmountSum = vatAmountSum.add(vatAmount);
+                        BigDecimal vatAmount = serviceLaborInvoiceDTO.getVatAmount();
+                        vatAmountSum = vatAmountSum.add(vatAmount);
+                    }
                 }
-            }
 
-            // 以结账为例：计算的是借方金额
-            BigDecimal debitSumAmount = discountAmountLabor.add(discountAmountParts);
-            // 以结账为例：计算的是贷方借额
-            BigDecimal creditSumAmount = totalPriceLabor.add(totalPriceParts).add(vatAmountSum);
-            // 结账
-            BigDecimal finalSumAmountForI = debitSumAmount.subtract(creditSumAmount);
-            // 退账
-            BigDecimal finalSumAmountForC = creditSumAmount.subtract(debitSumAmount);
+                // 以结账为例：计算的是借方金额
+                BigDecimal debitSumAmount = discountAmountLabor.add(discountAmountParts);
+                // 以结账为例：计算的是贷方借额
+                BigDecimal creditSumAmount = totalPriceLabor.add(totalPriceParts).add(vatAmountSum);
+                // 结账
+                BigDecimal finalSumAmountForI = debitSumAmount.subtract(creditSumAmount);
+                // 退账
+                BigDecimal finalSumAmountForC = creditSumAmount.subtract(debitSumAmount);
 
-            mapsAboutAmount.put("finalSumAmountForI",finalSumAmountForI);
-            mapsAboutAmount.put("finalSumAmountForC",finalSumAmountForC);
-            mapsAboutAmount.put("totalPriceParts",totalPriceParts);
-            mapsAboutAmount.put("discountAmountParts",discountAmountParts);
-            mapsAboutAmount.put("partsUnitCosts",partsUnitCosts);
-            mapsAboutAmount.put("totalPriceLabor",totalPriceLabor);
-            mapsAboutAmount.put("discountAmountLabor",discountAmountLabor);
-            mapsAboutAmount.put("vatAmountSum",vatAmountSum);
+                mapsAboutAmount.put("finalSumAmountForI",finalSumAmountForI);
+                mapsAboutAmount.put("finalSumAmountForC",finalSumAmountForC);
+                mapsAboutAmount.put("totalPriceParts",totalPriceParts);
+                mapsAboutAmount.put("discountAmountParts",discountAmountParts);
+                mapsAboutAmount.put("partsUnitCosts",partsUnitCosts);
+                mapsAboutAmount.put("totalPriceLabor",totalPriceLabor);
+                mapsAboutAmount.put("discountAmountLabor",discountAmountLabor);
+                mapsAboutAmount.put("vatAmountSum",vatAmountSum);
 
-            System.out.println("------- 业务数据在此已经清理完毕！--------");
+                System.out.println("------- 业务数据在此已经清理完毕！--------");
 
-            StringBuilder errorMsg = new StringBuilder();
-            String judgeMsg = judgeInterfaceInfoQuerstion(serviceInvoiceDTO, errorMsg);
-            if (!"".equals(judgeMsg)) {
-                logger.error(judgeMsg);
-                errorAllMessage.append("第i" + 1 + "的错误问题为：" + judgeMsg);
-                continue;
-            }
-
-            String invoicePrintType = serviceInvoiceDTO.getInvoicePrintType();
-            String interfaceInfo = "10";
-            if("I".equals(invoicePrintType)){
-                String interfaceType = "1";
-                Map<String,Object> stringObjectMap = convertBussinessToAccounting(serviceInvoiceDTO,errorMsg,interfaceInfo,interfaceType,mapsAboutAmount);
-                String resultMsg = (String) stringObjectMap.get("resultMsg");
-                if(!"success".equals(resultMsg)){
-                    logger.error(resultMsg);
-                    errorAllMessage.append("第i"+1+"的错误问题为："+judgeMsg);
+                StringBuilder errorMsg = new StringBuilder();
+                String judgeMsg = judgeInterfaceInfoQuerstion(serviceInvoiceDTO, errorMsg);
+                if (!"".equals(judgeMsg)) {
+                    logger.error(judgeMsg);
+                    errorAllMessage.append("第"+(i+1)+"个的错误问题为：" + judgeMsg);
                     continue;
                 }
 
-                listResultMaps.add(stringObjectMap);
+                String invoicePrintType = serviceInvoiceDTO.getInvoicePrintType();
+                String interfaceInfo = "10";
+                if("I".equals(invoicePrintType)){
+                    String interfaceType = "1";
+                    Map<String,Object> stringObjectMap = convertBussinessToAccounting(serviceInvoiceDTO,errorMsg,interfaceInfo,interfaceType,mapsAboutAmount);
+                    String resultMsg = (String) stringObjectMap.get("resultMsg");
+                    if(!"success".equals(resultMsg)){
+                        logger.error(resultMsg);
+                        errorAllMessage.append("第"+(i+1)+"个的错误问题为："+judgeMsg);
+                        continue;
+                    }
 
-            }else{
-                String interfaceType = "2";
-                Map<String,Object> stringObjectMap = convertBussinessToAccounting(serviceInvoiceDTO,errorMsg,interfaceInfo,interfaceType,mapsAboutAmount);
-                String resultMsg = (String) stringObjectMap.get("resultMsg");
-                if(!"success".equals(resultMsg)){
-                    logger.error(resultMsg);
-                    errorAllMessage.append("第i"+1+"的错误问题为："+judgeMsg);
-                    continue;
+                    listResultMaps.add(stringObjectMap);
+
+                }else{
+                    String interfaceType = "2";
+                    Map<String,Object> stringObjectMap = convertBussinessToAccounting(serviceInvoiceDTO,errorMsg,interfaceInfo,interfaceType,mapsAboutAmount);
+                    String resultMsg = (String) stringObjectMap.get("resultMsg");
+                    if(!"success".equals(resultMsg)){
+                        logger.error(resultMsg);
+                        errorAllMessage.append("第"+(i+1)+"个的错误问题为："+judgeMsg);
+                        continue;
+                    }
+
+                    listResultMaps.add(stringObjectMap);
                 }
-
-                listResultMaps.add(stringObjectMap);
             }
-        }
 
-        System.out.println("---------------《当前时间范围内的正确的数据，已全部保存到List集合中，下面开始保存入库！》------------------");
-        // 当前时间范围内解析到的所以数据放入到对应的对接接口表中存放信息。
-        for(int i = 0 ; i < listResultMaps.size(); i++ ){
-            Map<String, Object> stringObjectMap = listResultMaps.get(i);
-            List<VoucherDTO> list2 = (List<VoucherDTO>) stringObjectMap.get("list2");
-            List<VoucherDTO> list3 = (List<VoucherDTO>) stringObjectMap.get("list3");
-            VoucherDTO dto = (VoucherDTO) stringObjectMap.get("dto");
-            String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto);
-            if(!"success".equals(voucherNo)){
-                logger.error(voucherNo);
-                errorAllMessage.append("保存凭证出错");
+            System.out.println("---------------《当前时间范围内的正确的数据，已全部保存到List集合中，下面开始保存入库！》------------------");
+            // 当前时间范围内解析到的所以数据放入到对应的对接接口表中存放信息。
+            for(int i = 0 ; i < listResultMaps.size(); i++ ){
+                Map<String, Object> stringObjectMap = listResultMaps.get(i);
+                List<VoucherDTO> list2 = (List<VoucherDTO>) stringObjectMap.get("list2");
+                List<VoucherDTO> list3 = (List<VoucherDTO>) stringObjectMap.get("list3");
+                VoucherDTO dto = (VoucherDTO) stringObjectMap.get("dto");
+                String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto);
+                if(!"success".equals(voucherNo)){
+                    logger.error(voucherNo);
+                    errorAllMessage.append("保存凭证出错");
+                }
             }
+            System.out.println("--------------------  上述已经对正确的所有数据进行了入库保存！  ----------------------------");
+
+            respository.saveAll(serviceInvoiceList);
+            respository.flush();
+
+            if("".equals(errorAllMessage.toString())){
+                interfaceInfoService.successSave(branchInfo,loadTime,"当前时间段内的数据没有问题，全部入库！");
+                return "success";
+            }
+            interfaceInfoService.failSave(branchInfo,loadTime,"当前时间段内的信息个别信息有问题"+errorAllMessage.toString());
+            return "halfsuccess";
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("当前错误信息为:"+e);
+            return "fali";
         }
-        System.out.println("--------------------  上述已经对正确的所有数据进行了入库保存！  ----------------------------");
-
-
-        respository.saveAll(serviceInvoiceList);
-        respository.flush();
-
-        return "success";
     }
 
 
@@ -228,30 +246,30 @@ public class ServiceInvoiceServiceImpl implements ServiceInvoiceService {
 
         for (int i = 0; i < invoiceServiceLabors.size(); i++) {
             if (invoiceServiceLabors.get(i).getTotalPrice().toString() == null || "".equals(invoiceServiceLabors.get(i).getTotalPrice().toString())) {
-                errorMsg.append("当前集合中，第：" + i + 1 + "的工时销售总价，不能为空或为0！");
+                errorMsg.append("当前invoiceServiceLabors集合中，第：" + (i + 1) + "个的工时销售总价，不能为空或为0！");
             }
             if (invoiceServiceLabors.get(i).getDiscountAmount().toString() == null || "".equals(invoiceServiceLabors.get(i).getDiscountAmount().toString())) {
-                errorMsg.append("当前集合中，第：" + i + 1 + "的工时折旧金额，不能为空或为0！");
+                errorMsg.append("当前invoiceServiceLabors集合中，第：" + (i + 1) + "个的工时折旧金额，不能为空或为0！");
             }
-            if (invoiceServiceLabors.get(i).getVatAmount().compareTo(BigDecimal.ZERO) == 0) {
-                errorMsg.append("当前集合中，第：" + i + 1 + "的增值税金额，不能为空或为0！");
+            if (invoiceServiceLabors.get(i).getVatAmount().toString() == null || "".equals(invoiceServiceLabors.get(i).getVatAmount().toString())) {
+                errorMsg.append("当前invoiceServiceLabors集合中，第：" + (i + 1) + "个的增值税金额，不能为空或为0！");
             }
         }
         for (int j = 0; j < invoiceServiceParts.size(); j++) {
             if (invoiceServiceParts.get(j).getQuantity().toString() == null || "".equals(invoiceServiceParts.get(j).getQuantity().toString())) {
-                errorMsg.append("当前集合中，第：" + j + 1 + "的数量，不能为空或为0！");
+                errorMsg.append("当前invoiceServiceParts集合中，第：" + (j + 1) + "个的数量，不能为空或为0！");
             }
-            if (invoiceServiceParts.get(j).getPartsUnitCost().compareTo(BigDecimal.ZERO) == 0) {
-                errorMsg.append("当前集合中，第：" + j + 1 + "的金额，不能为0");
+            if (invoiceServiceParts.get(j).getPartsUnitCost().toString() == null || "" .equals(invoiceServiceParts.get(j).getPartsUnitCost().toString())) {
+                errorMsg.append("当前invoiceServiceParts集合中，第：" + (j + 1) + "个的金额，不能为0");
             }
-            if (invoiceServiceParts.get(j).getTotalPrice().compareTo(BigDecimal.ZERO) == 0) {
-                errorMsg.append("当前集合中，第：" + j + 1 + "的配件销售总价，不能为空或为0！");
+            if (invoiceServiceParts.get(j).getTotalPrice().toString() == null || "".equals(invoiceServiceParts.get(j).getTotalPrice().toString())) {
+                errorMsg.append("当前invoiceServiceParts集合中，第：" + (j + 1) + "个的配件销售总价，不能为空或为0！");
             }
             if (invoiceServiceParts.get(j).getDiscountAmount().toString() == null || "".equals(invoiceServiceParts.get(j).getDiscountAmount().toString())) {
-                errorMsg.append("当前集合中，第：" + j + 1 + "的工时折旧金额，不能为空或为0！");
+                errorMsg.append("当前invoiceServiceParts集合中，第：" + (j + 1) + "个的工时折旧金额，不能为空或为0！");
             }
-            if (invoiceServiceParts.get(j).getVatAmount().compareTo(BigDecimal.ZERO) == 0) {
-                errorMsg.append("当前集合中，第：" + j + 1 + "的增值税金额，不能为空或为0！");
+            if (invoiceServiceParts.get(j).getVatAmount().toString() == null || "".equals(invoiceServiceParts.get(j).getVatAmount().toString())) {
+                errorMsg.append("当前invoiceServiceParts集合中，第：" + (j + 1) + "个的增值税金额，不能为空或为0！");
             }
         }
         return errorMsg.toString();
@@ -357,135 +375,139 @@ public class ServiceInvoiceServiceImpl implements ServiceInvoiceService {
         // 这里给1/2 来判断生成那个类型的数据凭证信息。
         // 开始科目代码和专项信息存放整理，方便后续直接保存入库。
         // 之前是通过科目代码找专项一级，在通过专项一级找对应的字段，来拿到对接文档中的数据，并拿到数据再去数据库中比对信息是否存在。
-        List<ConfigureManage> configureManages = configureManageRespository.queryConfigureManagesByInterfaceInfoAndInterfaceTypeAndBranchCode(interfaceInfo, interfaceType,branchCode);
+        List<ConfigureManage> configureManages = configureManageRespository.queryConfigureManagesByInterfaceInfoAndInterfaceTypeAndBranchCode(interfaceInfo, interfaceType, branchCode);
+        if (configureManages.size() > 0) {
 
-        for(int i = 0 ; i < configureManages.size() ; i ++){
-            // 当前这里以为：entry
-            VoucherDTO voucherDTO1 = new VoucherDTO();
-            VoucherDTO voucherDTO2 = new VoucherDTO();
+            for (int i = 0; i < configureManages.size(); i++) {
+                // 当前这里以为：entry
+                VoucherDTO voucherDTO1 = new VoucherDTO();
+                VoucherDTO voucherDTO2 = new VoucherDTO();
 
-            // 对科目的校验
-            String subjectName = configureManages.get(i).getSubjectName();
-            String subjectInfo = configureManages.get(i).getId().getSubjectCode();
-            String resultCode = vehicleInvoiceServiceImpl.checkSubjectCodePassMusterBySubjectCodeAll(subjectInfo, accbookCode);
-            if (resultCode != null && !"".equals(resultCode)) {
-                if ("notExist".equals(resultCode)) {
-                    errorMsg.append(subjectInfo + "不存在，请重新输入！");
-                    resultMap.put("resultMsg", errorMsg.toString());
-                    return resultMap;
+                // 对科目的校验
+                String subjectName = configureManages.get(i).getSubjectName();
+                String subjectInfo = configureManages.get(i).getId().getSubjectCode();
+                String resultCode = vehicleInvoiceServiceImpl.checkSubjectCodePassMusterBySubjectCodeAll(subjectInfo, accbookCode);
+                if (resultCode != null && !"".equals(resultCode)) {
+                    if ("notExist".equals(resultCode)) {
+                        errorMsg.append(subjectInfo + "不存在，请重新输入！");
+                        resultMap.put("resultMsg", errorMsg.toString());
+                        return resultMap;
+                    }
+                    if ("notEnd".equals(resultCode)) {
+                        errorMsg.append(subjectInfo + "不是末级科目，请重新输入！");
+                        resultMap.put("resultMsg", errorMsg.toString());
+                        return resultMap;
+                    }
+                    if ("notUse".equals(resultCode)) {
+                        errorMsg.append(subjectInfo + "已停用，请重新输入！");
+                        resultMap.put("resultMsg", errorMsg.toString());
+                        return resultMap;
+                    }
                 }
-                if ("notEnd".equals(resultCode)) {
-                    errorMsg.append(subjectInfo + "不是末级科目，请重新输入！");
-                    resultMap.put("resultMsg", errorMsg.toString());
-                    return resultMap;
-                }
-                if ("notUse".equals(resultCode)) {
-                    errorMsg.append(subjectInfo + "已停用，请重新输入！");
-                    resultMap.put("resultMsg", errorMsg.toString());
-                    return resultMap;
-                }
-            }
 
-            // 当前配置表中的专项字段为专项信息的末级代码，并非一级。
-            // 之前由科目代码找到挂接的一级专项，再由一级专项去找s段，并在s段取出专项末级信息。
-            // 当前直接用配置好的专项信息，校验是否启用即可， 不校验配置的专项信息是否符合科目挂接的一级专项。
-            String specialInfo = configureManages.get(i).getSpecialCode();
-            if (specialInfo != null && !"".equals(specialInfo)) {
-                String[] specialInfos = specialInfo.split(",");
-                for (int j = 0; j < specialInfos.length; j++) {
-                    String specialJudgeInfo = voucherService.checkSpecialCodePassMusterBySpecialCode(specialInfos[j], accbookCode);
-                    if (specialJudgeInfo != null && !"".equals(specialJudgeInfo)) {
-                        if ("notExist".equals(specialJudgeInfo)) {
-                            errorMsg.append("专项：" + specialInfos[j] + " 不存在，请重新输入！");
-                            resultMap.put("resultMsg", errorMsg.toString());
-                            return resultMap;
-                        }
-                        if ("notEnd".equals(specialJudgeInfo)) {
-                            errorMsg.append(specialInfos[j] + "不是末级专项，请重新输入！");
-                            resultMap.put("resultMsg", errorMsg.toString());
-                            return resultMap;
-                        }
-                        if ("notUse".equals(specialJudgeInfo)) {
-                            errorMsg.append(specialInfos[j] + "专项已停用，请重新输入！");
-                            resultMap.put("resultMsg", errorMsg.toString());
-                            return resultMap;
+                // 当前配置表中的专项字段为专项信息的末级代码，并非一级。
+                // 之前由科目代码找到挂接的一级专项，再由一级专项去找s段，并在s段取出专项末级信息。
+                // 当前直接用配置好的专项信息，校验是否启用即可， 不校验配置的专项信息是否符合科目挂接的一级专项。
+                String specialInfo = configureManages.get(i).getSpecialCode();
+                if (specialInfo != null && !"".equals(specialInfo)) {
+                    String[] specialInfos = specialInfo.split(",");
+                    for (int j = 0; j < specialInfos.length; j++) {
+                        String specialJudgeInfo = voucherService.checkSpecialCodePassMusterBySpecialCode(specialInfos[j], accbookCode);
+                        if (specialJudgeInfo != null && !"".equals(specialJudgeInfo)) {
+                            if ("notExist".equals(specialJudgeInfo)) {
+                                errorMsg.append("专项：" + specialInfos[j] + " 不存在，请重新输入！");
+                                resultMap.put("resultMsg", errorMsg.toString());
+                                return resultMap;
+                            }
+                            if ("notEnd".equals(specialJudgeInfo)) {
+                                errorMsg.append(specialInfos[j] + "不是末级专项，请重新输入！");
+                                resultMap.put("resultMsg", errorMsg.toString());
+                                return resultMap;
+                            }
+                            if ("notUse".equals(specialJudgeInfo)) {
+                                errorMsg.append(specialInfos[j] + "专项已停用，请重新输入！");
+                                resultMap.put("resultMsg", errorMsg.toString());
+                                return resultMap;
+                            }
                         }
                     }
                 }
-            }
 
 
-            if("1".equals(interfaceType)){
-                if(i == 0){
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit(mapsAboutAmount.get("totalPriceLabor").toString());
-                }else if(i == 1){
-                    voucherDTO1.setDebit(mapsAboutAmount.get("finalSumAmountForI").toString());
-                    voucherDTO1.setCredit("0.00");
-                }else if (i == 2){
-                    voucherDTO1.setDebit(mapsAboutAmount.get("discountAmountLabor").toString());
-                    voucherDTO1.setCredit("0.00");
-                }else if (i == 3){
-                    voucherDTO1.setDebit(mapsAboutAmount.get("partsUnitCosts").toString());
-                    voucherDTO1.setCredit("0.00");
-                }else if (i == 4){
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit(mapsAboutAmount.get("partsUnitCosts").toString());
-                }else if (i ==5){
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit(mapsAboutAmount.get("totalPriceParts").toString());
-                }else if (i ==6){
-                    voucherDTO1.setDebit(mapsAboutAmount.get("discountAmountParts").toString());
-                    voucherDTO1.setCredit("0.00");
-                }else if (i ==7){
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit(mapsAboutAmount.get("vatAmountSum").toString());
+                if ("1".equals(interfaceType)) {
+                    if (i == 0) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit(mapsAboutAmount.get("totalPriceLabor").toString());
+                    } else if (i == 1) {
+                        voucherDTO1.setDebit(mapsAboutAmount.get("finalSumAmountForI").toString());
+                        voucherDTO1.setCredit("0.00");
+                    } else if (i == 2) {
+                        voucherDTO1.setDebit(mapsAboutAmount.get("discountAmountLabor").toString());
+                        voucherDTO1.setCredit("0.00");
+                    } else if (i == 3) {
+                        voucherDTO1.setDebit(mapsAboutAmount.get("partsUnitCosts").toString());
+                        voucherDTO1.setCredit("0.00");
+                    } else if (i == 4) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit(mapsAboutAmount.get("partsUnitCosts").toString());
+                    } else if (i == 5) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit(mapsAboutAmount.get("totalPriceParts").toString());
+                    } else if (i == 6) {
+                        voucherDTO1.setDebit(mapsAboutAmount.get("discountAmountParts").toString());
+                        voucherDTO1.setCredit("0.00");
+                    } else if (i == 7) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit(mapsAboutAmount.get("vatAmountSum").toString());
+                    }
+                } else {
+                    if (i == 0) {
+                        voucherDTO1.setDebit(mapsAboutAmount.get("totalPriceLabor").toString());
+                        voucherDTO1.setCredit("0.00");
+                    } else if (i == 1) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit(mapsAboutAmount.get("finalSumAmountForI").toString());
+                    } else if (i == 2) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit(mapsAboutAmount.get("discountAmountLabor").toString());
+                    } else if (i == 3) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit(mapsAboutAmount.get("partsUnitCosts").toString());
+                    } else if (i == 4) {
+                        voucherDTO1.setDebit(mapsAboutAmount.get("partsUnitCosts").toString());
+                        voucherDTO1.setCredit("0.00");
+                    } else if (i == 5) {
+                        voucherDTO1.setDebit(mapsAboutAmount.get("totalPriceParts").toString());
+                        voucherDTO1.setCredit("0.00");
+                    } else if (i == 6) {
+                        voucherDTO1.setDebit("0.00");
+                        voucherDTO1.setCredit(mapsAboutAmount.get("discountAmountParts").toString());
+                    } else if (i == 7) {
+                        voucherDTO1.setDebit(mapsAboutAmount.get("vatAmountSum").toString());
+                        voucherDTO1.setCredit("0.00");
+                    }
                 }
-            }else{
-                if(i == 0){
-                    voucherDTO1.setDebit(mapsAboutAmount.get("totalPriceLabor").toString());
-                    voucherDTO1.setCredit("0.00");
-                }else if(i == 1){
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit(mapsAboutAmount.get("finalSumAmountForI").toString());
-                }else if (i == 2){
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit(mapsAboutAmount.get("discountAmountLabor").toString());
-                }else if (i == 3){
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit(mapsAboutAmount.get("partsUnitCosts").toString());
-                }else if (i == 4){
-                    voucherDTO1.setDebit(mapsAboutAmount.get("partsUnitCosts").toString());
-                    voucherDTO1.setCredit("0.00");
-                }else if (i ==5){
-                    voucherDTO1.setDebit(mapsAboutAmount.get("totalPriceParts").toString());
-                    voucherDTO1.setCredit("0.00");
-                }else if (i ==6){
-                    voucherDTO1.setDebit("0.00");
-                    voucherDTO1.setCredit(mapsAboutAmount.get("discountAmountParts").toString());
-                }else if (i ==7){
-                    voucherDTO1.setDebit(mapsAboutAmount.get("vatAmountSum").toString());
-                    voucherDTO1.setCredit("0.00");
-                }
+
+
+                //  当前描述字段无法进行选取的问题。
+                voucherDTO1.setRemarkName(serviceInvoiceDTO.getInvoiceNo());
+                voucherDTO1.setSubjectCode(subjectInfo);
+                voucherDTO1.setSubjectName(subjectName);
+
+                voucherDTO2.setSubjectCodeS(subjectInfo);
+                voucherDTO2.setSubjectNameS(subjectName);
+
+                // 一级专项集合。专项信息配置一定注意顺序问题。
+                String specialSuperCodes = configureManages.get(i).getSpecialSuperCode().trim();
+                String specialCode = configureManages.get(i).getSpecialCode();
+                voucherDTO2.setSpecialSuperCodeS(specialSuperCodes);
+                // 当前 专项信息配置一定注意顺序问题末级、一级一致。
+                voucherDTO2.setSpecialCodeS(specialCode);
+                list2.add(voucherDTO1);
+                list3.add(voucherDTO2);
+
             }
-
-
-            //  当前描述字段无法进行选取的问题。
-            voucherDTO1.setRemarkName(serviceInvoiceDTO.getInvoiceNo());
-            voucherDTO1.setSubjectCode(subjectInfo);
-            voucherDTO1.setSubjectName(subjectName);
-
-            voucherDTO2.setSubjectCodeS(subjectInfo);
-            voucherDTO2.setSubjectNameS(subjectName);
-
-            // 一级专项集合。专项信息配置一定注意顺序问题。
-            String specialSuperCodes = configureManages.get(i).getSpecialSuperCode().trim();
-            String specialCode = configureManages.get(i).getSpecialCode();
-            voucherDTO2.setSpecialSuperCodeS(specialSuperCodes);
-            // 当前 专项信息配置一定注意顺序问题末级、一级一致。
-            voucherDTO2.setSpecialCodeS(specialCode);
-            list2.add(voucherDTO1);
-            list3.add(voucherDTO2);
+        } else {
 
         }
 
