@@ -5,7 +5,10 @@ CREATE TABLE taskschedulingdetailsinfo(
         start_time VARCHAR(30) NOT NULL COMMENT '开始日期',
         end_time VARCHAR(30) NOT NULL COMMENT '结束日期',
         flag VARCHAR(2) NOT NULL COMMENT '0 fail 1 success',
-        batch VARCHAR(50) NOT NULL COMMENT '接口标识号'
+        batch VARCHAR(50) NOT NULL COMMENT '接口标识号',
+        temp1 VARCHAR(50) ,
+        temp2 VARCHAR(50) ,
+        temp3 VARCHAR(50)
 );
 
 insert into `taskschedulingdetailsinfo` (`id`, `url`, `start_time`, `end_time`, `flag`, `batch`, `temp1`, `temp2`, `temp3`) values('1','https://otrplus-cn-test.api.mercedes-benz.com.cn/api/accounting/vehicle-stock-change','1598345400007','1596001003220','1','Vehicle_Stock',NULL,NULL,NULL);

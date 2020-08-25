@@ -65,7 +65,7 @@ public class PartsStockController implements ScheduledOfTask {
             } else {
                 List<JsonToPartsStock> partsStockList = (List<JsonToPartsStock>) JSONArray.parseArray(returnStr, JsonToPartsStock.class);
                 //保存入库
-                str = partsStockService.savePartsStockListList(partsStockList);
+                str = partsStockService.savePartsStockListList(partsStockList,tasksdetailsinfo.getEndTime());
             }
             System.out.println(str);
         } catch (Exception e) {
