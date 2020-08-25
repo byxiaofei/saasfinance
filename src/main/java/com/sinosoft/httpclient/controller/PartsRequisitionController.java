@@ -6,9 +6,11 @@ import com.sinosoft.httpclient.domain.JsonToPartsRequisition;
 import com.sinosoft.httpclient.service.HttpClient;
 import com.sinosoft.httpclient.service.PartsRequisitionService;
 import com.sinosoft.httpclient.service.impl.PartsRequisitionServiceImpl;
+import com.sinosoft.httpclient.task.ScheduledOfTask;
 import com.sinosoft.repository.SubjectRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,9 +20,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@RestController
-@RequestMapping(value = "/testPartsRequisition")
-public class PartsRequisitionController {
+@Component
+public class PartsRequisitionController implements ScheduledOfTask {
 
     private Logger logger = LoggerFactory.getLogger(PartsRequisitionController.class);
 
@@ -33,8 +34,8 @@ public class PartsRequisitionController {
     /**
      * 6. Parts Requisition 接口解析报文,范本
      */
-    @RequestMapping("/1")
-    public void getPartsRequisition(){
+    @Override
+    public void execute() {
         try {
             String url = "https://otrplus-cn-test.api.mercedes-benz.com.cn/api/accounting/parts-requisition";
             // 添加参数

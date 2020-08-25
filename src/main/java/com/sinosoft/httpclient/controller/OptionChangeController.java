@@ -4,9 +4,11 @@ import com.alibaba.fastjson.JSONArray;
 import com.sinosoft.httpclient.domain.OptionChange;
 import com.sinosoft.httpclient.service.HttpClient;
 import com.sinosoft.httpclient.service.OptionChangeService;
+import com.sinosoft.httpclient.task.ScheduledOfTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,9 +18,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@RestController
-@RequestMapping(value="/testOptionChange")
-public class OptionChangeController {
+@Component
+public class OptionChangeController implements ScheduledOfTask {
 
     private Logger logger = LoggerFactory.getLogger(OptionChangeController.class);
 
@@ -29,8 +30,8 @@ public class OptionChangeController {
     /**
     *OptionChange 接口解析报文
     */
-    @RequestMapping(value = "/1")
-    public void getOptionChange(){
+    @Override
+    public void execute() {
         try {
             String url="https://otrplus-cn-test.api.mercedes-benz.com.cn/api/accounting/option-change";
             //添加参数

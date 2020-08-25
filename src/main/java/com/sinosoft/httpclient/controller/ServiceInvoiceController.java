@@ -5,9 +5,11 @@ import com.sinosoft.httpclient.dto.PartsVerificationDTO;
 import com.sinosoft.httpclient.dto.ServiceInvoiceDTO;
 import com.sinosoft.httpclient.service.HttpClient;
 import com.sinosoft.httpclient.service.ServiceInvoiceService;
+import com.sinosoft.httpclient.task.ScheduledOfTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,9 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@RestController
-@RequestMapping("/serviceInvoice")
-public class ServiceInvoiceController {
+@Component
+public class ServiceInvoiceController implements ScheduledOfTask {
 
     private Logger logger = LoggerFactory.getLogger(ServiceInvoiceController.class);
 
@@ -27,8 +28,8 @@ public class ServiceInvoiceController {
     ServiceInvoiceService serviceInvoiceService;
     @Resource
     HttpClient httpClient;
-    @RequestMapping("/get_service_invoice")
-    public  void getServiceInvoiceService(){
+    @Override
+    public void execute() {
 
         try {
             String url = "https://otrplus-cn-test.api.mercedes-benz.com.cn/api/accounting/service-invoice";

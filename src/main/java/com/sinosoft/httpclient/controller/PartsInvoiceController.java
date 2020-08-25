@@ -5,9 +5,11 @@ import com.sinosoft.httpclient.domain.JsonToPartsInvoice;
 import com.sinosoft.httpclient.domain.PartsInvoice;
 import com.sinosoft.httpclient.service.HttpClient;
 import com.sinosoft.httpclient.service.PartsInvoiceService;
+import com.sinosoft.httpclient.task.ScheduledOfTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,9 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@RestController
-@RequestMapping(value = "/testPartsInvoice")
-public class PartsInvoiceController {
+@Component
+public class PartsInvoiceController implements ScheduledOfTask {
 
     private Logger logger = LoggerFactory.getLogger(PartsInvoiceController.class);
 
@@ -28,8 +29,8 @@ public class PartsInvoiceController {
     @Resource
     PartsInvoiceService partsInvoiceService;
 
-    @RequestMapping(value = "/1")
-    public void getPartsInvoice(){
+    @Override
+    public void execute() {
         try {
             String url = "https://otrplus-cn-test.api.mercedes-benz.com.cn/api/accounting/parts-invoice";
             //添加参数

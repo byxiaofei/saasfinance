@@ -4,9 +4,11 @@ import com.alibaba.fastjson.JSONArray;
 import com.sinosoft.httpclient.dto.PartsVerificationDTO;
 import com.sinosoft.httpclient.service.HttpClient;
 import com.sinosoft.httpclient.service.PartsVerificationService;
+import com.sinosoft.httpclient.task.ScheduledOfTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,9 +18,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@RestController
-@RequestMapping("/partsVerification")
-public class PartsVerificationController {
+@Component
+public class PartsVerificationController implements ScheduledOfTask {
 
     private Logger logger = LoggerFactory.getLogger(PartsVerificationController.class);
 
@@ -31,8 +32,8 @@ public class PartsVerificationController {
     /**
      *
      */
-    @RequestMapping(value = "/test")
-    public void getPartsVerification(){
+    @Override
+    public void execute() {
 
         try {
             String url = "https://otrplus-cn-test.api.mercedes-benz.com.cn/api/accounting/parts-verification";

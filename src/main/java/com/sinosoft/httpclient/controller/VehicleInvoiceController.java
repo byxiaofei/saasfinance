@@ -5,9 +5,11 @@ import com.sinosoft.httpclient.domain.VehicleInvoice;
 import com.sinosoft.httpclient.domain.VehicleStock;
 import com.sinosoft.httpclient.service.HttpClient;
 import com.sinosoft.httpclient.service.VehicleInvoiceService;
+import com.sinosoft.httpclient.task.ScheduledOfTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,9 +20,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@RestController
-@RequestMapping(value = "/testVehicleInvoice")
-public class VehicleInvoiceController {
+@Component
+public class VehicleInvoiceController implements ScheduledOfTask {
 
 
     private Logger logger = LoggerFactory.getLogger(VehicleInvoiceController.class);
@@ -34,8 +35,8 @@ public class VehicleInvoiceController {
     /**
      *
      */
-    @RequestMapping(value = "/1")
-    public void getVehicleInvoice(){
+    @Override
+    public void execute() {
 
         try {
             String url = "https://otrplus-cn-test.api.mercedes-benz.com.cn/api/accounting/vehicle-invoice";

@@ -5,9 +5,11 @@ import com.sinosoft.httpclient.domain.JsonToPartsPromotion;
 import com.sinosoft.httpclient.domain.PartsPromotion;
 import com.sinosoft.httpclient.service.HttpClient;
 import com.sinosoft.httpclient.service.PartsPromotionService;
+import com.sinosoft.httpclient.task.ScheduledOfTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,9 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@RestController
-@RequestMapping(value = "/testPartsPromotion")
-public class PartsPromotionController {
+@Component
+public class PartsPromotionController implements ScheduledOfTask {
 
     private Logger logger = LoggerFactory.getLogger(PartsPromotionController.class);
 
@@ -29,8 +30,8 @@ public class PartsPromotionController {
     @Resource
     private HttpClient httpClient;
 
-    @RequestMapping(value = "/1")
-    public void getPartsPromotionInfo(){
+    @Override
+    public void execute() {
         try {
             String url = "https://otrplus-cn-test.api.mercedes-benz.com.cn/api/accounting/parts-promotion";
             // 添加参数

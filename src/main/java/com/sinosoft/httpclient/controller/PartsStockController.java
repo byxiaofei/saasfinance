@@ -4,9 +4,11 @@ import com.alibaba.fastjson.JSONArray;
 import com.sinosoft.httpclient.domain.JsonToPartsStock;
 import com.sinosoft.httpclient.service.HttpClient;
 import com.sinosoft.httpclient.service.PartsStockService;
+import com.sinosoft.httpclient.task.ScheduledOfTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,9 +19,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-@RestController
-@RequestMapping(value = "/testPartsStock")
-public class PartsStockController {
+@Component
+public class PartsStockController implements ScheduledOfTask {
 
     private Logger logger = LoggerFactory.getLogger(PartsStockController.class);
 
@@ -32,8 +33,8 @@ public class PartsStockController {
     /**
      * 3. Parts stock in / checking 接口接收解析报文
      */
-    @RequestMapping(value = "/1")
-    public void getVehicleStock() {
+    @Override
+    public void execute() {
         try {
             String url = "https://otrplus-cn-test.api.mercedes-benz.com.cn/api/accounting/parts-stock-change";
             //添加参数
@@ -62,15 +63,5 @@ public class PartsStockController {
             logger.error("当前异常结果为："+e);
         }
     }
-
-    public static void main(String[] args) {
-        long time = 1597000000000L;
-        Date date = new Date(time);
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String format = sdf.format(date);
-        System.out.println(format);
-
-        long time1 = new Date().getTime();
-        System.out.println(time1);
-    }
+    
 }
