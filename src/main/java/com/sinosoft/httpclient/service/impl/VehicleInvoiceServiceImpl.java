@@ -510,7 +510,7 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
         //  查询会计月底第一条
         AccMonthTrace newestAccMonthTrace = accMonthTraceRespository.findNewestAccMonthTrace(centerCode, accBookType, accBookCode);
         String yearMonthDateAboutSql = newestAccMonthTrace.getId().getYearMonthDate();
-        SimpleDateFormat sdfNew = new SimpleDateFormat("yyyy-MM");
+        SimpleDateFormat sdfNew = new SimpleDateFormat("yyyyMM");
         try {
             Date accountDate = sdfNew.parse(yearMonthDateAboutSql);// 账务年月
             Date bussinessDate = sdfNew.parse(yearMonth);// 业务年月
