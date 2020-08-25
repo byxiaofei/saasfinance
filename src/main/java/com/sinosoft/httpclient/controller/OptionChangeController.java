@@ -2,8 +2,11 @@ package com.sinosoft.httpclient.controller;
 
 import com.alibaba.fastjson.JSONArray;
 import com.sinosoft.httpclient.domain.OptionChange;
+import com.sinosoft.httpclient.domain.Tasksdetailsinfo;
 import com.sinosoft.httpclient.service.HttpClient;
 import com.sinosoft.httpclient.service.OptionChangeService;
+import com.sinosoft.httpclient.service.TasksdetailsService;
+import com.sinosoft.httpclient.service.VehicleStockService;
 import com.sinosoft.httpclient.task.ScheduledOfTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,19 +30,31 @@ public class OptionChangeController implements ScheduledOfTask {
     private HttpClient httpClient;
     @Resource
     private OptionChangeService optionChangeService;
+    @Resource
+    TasksdetailsService tasksdetailsService;
     /**
     *OptionChange 接口解析报文
     */
     @Override
     public void execute() {
         try {
-            String url="https://otrplus-cn-test.api.mercedes-benz.com.cn/api/accounting/option-change";
-            //添加参数
-            Map<String,Long>uriMap =new HashMap<>(6);
-            Long startTime =new Date().getTime();  //开始时间传参
             Long endTime = new Date().getTime();
-            uriMap.put("startTime",Long.parseLong("1596001003220"));
-            uriMap.put("endTime",endTime);
+            Tasksdetailsinfo tasksdetailsinfo = new Tasksdetailsinfo();
+            tasksdetailsinfo.setBatch("Option_Change");
+            tasksdetailsinfo = tasksdetailsService.findTasksdetails(tasksdetailsinfo);
+
+            String url = tasksdetailsinfo.getUrl();
+            //添加参数
+            Map<String, Long> uriMap = new HashMap<>(6);
+
+            uriMap.put("startTime",Long.parseLong(tasksdetailsinfo.getEndTime()));
+            uriMap.put("endTime", endTime);
+
+            //保存接口结束日期
+            tasksdetailsinfo.setStartTime(tasksdetailsinfo.getEndTime());
+            tasksdetailsinfo.setEndTime(endTime.toString());
+            tasksdetailsService.saveTasksdetails(tasksdetailsinfo);
+
             String returnStr =httpClient.sendGet(url,uriMap);
             String str;
 

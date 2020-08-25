@@ -3,8 +3,10 @@ package com.sinosoft.httpclient.controller;
 
 import com.alibaba.fastjson.JSONArray;
 import com.sinosoft.httpclient.domain.JsonToPartsRequisition;
+import com.sinosoft.httpclient.domain.Tasksdetailsinfo;
 import com.sinosoft.httpclient.service.HttpClient;
 import com.sinosoft.httpclient.service.PartsRequisitionService;
+import com.sinosoft.httpclient.service.TasksdetailsService;
 import com.sinosoft.httpclient.service.impl.PartsRequisitionServiceImpl;
 import com.sinosoft.httpclient.task.ScheduledOfTask;
 import com.sinosoft.repository.SubjectRepository;
@@ -30,20 +32,32 @@ public class PartsRequisitionController implements ScheduledOfTask {
 
     @Resource
     HttpClient httpClient;
-
+    @Resource
+    TasksdetailsService tasksdetailsService;
     /**
      * 6. Parts Requisition 接口解析报文,范本
      */
     @Override
     public void execute() {
         try {
-            String url = "https://otrplus-cn-test.api.mercedes-benz.com.cn/api/accounting/parts-requisition";
-            // 添加参数
-            Map<String,Long> urlMap = new HashMap<>();
-            urlMap.put("startTime",Long.valueOf("1597000000000"));
-            urlMap.put("endTime",Long.valueOf("1597075199000"));
+            Long endTime = new Date().getTime();
+            Tasksdetailsinfo tasksdetailsinfo = new Tasksdetailsinfo();
+            tasksdetailsinfo.setBatch("Parts_Requisition");
+            tasksdetailsinfo = tasksdetailsService.findTasksdetails(tasksdetailsinfo);
 
-            String returnStr = httpClient.sendGet(url,urlMap);
+            String url = tasksdetailsinfo.getUrl();
+            //添加参数
+            Map<String, Long> uriMap = new HashMap<>(6);
+
+            uriMap.put("startTime",Long.parseLong(tasksdetailsinfo.getEndTime()));
+            uriMap.put("endTime", endTime);
+
+            //保存接口结束日期
+            tasksdetailsinfo.setStartTime(tasksdetailsinfo.getEndTime());
+            tasksdetailsinfo.setEndTime(endTime.toString());
+            tasksdetailsService.saveTasksdetails(tasksdetailsinfo);
+
+            String returnStr = httpClient.sendGet(url,uriMap);
             System.out.println(returnStr);
             String string;
             if(returnStr.equals("接口调用失败")){

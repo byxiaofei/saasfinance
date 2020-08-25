@@ -25,7 +25,5 @@ insert into `bz_spring_scheduled_cron` (`cron_id`, `cron_key`, `cron_expression`
 insert into `bz_spring_scheduled_cron` (`cron_id`, `cron_key`, `cron_expression`, `task_explain`, `status`) values('6','com.sinosoft.httpclient.controller.PartsVerificationController','0 30 0 * * ?','04-获取上次调用时间到当前时间，所有配件发票校验的数据','1');
 insert into `bz_spring_scheduled_cron` (`cron_id`, `cron_key`, `cron_expression`, `task_explain`, `status`) values('7','com.sinosoft.httpclient.controller.ServiceInvoiceController','0 0 1 * * ?','10-获取上次调用时间到当前时间，所有售后结账、退账的相关数据','1');
 insert into `bz_spring_scheduled_cron` (`cron_id`, `cron_key`, `cron_expression`, `task_explain`, `status`) values('8','com.sinosoft.httpclient.controller.VehicleInvoiceController','0 30 1 * * ?','02-获取上次调用时间到当前时间，所有车辆销售订单结账、退账的数据','1');
-insert into `bz_spring_scheduled_cron` (`cron_id`, `cron_key`, `cron_expression`, `task_explain`, `status`) values('9','com.sinosoft.httpclient.controller.VehicleStockController','0 0 2 * * ?','01-获取上次调用时间到当前时间，所有车辆库存变动的数据，包含入库退库和成本变更','1');
+insert into `bz_spring_scheduled_cron` (`cron_id`, `cron_key`, `cron_expression`, `task_explain`, `status`) values('9','com.sinosoft.httpclient.controller.VehicleStockController','0 36 17 * * ?','01-获取上次调用时间到当前时间，所有车辆库存变动的数据，包含入库退库和成本变更','1');
 insert into `bz_spring_scheduled_cron` (`cron_id`, `cron_key`, `cron_expression`, `task_explain`, `status`) values('10','com.sinosoft.httpclient.controller.WarrantyConfirmController','0 30 2 * * ?','08-获取上次调用时间到当前时间，所有索赔确认的数据','1');
-
-

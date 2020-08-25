@@ -3,8 +3,10 @@ package com.sinosoft.httpclient.controller;
 import com.alibaba.fastjson.JSONArray;
 import com.sinosoft.httpclient.domain.JsonToPartsPromotion;
 import com.sinosoft.httpclient.domain.PartsPromotion;
+import com.sinosoft.httpclient.domain.Tasksdetailsinfo;
 import com.sinosoft.httpclient.service.HttpClient;
 import com.sinosoft.httpclient.service.PartsPromotionService;
+import com.sinosoft.httpclient.service.TasksdetailsService;
 import com.sinosoft.httpclient.task.ScheduledOfTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,18 +31,28 @@ public class PartsPromotionController implements ScheduledOfTask {
 
     @Resource
     private HttpClient httpClient;
-
+    @Resource
+    TasksdetailsService tasksdetailsService;
     @Override
     public void execute() {
         try {
-            String url = "https://otrplus-cn-test.api.mercedes-benz.com.cn/api/accounting/parts-promotion";
-            // 添加参数
-            Map<String,Long> urlMap = new HashMap<>();
-            Long startTime = new Date().getTime();
             Long endTime = new Date().getTime();
-            urlMap.put("startTime",Long.parseLong("1595841003220"));
-            urlMap.put("endTime",endTime);
-            String returnStr = httpClient.sendGet(url,urlMap);
+            Tasksdetailsinfo tasksdetailsinfo = new Tasksdetailsinfo();
+            tasksdetailsinfo.setBatch("Parts_Promotion");
+            tasksdetailsinfo = tasksdetailsService.findTasksdetails(tasksdetailsinfo);
+
+            String url = tasksdetailsinfo.getUrl();
+            //添加参数
+            Map<String, Long> uriMap = new HashMap<>(6);
+
+            uriMap.put("startTime",Long.parseLong(tasksdetailsinfo.getEndTime()));
+            uriMap.put("endTime", endTime);
+
+            //保存接口结束日期
+            tasksdetailsinfo.setStartTime(tasksdetailsinfo.getEndTime());
+            tasksdetailsinfo.setEndTime(endTime.toString());
+            tasksdetailsService.saveTasksdetails(tasksdetailsinfo);
+            String returnStr = httpClient.sendGet(url,uriMap);
             System.out.println(returnStr);
             String str;
             if(returnStr.equals("调用接口失败")){

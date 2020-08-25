@@ -2,8 +2,10 @@ package com.sinosoft.httpclient.controller;
 
 import com.alibaba.fastjson.JSONArray;
 import com.sinosoft.httpclient.domain.JsonToPartsStock;
+import com.sinosoft.httpclient.domain.Tasksdetailsinfo;
 import com.sinosoft.httpclient.service.HttpClient;
 import com.sinosoft.httpclient.service.PartsStockService;
+import com.sinosoft.httpclient.service.TasksdetailsService;
 import com.sinosoft.httpclient.task.ScheduledOfTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,22 +31,30 @@ public class PartsStockController implements ScheduledOfTask {
 
     @Resource
     private PartsStockService partsStockService;
-
+    @Resource
+    TasksdetailsService tasksdetailsService;
     /**
      * 3. Parts stock in / checking 接口接收解析报文
      */
     @Override
     public void execute() {
         try {
-            String url = "https://otrplus-cn-test.api.mercedes-benz.com.cn/api/accounting/parts-stock-change";
+            Long endTime = new Date().getTime();
+            Tasksdetailsinfo tasksdetailsinfo = new Tasksdetailsinfo();
+            tasksdetailsinfo.setBatch("Parts_Stock_In_Checking");
+            tasksdetailsinfo = tasksdetailsService.findTasksdetails(tasksdetailsinfo);
+
+            String url = tasksdetailsinfo.getUrl();
             //添加参数
             Map<String, Long> uriMap = new HashMap<>(6);
-            Long startTime = new Date().getTime();   //开始时间需要传参
-            Long endTime = new Date().getTime();
-            //uriMap.put("startTime",endTime-86400000*4); //86400000 为一天的毫秒数
-            //uriMap.put("endTime", endTime);
-            uriMap.put("startTime",endTime-86400000*7);
-            uriMap.put("endTime",endTime-86400000*5);
+
+            uriMap.put("startTime",Long.parseLong(tasksdetailsinfo.getEndTime()));
+            uriMap.put("endTime", endTime);
+
+            //保存接口结束日期
+            tasksdetailsinfo.setStartTime(tasksdetailsinfo.getEndTime());
+            tasksdetailsinfo.setEndTime(endTime.toString());
+            tasksdetailsService.saveTasksdetails(tasksdetailsinfo);
 
 
             String returnStr = httpClient.sendGet(url, uriMap);
@@ -63,5 +73,5 @@ public class PartsStockController implements ScheduledOfTask {
             logger.error("当前异常结果为："+e);
         }
     }
-    
+
 }

@@ -1,15 +1,18 @@
 package com.sinosoft.httpclient.controller;
 
 import com.alibaba.fastjson.JSONArray;
+import com.sinosoft.httpclient.domain.Tasksdetailsinfo;
 import com.sinosoft.httpclient.domain.VehicleStock;
 import com.sinosoft.httpclient.dto.VehicleStockDTO;
 import com.sinosoft.httpclient.service.HttpClient;
+import com.sinosoft.httpclient.service.TasksdetailsService;
 import com.sinosoft.httpclient.service.VehicleStockService;
 import com.sinosoft.httpclient.task.ScheduledOfTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,19 +34,31 @@ public class VehicleStockController  implements ScheduledOfTask {
     @Resource
     private VehicleStockService vehicleStockService;
 
+    @Resource
+    TasksdetailsService tasksdetailsService;
     /**
      * VehicleStock 接口接收解析报文
      */
     @Override
     public void execute() {
         try {
-            String url = "https://otrplus-cn-test.api.mercedes-benz.com.cn/api/accounting/vehicle-stock-change";
+            Long endTime = new Date().getTime();
+            Tasksdetailsinfo tasksdetailsinfo = new Tasksdetailsinfo();
+            tasksdetailsinfo.setBatch("Vehicle_Stock");
+            tasksdetailsinfo = tasksdetailsService.findTasksdetails(tasksdetailsinfo);
+
+
+            String url = tasksdetailsinfo.getUrl();
             //添加参数
             Map<String, Long> uriMap = new HashMap<>(6);
-            Long startTime = new Date().getTime();   //开始时间需要传参
-            Long endTime = new Date().getTime();
-            uriMap.put("startTime",Long.parseLong("1596001003220"));
+
+            uriMap.put("startTime",Long.parseLong(tasksdetailsinfo.getEndTime()));
             uriMap.put("endTime", endTime);
+
+            //保存接口结束日期
+            tasksdetailsinfo.setStartTime(tasksdetailsinfo.getEndTime());
+            tasksdetailsinfo.setEndTime(endTime.toString());
+            tasksdetailsService.saveTasksdetails(tasksdetailsinfo);
 
             String returnStr = httpClient.sendGet(url,uriMap);
             String str  ;
