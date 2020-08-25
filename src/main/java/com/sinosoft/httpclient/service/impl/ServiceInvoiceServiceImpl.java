@@ -63,6 +63,9 @@ public class ServiceInvoiceServiceImpl implements ServiceInvoiceService {
     private InterfaceInfoService interfaceInfoService;
 
 
+    @Resource
+    private VehicleInvoiceServiceImpl vehicleInvoiceService;
+
     @Override
     public String getServiceInvoiceService(List<ServiceInvoiceDTO> ServiceInvoiceDTOList,String loadTime) {
 
@@ -333,6 +336,16 @@ public class ServiceInvoiceServiceImpl implements ServiceInvoiceService {
 
         String centerCode = branchCode;// branchCode 与centerCode 相同
 
+        // 这里看是否需要进行会计月度的追加。
+        // 根据机构和账套查询当前的最大会计月度，并选择到当前的日期，是否与当
+        String monthTrace = vehicleInvoiceService.recursiveCalls(centerCode, accbookType, accbookCode, yearMonth);
+        if(!"final".equals(monthTrace)){
+            // 如果不是final 就出现了异常了
+            errorMsg.append("当前对会计期间的开启存在异常");
+            resultMap.put("resultMsg",errorMsg.toString());
+            return resultMap;
+        }
+
         // 如果没有问题，校验的同时就生成了凭证号了。 这里把createBy 创建人，设置为001 系统默认了
         VoucherDTO voucherDTO = voucherService.setVoucher1(yearMonth, centerCode, branchCode, accbookCode, accbookType,"001");
         if(voucherDTO.getYearMonth() == null || "".equals(voucherDTO.getYearMonth())){
@@ -508,7 +521,9 @@ public class ServiceInvoiceServiceImpl implements ServiceInvoiceService {
 
             }
         } else {
-
+            errorMsg.append("没有对应的configuremanage表中的管理信息。");
+            resultMap.put("resultMsg", errorMsg.toString());
+            return resultMap;
         }
 
         // 以上已经对一条凭证处理校验完毕

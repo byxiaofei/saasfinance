@@ -3,6 +3,7 @@ package com.sinosoft.httpclient.service.impl;
 import com.sinosoft.common.WebServiceResult;
 import com.sinosoft.domain.InterfaceInfo;
 import com.sinosoft.domain.SubjectInfo;
+import com.sinosoft.domain.account.AccMonthTrace;
 import com.sinosoft.dto.VoucherDTO;
 import com.sinosoft.httpclient.domain.ConfigureManage;
 import com.sinosoft.httpclient.domain.VehicleInvoice;
@@ -15,6 +16,7 @@ import com.sinosoft.repository.SubjectRepository;
 import com.sinosoft.repository.account.AccMonthTraceRespository;
 import com.sinosoft.service.InterfaceInfoService;
 import com.sinosoft.service.VoucherService;
+import com.sinosoft.service.account.SettlePeriodService;
 import com.sinosoft.service.impl.DataDockingServiceImpl;
 import com.sinosoft.util.DateUtil;
 import com.sinosoft.util.XMLUtil;
@@ -24,10 +26,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Service
 public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
@@ -60,6 +61,11 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
     @Resource
     private InterfaceInfoService interfaceInfoService;
 
+    // 结算期管理进行的追加
+    @Resource
+    private SettlePeriodService settlePeriodService;
+
+
     @Transactional(rollbackFor = Exception.class)
     @Override
     public String saveVehicleInvoiceList(List<VehicleInvoice> vehicleInvoiceList,String loadTime) {
@@ -80,6 +86,8 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
                     errorAllMessage.append("第"+(i+1)+"的错误问题为："+judgeMsg);
                     continue;
                 }
+
+
                 // 1. 看当前信息是什么类型的
                 String invoiceType = vehicleInvoice.getInvoiceType();
                 String interfaceInfo = "2";
@@ -245,6 +253,18 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
             }
         }
         String centerCode = branchCode;// branchCode 与centerCode 相同
+
+
+        // 这里看是否需要进行会计月度的追加。
+        // 根据机构和账套查询当前的最大会计月度，并选择到当前的日期，是否与当
+        String monthTrace = recursiveCalls(centerCode, accbookType, accbookCode, yearMonth);
+        if(!"final".equals(monthTrace)){
+            // 如果不是final 就出现了异常了
+            errorMsg.append("当前对会计期间的开启存在异常");
+            resultMap.put("resultMsg",errorMsg.toString());
+            return resultMap;
+        }
+
 
         // 如果没问题，校验的同时就生成了凭证号了。 这里把createBy 创建人 设置为001 默认系统了
         VoucherDTO voucherDTO = voucherService.setVoucher1(yearMonth, centerCode, branchCode, accbookCode, accbookType,"001");
@@ -486,4 +506,24 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
     }
 
 
+    public String recursiveCalls(String centerCode,String accBookType,String accBookCode,String yearMonth){
+        //  查询会计月底第一条
+        AccMonthTrace newestAccMonthTrace = accMonthTraceRespository.findNewestAccMonthTrace(centerCode, accBookType, accBookCode);
+        String yearMonthDateAboutSql = newestAccMonthTrace.getId().getYearMonthDate();
+        SimpleDateFormat sdfNew = new SimpleDateFormat("yyyy-MM");
+        try {
+            Date accountDate = sdfNew.parse(yearMonthDateAboutSql);// 账务年月
+            Date bussinessDate = sdfNew.parse(yearMonth);// 业务年月
+            // 业务年月大于账务年月。则需要进行库表新增。其他则不用管。
+            if(accountDate.getTime() < bussinessDate.getTime()){
+                settlePeriodService.addToAndSave(centerCode, accBookType, accBookCode);
+                return recursiveCalls(centerCode,accBookType,accBookCode,yearMonth);
+            }else{
+                return "final";
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return "error";
+        }
+    }
 }

@@ -11,5 +11,5 @@ public interface VehicleStockService {
      * @param vehicleStockList
      * @return
      */
-     String savevehicleStockList(List<VehicleStock> vehicleStockList);
+     String savevehicleStockList(List<VehicleStock> vehicleStockList,String loadTime);
 }

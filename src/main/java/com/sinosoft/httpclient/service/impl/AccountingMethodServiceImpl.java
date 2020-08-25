@@ -28,14 +28,22 @@ public class AccountingMethodServiceImpl implements AccountingMethod {
 
     @Resource
     private BranchInfoRepository branchInfoRepository;
+
     @Resource
     private AccMonthTraceRespository accMonthTraceRespository;
+
     @Resource
     private VoucherService voucherService;
+
     @Resource
     private SubjectRepository subjectRepository;
+
     @Resource
     private ConfigureManageRespository configureManageRespository;
+
+    @Resource
+    private VehicleInvoiceServiceImpl vehicleInvoiceService;
+
     @Override
     public Map  InformationVerification(String companyNo, String PreparationDate, StringBuilder errorMsg) {
         Map resultMap = new HashMap<>();
@@ -87,6 +95,18 @@ public class AccountingMethodServiceImpl implements AccountingMethod {
                 accbookCode = maps.get("accountCode").toString();
             }
         }
+
+        // 这里看是否需要进行会计月度的追加。
+        // 根据机构和账套查询当前的最大会计月度，并选择到当前的日期，是否与当
+        String monthTrace = vehicleInvoiceService.recursiveCalls(companyNo, accbookType, accbookCode, yearMonth);
+        if(!"final".equals(monthTrace)){
+            // 如果不是final 就出现了异常了
+            errorMsg.append("当前对会计期间的开启存在异常");
+            resultMap.put("resultMsg",errorMsg.toString());
+            return resultMap;
+        }
+
+
         // 如果没问题，校验的同时就生成了凭证号了。 这里把createBy 创建人 设置为001 默认系统了
         VoucherDTO voucherDTO = voucherService.setVoucher1(yearMonth, companyNo, companyNo, accbookCode, accbookType,"001");
         if(voucherDTO.getYearMonth() == null || "".equals(voucherDTO.getYearMonth())){

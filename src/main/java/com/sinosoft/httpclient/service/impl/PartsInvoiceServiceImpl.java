@@ -51,6 +51,8 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService {
     @Resource
     private InterfaceInfoService interfaceInfoService;
 
+    @Resource
+    private VehicleInvoiceServiceImpl vehicleInvoiceService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -95,13 +97,12 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService {
                     partsInvoice.setVatRate(temp1.getVatRate());
                     partsInvoice.setVatAmount(temp1.getVatAmount());
                     partsInvoice.setCustomerTypeNo(temp1.getCustomerTypeNo());
+
                     partsInvoices.add(partsInvoice);
 
                 }
 
              //TODO .. 校验，入库。
-
-
 
             }
             //得到业务数据进行业务处理
@@ -252,18 +253,26 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService {
         }
         String centerCode = branchCode;// branchCode 与centerCode 相同
 
+
+        String monthTrace = vehicleInvoiceService.recursiveCalls(branchCode, accbookType, accbookCode, yearMonth);
+        if(!"final".equals(monthTrace)){
+            // 如果不是final 就出现了异常了
+            errorMsg.append("当前对会计期间的开启存在异常");
+            resultMap.put("resultMsg",errorMsg.toString());
+            return resultMap;
+        }
+
         // 如果没问题，校验的同时就生成了凭证号了。 这里把createBy 创建人 设置为001 默认系统了
         VoucherDTO voucherDTO = voucherService.setVoucher1(yearMonth, centerCode, branchCode, accbookCode, accbookType,"001");
         if(voucherDTO.getYearMonth() == null || "".equals(voucherDTO.getYearMonth())){
-//            errorMsg = errorMsg + "当前账套信息下没有对应的凭证月"+",";
             errorMsg.append("当前账套信息下没有对应的凭证月");
             resultMap.put("resultMsg",errorMsg.toString());
             return resultMap;
         }
+
         // 传过来的年月，需要判断当前月是否已经结转。
         List<?> objects = accMonthTraceRespository.queryAccMonthTraceByChooseMessage(centerCode, yearMonth, accbookType, accbookCode);
         if(objects.size() > 0){
-//            errorMsg = errorMsg + "当前月已经进行结转不能再新增凭证"+",";
             errorMsg.append("当前月已经进行结转不能再新增凭证");
             resultMap.put("resultMsg",errorMsg.toString());
             return resultMap;

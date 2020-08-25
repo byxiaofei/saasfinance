@@ -44,6 +44,10 @@ public class PartsStockServiceImpl implements PartsStockService {
     @Resource
     private InterfaceInfoService interfaceInfoService;
 
+    @Resource
+    private VehicleInvoiceServiceImpl vehicleInvoiceService;
+
+
     Map<String,Object> resultMap = new HashMap<>();
     VoucherDTO voucherDTO = new VoucherDTO();
     StringBuilder errorMsg = new StringBuilder();
@@ -55,7 +59,7 @@ public class PartsStockServiceImpl implements PartsStockService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String savePartsStockListList(List<JsonToPartsStock> jsonTopartsStockList) {
+    public String savePartsStockListList(List<JsonToPartsStock> jsonTopartsStockList,String loadTime) {
         saveinterface(jsonTopartsStockList);
 
         // 1 拿到解析数据，直接进行解析处理
@@ -67,7 +71,7 @@ public class PartsStockServiceImpl implements PartsStockService {
                 String judgeMsg = judgeInterfaceInfoQuerstion(jsonToPartsStock,partsStockIn);
                 if (returnErrorInfo(judgeMsg)) {
                     //记录失败日志
-                    logger.error("");
+                    interfaceInfoService.failSave("system",loadTime,errorMsg.toString());
                     flag = false;
                 }
             }
@@ -77,7 +81,8 @@ public class PartsStockServiceImpl implements PartsStockService {
             //根据业务类型处理分录信息
             if (manageTransactionType(jsonToPartsStock,jsonToPartsStock.getStockInParts(), Constant.INTERFACEINFO_3)) {
                 //记录失败日志
-                 continue;
+                interfaceInfoService.failSave("system",loadTime,errorMsg.toString());
+                continue;
             }
 
         }
@@ -234,6 +239,14 @@ public class PartsStockServiceImpl implements PartsStockService {
                 accbookType = maps.get("accountType").toString();
                 accbookCode = maps.get("accountCode").toString();
             }
+        }
+
+        String monthTrace = vehicleInvoiceService.recursiveCalls(branchCode, accbookType, accbookCode, yearMonth);
+        if(!"final".equals(monthTrace)){
+            // 如果不是final 就出现了异常了
+            errorMsg.append("当前对会计期间的开启存在异常");
+            resultMap.put("resultMsg",errorMsg.toString());
+            return false;
         }
 
         // 如果没问题，校验的同时就生成了凭证号了。 这里把createBy 创建人 设置为001 默认系统了

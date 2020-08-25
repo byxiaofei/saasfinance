@@ -56,9 +56,14 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
     @Resource
     private InterfaceInfoService interfaceInfoService;
 
+    @Resource
+    private VehicleInvoiceServiceImpl vehicleInvoiceService;
+
     // 任务调度明细表
     @Resource
     private TaskSchedulingDetailsInfoRespository taskSchedulingDetailsInfoRespository;
+
+
     /**
      * 保存
      * @param jsonToPartsRequisitionList
@@ -264,6 +269,15 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
         }
 
         String centerCode = branchCode;// branchCode 与centerCode 相同
+
+        String monthTrace = vehicleInvoiceService.recursiveCalls(branchCode, accbookType, accbookCode, yearMonth);
+        if(!"final".equals(monthTrace)){
+            // 如果不是final 就出现了异常了
+            errorMsg.append("当前对会计期间的开启存在异常");
+            resultMap.put("resultMsg",errorMsg.toString());
+            return resultMap;
+        }
+
 
         // 如果没有问题，校验的同时就生成了凭证号了。 这里把createBy 创建人，设置为001 系统默认了
         VoucherDTO voucherDTO = voucherService.setVoucher1(yearMonth, centerCode, branchCode, accbookCode, accbookType,"001");

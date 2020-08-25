@@ -27,6 +27,8 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -774,6 +776,156 @@ public class SettlePeriodServiceImpl implements SettlePeriodService{
         }
 
         return InvokeResult.success();
+    }
+
+    @Override
+    public String addToAndSave(String centerCode,String accBookType, String accBookCode) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String currentDate = sdf.format(new Date());
+        String yearMonthDate = currentDate.substring(0,4)+currentDate.substring(5,7);//追加 年月
+        AccMonthTrace accMonthTrace = accMonthTraceRespository.findNewestAccMonthTrace(centerCode, accBookType, accBookCode);
+
+        if(accMonthTrace != null ){
+            yearMonthDate = accMonthTrace.getId().getYearMonthDate();
+            if(yearMonthDate.substring(4,6).equals("14")){
+                /*yearMonthDate = yearMonthDate.substring(0,4) + "JS";*/
+                yearMonthDate = (Integer.parseInt(yearMonthDate.substring(0,4))+1)+"01";
+            }else if(yearMonthDate.substring(4,6).equals("09") || yearMonthDate.substring(4,6).equals("10") || yearMonthDate.substring(4,6).equals("11") || yearMonthDate.substring(4,6).equals("12") || yearMonthDate.substring(4,6).equals("13")){
+                yearMonthDate = yearMonthDate.substring(0,4) + (Integer.parseInt(yearMonthDate.substring(4,6))+1);
+            }else if(yearMonthDate.substring(4,6).equals("JS")){
+                yearMonthDate = (Integer.parseInt(yearMonthDate.substring(0,4))+1)+"01";
+            }else{//1--8
+                yearMonthDate = yearMonthDate.substring(0,5) + (Integer.parseInt(yearMonthDate.substring(5,6))+1);
+            }
+        }
+        AccMonthTraceDTO dto = new AccMonthTraceDTO();
+        dto.setCenterCode(accMonthTrace.getId().getCenterCode());//核算单位
+        dto.setYearMonthDate(yearMonthDate);//凭证年月
+        dto.setAccMonthStat("1");//会计月度状态
+        dto.setAccBookType(accMonthTrace.getId().getAccBookType());//账套类型
+        dto.setAccBookCode(accMonthTrace.getId().getAccBookCode());//账套编码
+        dto.setTemp("");//备用
+
+
+        AccMonthTraceId amId = new AccMonthTraceId();
+        amId.setAccBookCode(dto.getAccBookCode());
+        amId.setAccBookType(dto.getAccBookType());
+        amId.setCenterCode(dto.getCenterCode());
+        amId.setYearMonthDate(dto.getYearMonthDate());
+        AccMonthTrace am = new AccMonthTrace();
+        am.setAccMonthStat(dto.getAccMonthStat());
+        am.setTemp(dto.getTemp());
+
+        //修改上一个会计期间状态
+        String lastMonthDate = dto.getYearMonthDate();
+        if(lastMonthDate.substring(4,6).equals("01")){
+            /*lastMonthDate = Integer.parseInt(lastMonthDate.substring(0,4))-1+"JS";*/
+            lastMonthDate = Integer.parseInt(lastMonthDate.substring(0,4))-1+"14";
+        }else if(lastMonthDate.substring(4,6).equals("JS")){
+            lastMonthDate = lastMonthDate.substring(0,4)  + "12";
+        }else{
+            lastMonthDate = String.valueOf(Integer.parseInt(lastMonthDate)-1);
+        }
+        amId.setYearMonthDate(lastMonthDate);
+        AccMonthTrace accMonthTrace1 = accMonthTraceRespository.findById(amId).get();
+        accMonthTrace1.setAccMonthStat("2");
+        accMonthTraceRespository.saveAndFlush(accMonthTrace1);
+        accMonthTraceRespository.findAll();
+
+        //保存追加会计期间
+        amId.setYearMonthDate(dto.getYearMonthDate());
+        am.setId(amId);
+
+            /*if(amId.getYearMonthDate().contains("JS") || amId.getYearMonthDate().substring(4,6).equals("14")){
+                //如果为结算月，修改状态为 未结转
+                am.setAccMonthStat("2");
+            }else{
+                am.setAccMonthStat("1");
+            }*/
+        am.setAccMonthStat("1");
+
+        accMonthTraceRespository.saveAndFlush(am);
+
+        //判断是否为结算月,是结算月则存储下一年1月会计期间
+            /*if(dto.getYearMonthDate().contains("JS") || dto.getYearMonthDate().substring(4,6).equals("14")){
+                AccMonthTrace am2 = new AccMonthTrace();
+                amId.setYearMonthDate((Integer.parseInt(dto.getYearMonthDate().substring(0,4))+1)+ "01");
+                am2.setId(amId);
+                am2.setAccMonthStat("1");
+                accMonthTraceRespository.saveAndFlush(am2);
+            }*/
+
+
+        //固定资产会计期间追加
+        AccGCheckInfoId agid = new AccGCheckInfoId();
+        agid.setCenterCode(centerCode);
+        agid.setYearMonthDate(dto.getYearMonthDate());
+        agid.setAccBookType(CurrentUser.getCurrentLoginAccountType());
+        agid.setAccBookCode(CurrentUser.getCurrentLoginAccount());
+        AccGCheckInfo ag = new AccGCheckInfo();
+        ag.setId(agid);
+        ag.setFlag("0");//未计提
+        String str = dto.getYearMonthDate().substring(4,6);
+        if(!"JS".equals(str) && !"13".equals(str) && !"14".equals(str)){
+            accGCheckInfoRepository.save(ag);//不保存JS月
+        }/*else if ("14".equals(str)) {
+                agid.setYearMonthDate((Integer.parseInt(dto.getYearMonthDate().substring(0,4))+1)+ "01");
+                ag.setId(agid);
+                accGCheckInfoRepository.save(ag);
+            }*/
+
+        //无形资产会计期间追加
+        AccWCheckInfoId awid = new AccWCheckInfoId();
+        awid.setCenterCode(centerCode);
+        awid.setYearMonthDate(dto.getYearMonthDate());
+        awid.setAccBookType(CurrentUser.getCurrentLoginAccountType());
+        awid.setAccBookCode(CurrentUser.getCurrentLoginAccount());
+        AccWCheckInfo aw = new AccWCheckInfo();
+        aw.setId(awid);
+        aw.setFlag("0");//未计提
+        if(!"JS".equals(str) && !"13".equals(str) && !"14".equals(str)){
+            accWCheckInfoRepository.save(aw);//不保存JS月
+        }/*else if ("14".equals(str)) {
+                awid.setYearMonthDate((Integer.parseInt(dto.getYearMonthDate().substring(0,4))+1)+ "01");
+                aw.setId(awid);
+                accWCheckInfoRepository.save(aw);
+            }*/
+
+        //对账信息表追加数据
+        AccMonthTraceId newID = new AccMonthTraceId();
+        newID.setCenterCode(centerCode);
+        newID.setAccBookType(CurrentUser.getCurrentLoginAccountType());
+        newID.setAccBookCode(CurrentUser.getCurrentLoginAccount());
+        newID.setYearMonthDate(dto.getYearMonthDate());
+        AccCheckInfo accCheckInfo = new AccCheckInfo();
+        accCheckInfo.setId(newID);
+        accCheckInfo.setIsCarry("");
+        accCheckInfo.setIsCheck("");
+        accCheckInfoRespository.saveAndFlush(accCheckInfo);
+
+            /*if(dto.getYearMonthDate().contains("JS") || "14".equals(str)){
+                accCheckInfo = new AccCheckInfo();
+                newID.setYearMonthDate((Integer.parseInt(dto.getYearMonthDate().substring(0,4))+1)+ "01");
+                accCheckInfo.setId(newID);
+                accCheckInfo.setIsCarry("");
+                accCheckInfo.setIsCheck("");
+                accCheckInfoRespository.saveAndFlush(accCheckInfo);
+            }*/
+
+        //保存凭证最大号
+        AccVoucherNoId avnid = new AccVoucherNoId();
+        avnid.setAccBookCode(CurrentUser.getCurrentLoginAccount());
+        avnid.setAccBookType(CurrentUser.getCurrentLoginAccountType());
+        avnid.setCenterCode(centerCode);
+        avnid.setYearMonthDate(dto.getYearMonthDate());
+
+        AccVoucherNo avn = new AccVoucherNo();
+        avn.setId(avnid);
+        avn.setMaxFlag("1");//标志
+        avn.setVoucherNo("1");//最大凭证号
+        accVoucherNoRespository.saveAndFlush(avn);
+
+        return  "success";
     }
 
 }

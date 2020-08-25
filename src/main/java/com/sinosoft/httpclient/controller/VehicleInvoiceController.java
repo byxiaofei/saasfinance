@@ -54,6 +54,7 @@ public class VehicleInvoiceController implements ScheduledOfTask {
                 str = "接口调用失败"; // TODO 循环请求或者 其他原因导致请求失败，具体原因分析
             } else {
                 List<VehicleInvoice> vehicleInvoices = JSONArray.parseArray(returnStr, VehicleInvoice.class);
+
                 //保存入库
                 str = vehicleInvoiceService.saveVehicleInvoiceList(vehicleInvoices,"1597039093220");
             }

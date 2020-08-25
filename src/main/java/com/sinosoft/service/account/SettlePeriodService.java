@@ -20,4 +20,11 @@ public interface SettlePeriodService {
     InvokeResult settle(AccMonthTraceDTO dto);
 
     InvokeResult unSettle(AccMonthTraceDTO dto);
+
+    /**
+     * 校验并且查询新增会计期间
+     *
+     * @return
+     */
+    String addToAndSave(String centerCode,String accBookType, String accBookCode);
 }

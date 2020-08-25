@@ -52,7 +52,7 @@ public class VehicleStockController  implements ScheduledOfTask {
             }else{
                 List<VehicleStock> vehicleStockList = (List<VehicleStock>) JSONArray.parseArray(returnStr, VehicleStock.class);
                 //保存入库
-                 str =  vehicleStockService.savevehicleStockList(vehicleStockList);
+                 str =  vehicleStockService.savevehicleStockList(vehicleStockList,String.valueOf(new Date().getTime()));
             }
             System.out.println(str);
         } catch (Exception e) {
@@ -62,61 +62,5 @@ public class VehicleStockController  implements ScheduledOfTask {
 
     }
 
-    public static void main(String[] args) {
-        //模拟请求返回报文结果
-        String returnStr = "[" +
-                "{ "+
-                "\"dealerNo\": \"GS0031211\","+
-                "\"companyNo\": \"GS0031211\","+
-                "\"transactionType\": \"STOCK_IN\","+
-                "\"stockChangeDate\": \"2019-11-15\","+
-                "\"commissionNo\": \"0688644948\","+
-                "\"vin\": \"WDDWH4CB4HF559394\","+
-                "\"fin\": \"WDD2052421F559394\","+
-                "\"baumuster\": \"2052421\","+
-                "\"nst\": \"CN2\","+
-                "\"brand\": \"MB\","+
-                "\"origin\": \"CBU\","+
-                "\"model\": \"C200\","+
-                "\"typeClass\": \"C\","+
-                "\"engineNo\": \"27492031031662\","+
-                "\"originVehicleStatus\": \"NOT_BOOKED\","+
-                "\"currentVehicleStatus\": \"BOOKED_IN\","+
-                "\"description\": \"C 200 旅行轿车\","+
-                "\"vehicleCurrentCost\": 0,"+
-                "\"vehicleOldCost\": 0,"+
-                "\"vehicleCostChange\": 0,"+
-                "\"operationDate\": \"2019-11-15\""+
-                "}," +
-                "{"+
-                "\"dealerNo\": \"GS0031211\","+
-                "\"companyNo\": \"GS0031211\","+
-                "\"transactionType\": \"COST_CHANGE\","+
-                "\"stockChangeDate\": \"2019-11-15\","+
-                "\"commissionNo\": \"0688644948\","+
-                "\"vin\": \"WDDWH4CB4HF559394\","+
-                "\"fin\": \"WDD2052421F559394\","+
-                "\"baumuster\": \"2052421\","+
-                "\"nst\": \"CN2\","+
-                "\"brand\": \"MB\","+
-                "\"origin\": \"CBU\","+
-                "\"model\": \"C200\","+
-                "\"typeClass\": \"C\","+
-                "\"engineNo\": \"27492031031662\","+
-                "\"originVehicleStatus\": \"BOOKED_IN\","+
-                "\"currentVehicleStatus\": \"BOOKED_IN\","+
-                "\"description\": \"C 200 旅行轿车\","+
-                "\"vehicleCurrentCost\": 332510.09,"+
-                "\"vehicleOldCost\": 0,"+
-                "\"vehicleCostChange\": 332510.09,"+
-                "\"operationDate\": \"2019-11-16\" "+
-                "}" +
-                "]";
-
-        List<VehicleStock> vehicleStocks = (List<VehicleStock>) JSONArray.parseArray(returnStr, VehicleStock.class);
-
-        System.out.println(vehicleStocks);
-
-    }
 
 }
