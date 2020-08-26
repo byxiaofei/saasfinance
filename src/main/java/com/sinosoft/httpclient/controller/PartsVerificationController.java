@@ -65,7 +65,7 @@ public class PartsVerificationController implements ScheduledOfTask {
                 List<PartsVerificationDTO> partsVerificationList = JSONArray.parseArray(returnStr, PartsVerificationDTO.class);
                 //保存入库
                 System.out.println(partsVerificationList);
-                str =  partsVerificationService.getPartsVerification(partsVerificationList,"1597039093220");
+                str =  partsVerificationService.getPartsVerification(partsVerificationList,tasksdetailsinfo.getEndTime());
             }
             System.out.println(str);
         } catch (Exception e) {

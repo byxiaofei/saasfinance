@@ -243,10 +243,15 @@ public class PartsStockServiceImpl implements PartsStockService {
 
         String monthTrace = vehicleInvoiceService.recursiveCalls(branchCode, accbookType, accbookCode, yearMonth);
         if(!"final".equals(monthTrace)){
-            // 如果不是final 就出现了异常了
-            errorMsg.append("当前对会计期间的开启存在异常");
-            resultMap.put("resultMsg",errorMsg.toString());
-            return false;
+            if("fail".equals(monthTrace)){
+                errorMsg.append("不存在当前会计期间");
+                resultMap.put("resultMsg",errorMsg.toString());
+                return false;
+            }else{
+                errorMsg.append("当前对会计期间的开启存在异常");
+                resultMap.put("resultMsg",errorMsg.toString());
+                return false;
+            }
         }
 
         // 如果没问题，校验的同时就生成了凭证号了。 这里把createBy 创建人 设置为001 默认系统了

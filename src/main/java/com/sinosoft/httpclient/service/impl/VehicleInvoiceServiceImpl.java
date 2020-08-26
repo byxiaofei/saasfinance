@@ -259,11 +259,18 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
         // 根据机构和账套查询当前的最大会计月度，并选择到当前的日期，是否与当
         String monthTrace = recursiveCalls(centerCode, accbookType, accbookCode, yearMonth);
         if(!"final".equals(monthTrace)){
-            // 如果不是final 就出现了异常了
-            errorMsg.append("当前对会计期间的开启存在异常");
-            resultMap.put("resultMsg",errorMsg.toString());
-            return resultMap;
+            // 如果不是final 就出现了异常了,
+            if("fail".equals(monthTrace)){
+                errorMsg.append("不存在当前会计期间");
+                resultMap.put("resultMsg",errorMsg.toString());
+                return resultMap;
+            }else{
+                errorMsg.append("当前对会计期间的开启存在异常");
+                resultMap.put("resultMsg",errorMsg.toString());
+                return resultMap;
+            }
         }
+
 
 
         // 如果没问题，校验的同时就生成了凭证号了。 这里把createBy 创建人 设置为001 默认系统了
@@ -509,15 +516,20 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
     public String recursiveCalls(String centerCode,String accBookType,String accBookCode,String yearMonth){
         //  查询会计月底第一条
         AccMonthTrace newestAccMonthTrace = accMonthTraceRespository.findNewestAccMonthTrace(centerCode, accBookType, accBookCode);
+        AccMonthTrace newestAccMonthTraceASC = accMonthTraceRespository.findNewestAccMonthTraceASC(centerCode, accBookType, accBookCode);
         String yearMonthDateAboutSql = newestAccMonthTrace.getId().getYearMonthDate();
+        String yearMonthDateAboutSqlAsc = newestAccMonthTraceASC.getId().getYearMonthDate();
         SimpleDateFormat sdfNew = new SimpleDateFormat("yyyyMM");
         try {
             Date accountDate = sdfNew.parse(yearMonthDateAboutSql);// 账务年月
             Date bussinessDate = sdfNew.parse(yearMonth);// 业务年月
+            Date accountDateAsc = sdfNew.parse(yearMonthDateAboutSqlAsc);
             // 业务年月大于账务年月。则需要进行库表新增。其他则不用管。
             if(accountDate.getTime() < bussinessDate.getTime()){
                 settlePeriodService.addToAndSave(centerCode, accBookType, accBookCode);
                 return recursiveCalls(centerCode,accBookType,accBookCode,yearMonth);
+            }else if (accountDateAsc.getTime() > bussinessDate.getTime()){
+                return "fail";
             }else{
                 return "final";
             }

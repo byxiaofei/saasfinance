@@ -67,7 +67,7 @@ public class VehicleStockController  implements ScheduledOfTask {
             }else{
                 List<VehicleStock> vehicleStockList = (List<VehicleStock>) JSONArray.parseArray(returnStr, VehicleStock.class);
                 //保存入库
-                 str =  vehicleStockService.savevehicleStockList(vehicleStockList,String.valueOf(new Date().getTime()));
+                 str =  vehicleStockService.savevehicleStockList(vehicleStockList,tasksdetailsinfo.getEndTime());
             }
             System.out.println(str);
         } catch (Exception e) {

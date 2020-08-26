@@ -6,7 +6,7 @@
 </head>
 <style type="text/css">
     body {
-        width: 80%;
+        width: 100%;
         text-align: center;
         margin: auto;
     }
@@ -25,12 +25,12 @@
 </style>
 <body>
 <h1>任务调度中心</h1>
-<div style="width:1000px; height:200px; overflow:scroll;">
+<div style="width:1300px; height:800px; overflow:scroll;">
 <table>
     <thead>
     <tr>
         <td>序号</td>
-        <td>cron_key</td>
+        <!--<td style="visibility: hidden">cron_key</td>-->
         <td>cron表达式</td>
         <td>任务描述</td>
         <td>状态</td>
@@ -40,7 +40,7 @@
     <tbody>
     <tr th:each="cron,iterStat:${cronList}">
         <td th:text="${iterStat.count}"></td>
-        <td th:text="${cron.cronKey}"></td>
+        <!--<td th:text="${cron.cronKey}" style="visibility: hidden"></td>-->
         <td th:text="${cron.status} == 1 ? ${cron.cronExpression}:'---'"></td>
         <td th:text="${cron.taskExplain}"></td>
         <td th:text="${cron.status} == 1 ? '正常':'暂停'"></td>

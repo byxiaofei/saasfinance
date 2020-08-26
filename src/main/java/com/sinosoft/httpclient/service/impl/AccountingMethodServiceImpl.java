@@ -100,10 +100,15 @@ public class AccountingMethodServiceImpl implements AccountingMethod {
         // 根据机构和账套查询当前的最大会计月度，并选择到当前的日期，是否与当
         String monthTrace = vehicleInvoiceService.recursiveCalls(companyNo, accbookType, accbookCode, yearMonth);
         if(!"final".equals(monthTrace)){
-            // 如果不是final 就出现了异常了
-            errorMsg.append("当前对会计期间的开启存在异常");
-            resultMap.put("resultMsg",errorMsg.toString());
-            return resultMap;
+            if("fail".equals(monthTrace)){
+                errorMsg.append("不存在当前会计期间");
+                resultMap.put("resultMsg",errorMsg.toString());
+                return resultMap;
+            }else{
+                errorMsg.append("当前对会计期间的开启存在异常");
+                resultMap.put("resultMsg",errorMsg.toString());
+                return resultMap;
+            }
         }
 
 

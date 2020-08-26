@@ -10,5 +10,5 @@ public interface PartsInvoiceService {
      * @param jsonToPartsInvoices
      * @return
      */
-    String savePartsInvoiceList(List<JsonToPartsInvoice> jsonToPartsInvoices);
+    String savePartsInvoiceList(List<JsonToPartsInvoice> jsonToPartsInvoices,String loadTime);
 }

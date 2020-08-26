@@ -60,7 +60,7 @@ public class PartsPromotionController implements ScheduledOfTask {
             }else{
                 List<JsonToPartsPromotion> jsonToPartsPromotion = JSONArray.parseArray(returnStr, JsonToPartsPromotion.class);
                 // 保存入库
-                str = partsPromotionService.savePartsPromotionList(jsonToPartsPromotion,"1597039093220");
+                str = partsPromotionService.savePartsPromotionList(jsonToPartsPromotion,tasksdetailsinfo.getEndTime());
             }
             System.out.println(str);
         } catch (Exception e) {

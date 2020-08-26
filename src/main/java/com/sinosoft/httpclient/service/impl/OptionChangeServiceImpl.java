@@ -55,6 +55,9 @@ public class OptionChangeServiceImpl implements OptionChangeService {
     @Resource
     private InterfaceInfoService interfaceInfoService;
 
+    @Resource
+    private VehicleInvoiceServiceImpl vehicleInvoiceService;
+
     @Override
     public String saveoptionChangeListTest(List<OptionChange> optionChangeList) {
         optionChangeRespository.saveAll(optionChangeList);
@@ -64,12 +67,14 @@ public class OptionChangeServiceImpl implements OptionChangeService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public String saveoptionChangeList(List<OptionChange> optionChangeList){
+    public String saveoptionChangeList(List<OptionChange> optionChangeList,String loadTime){
         try {
             List<Map<String,Object>> listResultMap = new ArrayList<>();
             StringBuilder errorMsg = new StringBuilder();
+            String companyNo =null;
             for (int i=0;i<optionChangeList.size();i++){
                 OptionChange optionChange = optionChangeList.get(i);
+                companyNo = optionChange.getCompanyNo();
                 String judgeMsg =judgeInterfaceInfoQuerstion(optionChange,errorMsg);
                 if (!"".equals(judgeMsg)){
                     logger.error(judgeMsg);
@@ -133,7 +138,12 @@ public class OptionChangeServiceImpl implements OptionChangeService {
             optionChangeRespository.flush();
             System.out.println("---------------------当前时间范围内的数据，已经全部保存到对接接口表中---------------------------");
             // TODO  最后接口改造，需要传入--> 起止时间 ，并把起止时间保存到 任务调度明细表中 (taskschedulingdetailsinfo)。
-            return "success";
+            if("".equals(errorMsg.toString())){
+                interfaceInfoService.successSave(companyNo,loadTime,"当前时间段内的数据没有问题，全部入库！");
+                return "success";
+            }
+            interfaceInfoService.failSave(companyNo,loadTime,"当前时间段内的信息个别信息有问题"+errorMsg.toString());
+            return "halfsuccess";
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("当前异常信息为："+e);
@@ -217,7 +227,21 @@ public class OptionChangeServiceImpl implements OptionChangeService {
             }
             String centerCode = branchCode;// branchCode 与centerCode 相同
 
-            // 如果没问题，校验的同时就生成了凭证号了。 这里把createBy 创建人 设置为001 默认系统了
+        String monthTrace = vehicleInvoiceService.recursiveCalls(branchCode, accbookType, accbookCode, yearMonth);
+        if(!"final".equals(monthTrace)){
+            if("fail".equals(monthTrace)){
+                errorMsg.append("不存在当前会计期间");
+                resultMap.put("resultMsg",errorMsg.toString());
+                return resultMap;
+            }else{
+                errorMsg.append("当前对会计期间的开启存在异常");
+                resultMap.put("resultMsg",errorMsg.toString());
+                return resultMap;
+            }
+        }
+
+
+        // 如果没问题，校验的同时就生成了凭证号了。 这里把createBy 创建人 设置为001 默认系统了
             VoucherDTO voucherDTO = voucherService.setVoucher1(yearMonth, centerCode, branchCode, accbookCode, accbookType,"001");
             if(voucherDTO.getYearMonth() == null || "".equals(voucherDTO.getYearMonth())){
 //            errorMsg = errorMsg + "当前账套信息下没有对应的凭证月"+",";

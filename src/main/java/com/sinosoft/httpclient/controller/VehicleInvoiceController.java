@@ -3,18 +3,13 @@ package com.sinosoft.httpclient.controller;
 import com.alibaba.fastjson.JSONArray;
 import com.sinosoft.httpclient.domain.Tasksdetailsinfo;
 import com.sinosoft.httpclient.domain.VehicleInvoice;
-import com.sinosoft.httpclient.domain.VehicleStock;
 import com.sinosoft.httpclient.service.HttpClient;
 import com.sinosoft.httpclient.service.TasksdetailsService;
 import com.sinosoft.httpclient.service.VehicleInvoiceService;
 import com.sinosoft.httpclient.task.ScheduledOfTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -68,7 +63,7 @@ public class VehicleInvoiceController implements ScheduledOfTask {
                 List<VehicleInvoice> vehicleInvoices = JSONArray.parseArray(returnStr, VehicleInvoice.class);
 
                 //保存入库
-                str = vehicleInvoiceService.saveVehicleInvoiceList(vehicleInvoices,"1597039093220");
+                str = vehicleInvoiceService.saveVehicleInvoiceList(vehicleInvoices,tasksdetailsinfo.getEndTime());
             }
             System.out.println(str);
         } catch (Exception e) {

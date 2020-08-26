@@ -61,8 +61,12 @@ public interface AccMonthTraceRespository extends BaseRepository<AccMonthTrace, 
     @Query(value = "update AccMonthTrace set acc_month_stat = '2' , create_by = ?2 , create_time = ?3 , temp = '' where acc_book_type = ?4 and acc_book_code = ?5 and year_month_date = ?1 and center_code = ?6", nativeQuery = true)
     void updateDQFlag2(String yearMonthDate, String createBy, String createTime, String accBookType, String accBookCode, String centerCode);
 
+    // 寻找最大的会计期间月份
     @Query(value = "select * from accmonthtrace a where a.center_code = ?1 and a.acc_book_type = ?2 and a.acc_book_code = ?3 order by a.year_month_date desc limit 1", nativeQuery = true)
     AccMonthTrace findNewestAccMonthTrace(String centerCode, String accBookType, String accBookCode);
+    // 寻找最小的会计期间月份
+    @Query(value = "select * from accmonthtrace a where a.center_code = ?1 and a.acc_book_type = ?2 and a.acc_book_code = ?3 order by a.year_month_date asc limit 1", nativeQuery = true)
+    AccMonthTrace findNewestAccMonthTraceASC(String centerCode, String accBookType, String accBookCode);
 
     @Query(value = "select * from accmonthtrace a where a.center_code = ?1 and a.acc_book_type = ?2 and a.acc_book_code = ?3 and a.year_month_date = ?4", nativeQuery = true)
     AccMonthTrace findAccMonthTraceByYearMonthDate(String centerCode, String accBookType, String accBookCode, String yearMonthDate);

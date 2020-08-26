@@ -63,7 +63,7 @@ public class OptionChangeController implements ScheduledOfTask {
             }else {
                 List<OptionChange> optionChanges = JSONArray.parseArray(returnStr,OptionChange.class);
                 //保存入库
-                str =optionChangeService.saveoptionChangeList(optionChanges);
+                str =optionChangeService.saveoptionChangeList(optionChanges,tasksdetailsinfo.getEndTime());
             }
             System.out.println(str);
         } catch (Exception e) {

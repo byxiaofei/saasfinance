@@ -62,7 +62,7 @@ public class PartsInvoiceController implements ScheduledOfTask {
             }else{
                 List<JsonToPartsInvoice> jsonToPartsInvoices = JSONArray.parseArray(returnMessage, JsonToPartsInvoice.class);
                 //保存入库
-                message = partsInvoiceService.savePartsInvoiceList(jsonToPartsInvoices);
+                message = partsInvoiceService.savePartsInvoiceList(jsonToPartsInvoices,tasksdetailsinfo.getEndTime());
             }
             System.out.println(message);
         } catch (Exception e) {

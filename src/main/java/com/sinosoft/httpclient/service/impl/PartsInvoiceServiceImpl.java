@@ -56,12 +56,12 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String savePartsInvoiceList(List<JsonToPartsInvoice> jsonToPartsInvoicesList) {
+    public String savePartsInvoiceList(List<JsonToPartsInvoice> jsonToPartsInvoicesList,String loadTime) {
         try {
             List<PartsInvoice> partsInvoices = new ArrayList<>();
             List<Map<String,Object>> listResultMaps = new ArrayList<>();
             StringBuilder errorAllMessage = new StringBuilder();
-
+            String branchInfo = null;
 
             for(int i = 0;i < jsonToPartsInvoicesList.size();i++){
                 JsonToPartsInvoice temp = jsonToPartsInvoicesList.get(i);
@@ -77,6 +77,8 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService {
                 partsInvoice.setFranchise(temp.getFranchise());
                 partsInvoice.setOrderNo(temp.getOrderNo());
                 partsInvoice.setOperationDate(temp.getOperationDate());
+                branchInfo = temp.getCompanyNo();
+
 
                 BigDecimal sum = new BigDecimal("0.00");
                 for(int j = 0;j < temp.getInvoiceParts().size();j++){
@@ -102,11 +104,9 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService {
 
                 }
 
-             //TODO .. 校验，入库。
 
             }
             //得到业务数据进行业务处理
-            //TODO ..
             for(int a = 0;a < partsInvoices.size(); a++){
                 //取值对象
                 PartsInvoice partsInvoice = partsInvoices.get(a);
@@ -132,15 +132,9 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService {
                         logger.error(resultMsg);
                         return "fail";
                     }
-                    List<VoucherDTO> list2 = (List<VoucherDTO>) objectMap.get("list2");
-                    List<VoucherDTO> list3 = (List<VoucherDTO>) objectMap.get("list3");
-                    VoucherDTO dto1 = (VoucherDTO) objectMap.get("dto");
-                    //生成保存凭证
-                    String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto1);
-                    if(!"success".equals(voucherNo)){
-                        logger.error(voucherNo);
-                        return "fail";
-                    }
+
+                    listResultMaps.add(objectMap);
+
                 }else{
                     //配件销售分录  interfaceType --->2
                     String interfacetype = "2";
@@ -150,22 +144,36 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService {
                         logger.error(resultMsg);
                         return "fail";
                     }
-                    List<VoucherDTO> list2 = (List<VoucherDTO>) objectMap.get("list2");
-                    List<VoucherDTO> list3 = (List<VoucherDTO>) objectMap.get("list3");
-                    VoucherDTO dto1 = (VoucherDTO) objectMap.get("dto");
-                    //生成保存凭证
-                    String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto1);
-                    if(!"success".equals(voucherNo)){
-                        logger.error(voucherNo);
-                        return "fail";
-                    }
+
+                    listResultMaps.add(objectMap);
+
                 }
             }
             System.out.println("------------->当前时间范围内的数据，已全部保存到凭证表中，入库成功<-------------");
+            for(int i = 0 ; i < listResultMaps.size(); i++ ){
+                Map<String, Object> stringObjectMap = listResultMaps.get(i);
+                List<VoucherDTO> list2 = (List<VoucherDTO>) stringObjectMap.get("list2");
+                List<VoucherDTO> list3 = (List<VoucherDTO>) stringObjectMap.get("list3");
+                VoucherDTO dto = (VoucherDTO) stringObjectMap.get("dto");
+                String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto);
+                if(!"success".equals(voucherNo)){
+                    logger.error(voucherNo);
+                    errorAllMessage.append("保存凭证出错");
+                }
+            }
+
             partsInvoiceRespository.saveAll(partsInvoices);
             partsInvoiceRespository.flush();
-            System.out.println("------------->当前时间范围内的数据，已全部保存到凭证表中，入库成功<-------------");
-            return "success";
+
+            System.out.println("--------------------  上述已经对正确的所有数据进行了入库保存！  ----------------------------");
+
+            if("".equals(errorAllMessage.toString())){
+                interfaceInfoService.successSave(branchInfo,loadTime,"当前时间段内的数据没有问题，全部入库！");
+                return "success";
+            }
+            interfaceInfoService.failSave(branchInfo,loadTime,"当前时间段内的信息个别信息有问题"+errorAllMessage.toString());
+            return "halfsuccess";
+
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("当前错误信息为:"+e);
@@ -256,10 +264,15 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService {
 
         String monthTrace = vehicleInvoiceService.recursiveCalls(branchCode, accbookType, accbookCode, yearMonth);
         if(!"final".equals(monthTrace)){
-            // 如果不是final 就出现了异常了
-            errorMsg.append("当前对会计期间的开启存在异常");
-            resultMap.put("resultMsg",errorMsg.toString());
-            return resultMap;
+            if("fail".equals(monthTrace)){
+                errorMsg.append("不存在当前会计期间");
+                resultMap.put("resultMsg",errorMsg.toString());
+                return resultMap;
+            }else{
+                errorMsg.append("当前对会计期间的开启存在异常");
+                resultMap.put("resultMsg",errorMsg.toString());
+                return resultMap;
+            }
         }
 
         // 如果没问题，校验的同时就生成了凭证号了。 这里把createBy 创建人 设置为001 默认系统了

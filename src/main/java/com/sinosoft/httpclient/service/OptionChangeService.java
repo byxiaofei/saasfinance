@@ -12,6 +12,6 @@ public interface OptionChangeService {
      */
     String saveoptionChangeListTest(List<OptionChange> ListOptionChange);
 
-    String saveoptionChangeList(List<OptionChange> ListOptionChange);
+    String saveoptionChangeList(List<OptionChange> ListOptionChange,String loadTime);
 
 }

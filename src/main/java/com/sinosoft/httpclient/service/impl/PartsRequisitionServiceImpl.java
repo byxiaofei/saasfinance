@@ -178,7 +178,6 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
         partsRequisitionRespository.saveAll(partsRequisitions);
         partsRequisitionRespository.flush();
 
-        //  保存日志
 
 
         if("".equals(errorAllMessage.toString())){
@@ -272,10 +271,15 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
 
         String monthTrace = vehicleInvoiceService.recursiveCalls(branchCode, accbookType, accbookCode, yearMonth);
         if(!"final".equals(monthTrace)){
-            // 如果不是final 就出现了异常了
-            errorMsg.append("当前对会计期间的开启存在异常");
-            resultMap.put("resultMsg",errorMsg.toString());
-            return resultMap;
+            if("fail".equals(monthTrace)){
+                errorMsg.append("不存在当前会计期间");
+                resultMap.put("resultMsg",errorMsg.toString());
+                return resultMap;
+            }else{
+                errorMsg.append("当前对会计期间的开启存在异常");
+                resultMap.put("resultMsg",errorMsg.toString());
+                return resultMap;
+            }
         }
 
 

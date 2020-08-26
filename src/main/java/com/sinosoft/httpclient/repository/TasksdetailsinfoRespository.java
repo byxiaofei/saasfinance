@@ -14,7 +14,7 @@ import java.util.List;
 @Repository
 public interface TasksdetailsinfoRespository extends BaseRepository<Tasksdetailsinfo,Integer> {
 
-    @Query(value = "SELECT  *  FROM taskschedulingdetailsinfo WHERE  batch = ?   ORDER BY end_time LIMIT 1",nativeQuery = true)
+    @Query(value = "SELECT  *  FROM taskschedulingdetailsinfo WHERE  batch = ?   ORDER BY end_time desc LIMIT 1  ",nativeQuery = true)
     public  List<Tasksdetailsinfo> findLimitOne(String batch);
 
 /*

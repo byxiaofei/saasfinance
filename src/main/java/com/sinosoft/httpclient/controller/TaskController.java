@@ -1,6 +1,7 @@
 package com.sinosoft.httpclient.controller;
 
 import com.sinosoft.httpclient.config.AppConsts;
+import com.sinosoft.httpclient.domain.SpringScheduledCron;
 import com.sinosoft.httpclient.dto.Result;
 import com.sinosoft.httpclient.repository.SpringScheduledCronRepository;
 
@@ -12,6 +13,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.util.List;
 
 /**
  * 管理定时任务(需要做权限控制)
@@ -27,6 +30,13 @@ public class TaskController {
     private ApplicationContext context;
     @Autowired
     private SpringScheduledCronRepository cronRepository;
+
+
+    @RequestMapping("/list")
+    public List<?> queryTaskList(){
+        List<SpringScheduledCron> all = cronRepository.findAll();
+        return all;
+    }
 
     /**
      * 查看任务列表

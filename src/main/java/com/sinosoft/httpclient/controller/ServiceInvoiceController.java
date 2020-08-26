@@ -48,12 +48,16 @@ public class ServiceInvoiceController implements ScheduledOfTask {
             uriMap.put("startTime",Long.parseLong(tasksdetailsinfo.getEndTime()));
             uriMap.put("endTime", endTime);
 
+            System.out.println("数据库查找到的结束日期TO开始日期："+tasksdetailsinfo.getEndTime());
+            System.out.println("当前进行new Date 的结束日期："+endTime.toString());
+            String endTimeToStar = tasksdetailsinfo.getEndTime();
             //保存接口结束日期
-            tasksdetailsinfo.setStartTime(tasksdetailsinfo.getEndTime());
+            tasksdetailsinfo.setStartTime(endTimeToStar);
             tasksdetailsinfo.setEndTime(endTime.toString());
             tasksdetailsService.saveTasksdetails(tasksdetailsinfo);
 
             String returnStr = httpClient.sendGet(url,uriMap);
+
             System.out.println(returnStr );
             String str=null  ;
             if(returnStr.equals("接口调用失败")){
@@ -62,7 +66,7 @@ public class ServiceInvoiceController implements ScheduledOfTask {
                 List<ServiceInvoiceDTO> serviceInvoiceDTOList = JSONArray.parseArray(returnStr, ServiceInvoiceDTO.class);
                 //保存入库
                 System.out.println(serviceInvoiceDTOList);
-                str =  serviceInvoiceService.getServiceInvoiceService(serviceInvoiceDTOList,"1597039093220");
+                str =  serviceInvoiceService.getServiceInvoiceService(serviceInvoiceDTOList,tasksdetailsinfo.getEndTime());
             }
 
             System.out.println(str);
