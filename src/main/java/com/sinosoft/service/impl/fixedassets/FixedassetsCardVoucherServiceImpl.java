@@ -1296,7 +1296,7 @@ public class FixedassetsCardVoucherServiceImpl implements FixedassetsCardVoucher
         Map<Integer,Object> seats = new HashMap<>();
         String flag = null;
         StringBuffer siSql = new StringBuffer();
-        siSql.append("select * from specialinfo where special_code = ?"+ seatNo );
+        siSql.append("select * from specialinfo s where s.special_code = ?"+ seatNo );
         seats.put(seatNo,specialCode);
         seatNo++;
 //        (CurrentUser.getCurrentLoginAccount())

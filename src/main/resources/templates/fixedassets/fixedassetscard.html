@@ -1841,14 +1841,14 @@
 
     }
 
-    //  支付方式
+    //  支付方式  data是数组下标从 0 开始的。
     function treeValue() {
         var superCode = $('#payWay').textbox('getValue');
         if (superCode != '' && superCode != null) {
             $.get('/voucher/getSpecialDate?subjectCode=' + superCode,
                 function (data) {
                     if (data.length != "" && data.length != null) {
-                        var originalValue = data[1].specialCode;
+                        var originalValue = data[0].specialCode;
                         var inputValue = $('#payCode').textbox('getText');
                         $('#specialTree').tree({
                             url: '/voucher/specialTreeUseFlogOne?originalValue=' + encodeURI(originalValue) + '&inputValue=' + encodeURI(inputValue) + '&onlyLastStage=N',
@@ -1878,6 +1878,7 @@
                             }
                         });
                     }
+                    alert("到了这里");
                 })
         }
     }
