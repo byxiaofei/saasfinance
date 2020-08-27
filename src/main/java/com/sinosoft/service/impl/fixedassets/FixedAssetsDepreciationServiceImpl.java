@@ -577,13 +577,6 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
                 specialMap1.putAll((Map)specialObj);
                 specialMap2.put(specialMap1.get("id").toString(),specialMap1.get("special_code"));
             }
-            //判断当前会计期间是否结SELECT * FROM specialinfo s WHERE s.`endflag`='1' AND s.`super_special`='' AND s.`account`='000001';
-            //
-            //SELECT s.`special_id` FROM subjectinfo s WHERE s.`level`='1' AND s.`subject_code`='1601' AND s.`account`='000001';转，如为结转则不允许进行凭证生成操作
-//            StringBuffer sql1 = new StringBuffer();
-//            sql1.append("select * from accmonthtrace where center_code='"+CurrentUser.getCurrentLoginManageBranch()+"' and  year_month_date = '"+ dto.getYearMonthDate() +"' and acc_month_stat > 2 " +
-//                    " and acc_book_type = '"+ CurrentUser.getCurrentLoginAccountType() +"' and acc_book_code = '"+ CurrentUser.getCurrentLoginAccount() +"' ");//已结转
-//            List<?> list1 = accGCheckInfoRepository.queryBySqlSC(sql1.toString());
 
             List<?> list1 = accMonthTraceRespository.queryAccMonthTraceByChooseMessage(CurrentUser.getCurrentLoginManageBranch(),dto.getYearMonthDate(),CurrentUser.getCurrentLoginAccountType(),CurrentUser.getCurrentLoginAccount());
             if(list1.size()>0){
@@ -600,10 +593,6 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
             }else{//不为1月，直接减1
                 lastYearMonthDate = String.valueOf(Integer.parseInt(dto.getYearMonthDate())-1);
             }
-//            StringBuffer lastSql = new StringBuffer();
-//            lastSql.append("select * from accgcheckinfo where center_code='"+CurrentUser.getCurrentLoginManageBranch()+"' and year_month_date = "+ lastYearMonthDate +" " +
-//                    " and acc_book_type = '"+ CurrentUser.getCurrentLoginAccountType() +"' and acc_book_code = '"+ CurrentUser.getCurrentLoginAccount() +"' ");
-//            List<?> lastList = accGCheckInfoRepository.queryBySql(lastSql.toString(), AccGCheckInfo.class);
             List<AccGCheckInfo> lastList = accGCheckInfoRepository.queryAccGCheckInfoByCenterCodeAndYearMonthDateAndAccBookTypeAndAccBookCode(CurrentUser.getCurrentLoginManageBranch(),lastYearMonthDate,CurrentUser.getCurrentLoginAccountType(),CurrentUser.getCurrentLoginAccount());
             if(lastList.size()!=0){//size不等于0说明有上个会计期间
                 if(!((AccGCheckInfo)lastList.get(0)).getFlag().equals("3")){//判断上个会计期间状态 3已生成凭证
@@ -615,24 +604,17 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
             return InvokeResult.failure("制单日期请选择当前会计期间所在月份！");
         }
 
-            //格式化创建时间
-            SimpleDateFormat df1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String time = df1.format(new Date());
-            SimpleDateFormat df2 = new SimpleDateFormat("yyyy-MM-dd");
-     //-------------------------
-            //先从固定资产折旧记录表中获取所有信息
-//        StringBuffer sqls1=new StringBuffer();
-//        sqls1.append("select * from  accdepre where center_code='"+CurrentUser.getCurrentLoginManageBranch()+"' and acc_book_code='"+CurrentUser.getCurrentLoginAccount()+"' and year_month_data='"+dto.getYearMonthDate()+"' and (voucher_no is null or voucher_no='')");
-//        List<AccDepre> accdepreList=(List<AccDepre>)accDepreRepository.queryBySql(sqls1.toString(),AccDepre.class);
+        //格式化创建时间
+        SimpleDateFormat df1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = df1.format(new Date());
+        SimpleDateFormat df2 = new SimpleDateFormat("yyyy-MM-dd");
+
         List<AccDepre> accdepreList=accDepreRepository.queryAccDepreByChooseMessage1(CurrentUser.getCurrentLoginManageBranch(),CurrentUser.getCurrentLoginAccount(),dto.getYearMonthDate());
         int test1=0;
         if(accdepreList.size()>0){
             for (AccDepre accD : accdepreList) {
                 String accBookCode=accD.getId().getAccBookCode();
                 String assetCode=accD.getId().getAssetCode();
-//                StringBuffer sqls2=new StringBuffer();
-//                sqls2.append("select * from accassetinfo where center_code='"+CurrentUser.getCurrentLoginManageBranch()+"' and  acc_book_code='"+accBookCode+"' and asset_code='"+assetCode+"'");
-//                AccAssetInfo accAssetInfo=(AccAssetInfo)accDepreRepository.queryBySql(sqls2.toString(),AccAssetInfo.class).get(0);
                 AccAssetInfo accAssetInfo=accAssetInfoRepository.queryAccAssetInfoByCenterCodeAndAcBookCodeAndAssetCode(CurrentUser.getCurrentLoginManageBranch(),accBookCode,assetCode).get(0);
 //-------------------------凭证主表录入开始------------------------------
                 AccMainVoucherId amvId = new AccMainVoucherId();
@@ -641,11 +623,6 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
                 amvId.setAccBookType(CurrentUser.getCurrentLoginAccountType());//账套类型
                 amvId.setAccBookCode(CurrentUser.getCurrentLoginAccount());//账套编码
 
-                //从accvoucherno表中获取最大凭证号
-//                StringBuffer maxVoucherNoSql = new StringBuffer();
-//                maxVoucherNoSql.append("select * from accvoucherno  where center_code='"+CurrentUser.getCurrentLoginManageBranch()+"' and  year_month_date = '"+ dto.getYearMonthDate() +"' " +
-//                        " and acc_book_type = '"+ CurrentUser.getCurrentLoginAccountType() +"' and acc_book_code = '"+ CurrentUser.getCurrentLoginAccount() +"' ");
-//                List<?> maxVoucherNoList = accVoucherNoRespository.queryBySql(maxVoucherNoSql.toString(), AccVoucherNo.class);
                 List<AccVoucherNo> maxVoucherNoList = accVoucherNoRespository.queryAccVoucherNoByChooseMessage(CurrentUser.getCurrentLoginManageBranch(),dto.getYearMonthDate(),CurrentUser.getCurrentLoginAccountType(),CurrentUser.getCurrentLoginAccount());
                 //通过年月 生成凭证号
                 String maxVoucherNo = ((AccVoucherNo)maxVoucherNoList.get(0)).getVoucherNo();
@@ -654,7 +631,6 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
                     maxVoucherNo = "0"+maxVoucherNo;
                 }
                 maxVoucherNo = centerCode + ((AccVoucherNo)maxVoucherNoList.get(0)).getId().getYearMonthDate().substring(2,6)+maxVoucherNo;
-//                        amvId.setYearMonthDate(((AccVoucherNo)maxVoucherNoList.get(0)).getId().getYearMonthDate());//年月
                 amvId.setYearMonthDate(dto.getYearMonthDate());//年月
                 amvId.setVoucherNo(maxVoucherNo);//凭证号
 
@@ -662,15 +638,6 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
                 amv.setId(amvId);//联合主键
                 amv.setVoucherType("3");//凭证类型 3固资自转
                 amv.setGenerateWay("1");//录入方式 1自动
-                //未添加制单日期--凭证日期 系统当前日期
-                /*String voucherDate = df2.format(new Date());
-                if ((voucherDate.substring(0,4)+voucherDate.substring(5,7)).equals(dto.getYearMonthDate())) {
-                    amv.setVoucherDate(voucherDate);
-                } else {
-                    int year = Integer.parseInt(dto.getYearMonthDate().substring(0,4));
-                    int month = Integer.parseInt(dto.getYearMonthDate().substring(4));
-                    amv.setVoucherDate(fixedassetsCardVoucherService.getLastDayOfYearMonth(year, month));
-                }*/
                 /*添加制单日期后*/
                 amv.setVoucherDate(dto.getCreateTime2());
 
@@ -687,46 +654,25 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
                 asvId.setBranchCode(CurrentUser.getCurrentLoginManageBranch());//基层单位
                 String accBookType = CurrentUser.getCurrentLoginAccountType();//账套类型
                 asvId.setAccBookType(accBookType);//账套类型
-                //String accBookCode = CurrentUser.getCurrentLoginAccount();//账套编码
                 asvId.setAccBookCode(accBookCode);//账套编码
-//                        asvId.setYearMonthDate(((AccVoucherNo)maxVoucherNoList.get(0)).getId().getYearMonthDate());//年月 (生成方式见上方主表)
                 asvId.setYearMonthDate(dto.getYearMonthDate());//年月 (生成方式见上方主表)
                 asvId.setVoucherNo(maxVoucherNo);//凭证号 (生成方式见上方主表)
 
-
-
-                //通过管理类别编码去获取科目代码、科目段、专项段
-//                StringBuffer sql3 = new StringBuffer();
-//                sql3.append("select * from accassetcodetype where 1=1 " +
-//                        " and acc_book_type = '"+ accBookType +"' \n" +
-//                        "and acc_book_code = '"+ accBookCode +"' and code_type = '"+accAssetInfo.getId().getCodeType()+"' and asset_type = '"+accAssetInfo.getAssetType() +"'");
-//                List<?> aactList = accAssetCodeTypeRepository.queryBySql(sql3.toString(), AccAssetCodeType.class);
                 List<AccAssetCodeType> aactList = accAssetCodeTypeRepository.queryAccAssetCodeTypeByAccBookTypeAndAccBookCodeAndAssetTypeChooseCodeType(accBookType,accBookCode,accAssetInfo.getId().getCodeType(),accAssetInfo.getAssetType());
                 //因为一个借方，一个贷方，所以循环执行两次
                 for(int i=0; i<2; i++){
                     AccSubVoucher asv = new AccSubVoucher();
                     asv.setId(asvId);//联合主键
                     //先根据主键去 凭证子表中查询，如果信息存在则凭证号+1，若不存在，凭证号为1
-//                    StringBuffer sql4 = new StringBuffer();
-//                    sql4.append("select * from accsubvoucher where center_code = '"+ CurrentUser.getCurrentLoginManageBranch() +"' \n" +
-//                            "and branch_code = '"+ CurrentUser.getCurrentLoginManageBranch() +"' and acc_book_type ='"+ accBookType +"'\n" +
-//                            "and acc_book_code = '"+ accBookCode +"' and year_month_date = '"+ ((AccVoucherNo)maxVoucherNoList.get(0)).getId().getYearMonthDate() +"'\n" +
-//                            "and voucher_no = '"+ maxVoucherNo +"' and suffix_no=\n" +
-//                            "(select MAX(suffix_no) from accsubvoucher where voucher_no = '"+ maxVoucherNo +"')");
-//                    List<?> list = accSubVoucherRespository.queryBySql(sql4.toString(), AccSubVoucher.class);
                     List<AccSubVoucher> list = accSubVoucherRespository.queryAccSubVoucherByAccId(CurrentUser.getCurrentLoginManageBranch(),CurrentUser.getCurrentLoginManageBranch(),accBookType,accBookCode,((AccVoucherNo)maxVoucherNoList.get(0)).getId().getYearMonthDate(),maxVoucherNo,maxVoucherNo);
                     if(list.size()!=0){//存在，需要分录，分类号+1
                         asvId.setSuffixNo(String.valueOf(Integer.parseInt(((AccSubVoucher)list.get(0)).getId().getSuffixNo())+1));//凭证分录号
                     }else{//不存在，不需要分录，分类号为1
                         asvId.setSuffixNo("1");//凭证分录号
                     }
-                    //当月计提折旧额
-//                    String monthDepreMoneyss=String.valueOf(accAssetInfo.getEndDepreMoney().subtract(accAssetInfo.getInitDepreMoney()));
                     BigDecimal monthDepreMoneyss = accD.getMonthDepreMoney();
                     switch (i){
                         case 0://借方
-                            //if(aaiMap.get("end_depre_money").toString().equals("0.00")){
-//                            if(monthDepreMoneyss.equals("0.00")){
                             if(monthDepreMoneyss.compareTo(BigDecimal.ZERO) == 0){
                                 continue;//金额为0，则不记录该分录
                             }
@@ -786,12 +732,6 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
                                     for (Map.Entry<String, String> entry : entries) {
                                         String key = entry.getKey();
                                         String value = entry.getValue();
-//                                            if(specialIds[0].equals(key)){
-//                                                    String specialCode = ((AccAssetCodeType) aactList.get(0)).getArticleCode3();
-//                                                    flag = qrySegmentFlag(specialCode);//用来判断存放位置
-//                                                    setValue(flag,asv,aactList);
-//                                                    asv.setDirectionOther(((AccAssetCodeType) aactList.get(0)).getArticleCode3());//专项方向段
-//                                                };
                                         //判断BM 和ZC 谁在前 290 6
                                         if(specialIds[0].equals(key)&&value.equals("BM")){
                                             int paramsNo = 1;
@@ -940,10 +880,7 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
                             StringBuffer directionIdxName = new StringBuffer();
                             String itemCodeStr="";
                             for(int j=0; j<itemCodeArr.length; j++){
-//                                StringBuffer nameSql = new StringBuffer();
                                 itemCodeStr=itemCodeStr+itemCodeArr[j]+"/";
-//                                nameSql.append("select * from subjectinfo where CONCAT(all_subject,subject_code,'/')='"+itemCodeStr+" ' and account='"+CurrentUser.getCurrentLoginAccount()+"'\n");
-//                                List<?> nameList = accAssetCodeTypeRepository.queryBySql(nameSql.toString(), SubjectInfo.class);
                                 List<SubjectInfo> nameList = subjectRepository.querySubjectInfoByAccountAndAllsubject(CurrentUser.getCurrentLoginAccount(),itemCodeStr);
                                 if(j==0){//第一次追加科目名称直接追加，非第一次追加在前面加"/"
                                     directionIdxName.append(((SubjectInfo)nameList.get(0)).getSubjectName());
@@ -969,7 +906,6 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
                             asv.setRemark("提取"+asvId.getYearMonthDate().substring(0,4)+"年"+asvId.getYearMonthDate().substring(4,6)+"月固定资产折旧");//摘要 默认置空
                             asv.setCurrency(currency);//原币别编码
                             asv.setExchangeRate(new BigDecimal(0));//当前汇率 默认0
-                            //  asv.setDebitSource(new BigDecimal(aaiMap.get("end_depre_money").toString()));//原币借方金额 同一固定资产类别编码下卡片“金额”字段值
                             asv.setDebitSource(monthDepreMoneyss);//原币借方金额 同一固定资产类别编码下卡片“金额”字段值
                             asv.setCreditSource(new BigDecimal(0));//原币贷方金额
                             //  asv.setDebitDest(new BigDecimal(aaiMap.get("end_depre_money").toString()));//本位币借方金额 值同原币
@@ -1124,9 +1060,6 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
                                             };
                                         }
                                         if (specialIds[1].equals(key)&&value.equals("BM")){
-//                                            StringBuilder sql7 = new StringBuilder();
-//                                            sql7.append("SELECT (SELECT s.special_code FROM specialinfo s WHERE s.id=a.unit_code) AS specialCode FROM AccAssetInfo a  WHERE 1=1 " +
-//                                                    "AND  a.center_code='"+CurrentUser.getCurrentLoginManageBranch()+"' and a.asset_code='" + assetCode + "' AND a.acc_book_code='" + CurrentUser.getCurrentLoginAccount() + "' AND a.acc_book_type='" + CurrentUser.getCurrentLoginAccountType() + "'");
                                             int paramsNo = 1;
                                             Map<Integer,Object> params = new HashMap<>();
                                             StringBuilder sql7 = new StringBuilder();
@@ -1237,32 +1170,23 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
                             String directionidxNames2=directionIdxName2.toString();
                             if(directionidxNames2.charAt(directionidxNames2.length()-1)!='/'){directionidxNames2=directionidxNames2+"/";}
                             asv.setDirectionIdxName(directionidxNames2.toString());//科目方向段名称
-                            //判断科目专项是否相同，合并金额
-//                            StringBuffer sqls4=new StringBuffer();
-//                            sqls4.append("select * from accsubvoucher where center_code='"+CurrentUser.getCurrentLoginManageBranch()+"' and  acc_book_code='"+accBookCode+"' and voucher_no='"+maxVoucherNo+"' and direction_idx='"+asv.getDirectionIdx()+"' and direction_other='"+asv.getDirectionOther()+"'");
-//                            List<AccSubVoucher> accsubList1=(List<AccSubVoucher>) accSubVoucherRespository.queryBySql(sqls4.toString(),AccSubVoucher.class);
                             List<AccSubVoucher> accsubList1=accSubVoucherRespository.queryAccSubVoucherByAccBookCodeAndVoucherNoAndDirectionIdxAndDirectionOtherAndCenterCode(accBookCode,maxVoucherNo,asv.getDirectionIdx(),asv.getDirectionOther(),CurrentUser.getCurrentLoginManageBranch());
                             if(accsubList1!=null&&accsubList1.size()>0){
                                 AccSubVoucher accsub=accsubList1.get(0);
                                 accsub.setDebitSource(new BigDecimal(0));//原币借方金额
-                                //  asv.setCreditSource(new BigDecimal(aaiMap.get("end_depre_money").toString()));//原币贷方金额 固定资产计提折旧合计
                                 accsub.setCreditSource(accsub.getCreditSource().add(monthDepreMoneyss));//原币贷方金额 固定资产计提折旧合计
                                 accsub.setDebitDest(new BigDecimal(0));//本位币借方金额
-                                //  asv.setCreditDest(new BigDecimal(aaiMap.get("end_depre_money").toString()));//本位币贷方金额 固定资产计提折旧合计
                                 accsub.setCreditDest(accsub.getCreditDest().add(monthDepreMoneyss));//本位币贷方金额 固定资产计提折旧合计
 
                                 accSubVoucherRespository.save(accsub);//凭证子表信息录入
                                 break;
                             }
-//                                    asv.setDirectionOther(((AccAssetCodeType)aactList.get(0)).getArticleCode2());//专项方向段
                             asv.setRemark("提取"+asvId.getYearMonthDate().substring(0,4)+"年"+asvId.getYearMonthDate().substring(4,6)+"月固定资产折旧");//摘要 默认置空
                             asv.setCurrency(currency);//原币别编码
                             asv.setExchangeRate(new BigDecimal(0));//当前汇率 默认0
                             asv.setDebitSource(new BigDecimal(0));//原币借方金额
-                            //  asv.setCreditSource(new BigDecimal(aaiMap.get("end_depre_money").toString()));//原币贷方金额 固定资产计提折旧合计
                             asv.setCreditSource(monthDepreMoneyss);//原币贷方金额 固定资产计提折旧合计
                             asv.setDebitDest(new BigDecimal(0));//本位币借方金额
-                            //  asv.setCreditDest(new BigDecimal(aaiMap.get("end_depre_money").toString()));//本位币贷方金额 固定资产计提折旧合计
                             asv.setCreditDest(monthDepreMoneyss);//本位币贷方金额 固定资产计提折旧合计
                             asv.setCreateBy(String.valueOf(CurrentUser.getCurrentUser().getId()));//制单人
                             asv.setCreateTime(time);//创建时间
@@ -1566,11 +1490,10 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
                 StringBuffer agSql = new StringBuffer();
                 int ssetNo = 1;
                 Map<Integer,Object> ssets = new HashMap<>();
-                agSql.append("select * from accsegmentdefine where segment_col = ?"+ ssetNo);
+                agSql.append("select * from accsegmentdefine whemre segent_col = ?"+ ssetNo);
                 ssets.put(ssetNo,specialCode);
                 ssetNo++;
                 List<?> agList = accAssetCodeTypeRepository.queryBySqlSC(agSql.toString(),ssets);
-//                List<?> agList = accSegmentDefineRespository.queryAccSegmentDefine(specialCode);
                 if(agList.size()>0){
                     Map agMap = new HashMap();
                     for(Object agObj : agList){
