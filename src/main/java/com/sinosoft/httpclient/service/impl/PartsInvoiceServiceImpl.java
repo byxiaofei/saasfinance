@@ -435,7 +435,7 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService {
             list3.add(voucherDTO2);
         }
 
-        // 以上已经对一条凭证处理校验完毕
+        // 以上已经对一条凭证sr处理校验完毕
         resultMap.put("list2", list2);
         resultMap.put("list3", list3);
         resultMap.put("resultMsg", "success");
