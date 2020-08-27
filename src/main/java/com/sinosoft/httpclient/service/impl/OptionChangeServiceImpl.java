@@ -79,7 +79,6 @@ public class OptionChangeServiceImpl implements OptionChangeService {
                 if (!"".equals(judgeMsg)){
                     logger.error(judgeMsg);
                     errorMsg.append("第"+(i+1)+"个的错误问题为："+judgeMsg);
-
                     continue;
                 }
                 String sourceCode = optionChange.getSourceCode();
@@ -90,7 +89,7 @@ public class OptionChangeServiceImpl implements OptionChangeService {
                     String resultMsg =(String)stringObjectMap.get("resultMsg");
                     if (!"success".equals(resultMsg)){
                         errorMsg.append("第"+(i+1)+"个Invoice类型错误问题为："+judgeMsg);
-                        return "fail";
+                        continue;
                     }
                     interfaceType = "P2";
                     Map<String,Object> stringObjectMap1 = converBussinessToAccounting(optionChange,errorMsg,interfaceInfo,interfaceType);
@@ -98,27 +97,29 @@ public class OptionChangeServiceImpl implements OptionChangeService {
                     if (!"success".equals(resultMsg1)){
                         logger.error(resultMsg1);
                         // 写个方法直接插入扔库里信息。
-                        return "fail";
+                       continue;
                     }
                     listResultMap.add(stringObjectMap);
                     listResultMap.add(stringObjectMap1);
-                }else {
+                }else if ("F".equals(sourceCode)){
                         String interfaceType = "F1";
                         Map<String,Object> stringObjectMap = converBussinessToAccounting(optionChange,errorMsg,interfaceInfo,interfaceType);
                         String resultMsg =(String)stringObjectMap.get("resultMsg");
                         if (!"success".equals(resultMsg)){
                             logger.error(resultMsg);
-                            return "fail";
+                           continue;
                         }
                     interfaceType = "F2";
                     Map<String,Object> stringObjectMap1 = converBussinessToAccounting(optionChange,errorMsg,interfaceInfo,interfaceType);
                     String resultMsg1 =(String)stringObjectMap1.get("resultMsg");
                     if (!"success".equals(resultMsg1)){
                         logger.error(resultMsg1);
-                        return "fail";
+                        continue;
                     }
                     listResultMap.add(stringObjectMap);
                     listResultMap.add(stringObjectMap1);
+                }else {
+                    continue;
                 }
             }
             System.out.println("---------------《当前时间范围内的正确的数据，已全部保存到List集合中，下面开始保存入库！》------------------");
@@ -155,12 +156,6 @@ public class OptionChangeServiceImpl implements OptionChangeService {
         if(optionChange.getCompanyNo() == null || "".equals(optionChange.getCompanyNo())){
             errorMsg.append("机构编码不能为空");
         }
-        if(optionChange.getOperationDate() == null || "".equals(optionChange.getOperationDate())){
-            errorMsg.append("业务日期不能为空");
-        }
-        if (optionChange.getPrice()==null||"".equals(optionChange.getPrice())){
-            errorMsg.append("价格不能为空");
-        }
         if (optionChange.getTransactionType()==null||"".equals(optionChange.getTransactionType())){
             errorMsg.append("业务类型不能为空");
         }
@@ -189,7 +184,7 @@ public class OptionChangeServiceImpl implements OptionChangeService {
                 return resultMap;
             }
         }
-        Date opertionDate =optionChange.getOperationDate();  //凭证日期
+        Date opertionDate =optionChange.getBusinessDate();  //凭证日期
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         String date = sdf.format(opertionDate);
         String yearMonthDate = DateUtil.getDateTimeFormatToGeneralLedger(date);
@@ -337,22 +332,22 @@ public class OptionChangeServiceImpl implements OptionChangeService {
                 }
                 // 通过接口类型来区分，金额的走向。
                 BigDecimal currentQuantity = optionChange.getCurrentQuantity();
-                BigDecimal currentActualCost = optionChange.getCurrentActualCost();
-                BigDecimal result = currentActualCost.multiply(currentQuantity);
+                BigDecimal currentEstimateCost = optionChange.getCurrentEstimateCost();
+                BigDecimal result = currentQuantity.multiply(currentEstimateCost);
                 String resultMoney = result.toString();
                 if ("P2".equals(interfaceType)){
                         voucherDTO1.setDebit(resultMoney);
-                        voucherDTO1.setCredit("0.0");
+                        voucherDTO1.setCredit("0.00");
                     }else if ("P1".equals(interfaceType)){
-                        voucherDTO1.setDebit("0.0");
+                        voucherDTO1.setDebit("0.00");
                         voucherDTO1.setCredit(resultMoney);
                     }
                 if ("F1".equals(interfaceType)){
-                        voucherDTO1.setDebit("0.0");
+                        voucherDTO1.setDebit("0.00");
                         voucherDTO1.setCredit(resultMoney);
                     }else if ("F2".equals(interfaceType)){
                         voucherDTO1.setDebit(resultMoney);
-                        voucherDTO1.setCredit("0.0");
+                        voucherDTO1.setCredit("0.00");
                     }
                 voucherDTO1.setRemarkName(optionChange.getVin());
                 voucherDTO1.setSubjectCode(subjectInfo);

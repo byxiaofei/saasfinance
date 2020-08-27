@@ -17,8 +17,6 @@ public class OptionChange {
     private String dealerNo;
     //记账公司GSSN号
     private String companyNo;
-    //交易数据
-    private Long idl;
     //生产号
     private String commissionNo;
     //美版底盘号
@@ -39,16 +37,8 @@ public class OptionChange {
     private String typeClass;
     //车辆状态
     private String vehicleStatus;
-    //售后工单号
-    private String rwoOrderNo;
-    //账单号
-    private String rwoInvoiceNo;
-    //采购发票号
-    private String procurementInvoiceNo;
     //选装件唯一ID
     private String optionId;
-    //零件编号
-    private String partsNo;
     //选装件代码
     private String optionCode;
     //选装件描述
@@ -57,10 +47,6 @@ public class OptionChange {
     private String sourceCode;
     //选装件类别代码
     private String optionCategoryCode;
-    //选装件价格
-    private BigDecimal price;
-    //选装件不含税价格
-    private BigDecimal priceWithoutTax;
     //原数量
     private BigDecimal originQuantity;
     //现数量
@@ -69,10 +55,6 @@ public class OptionChange {
     private BigDecimal originEstimateCost;
     //现预估成本
     private BigDecimal currentEstimateCost;
-    //原实际成本
-    private BigDecimal originActualCost;
-    //现实际成本
-    private BigDecimal currentActualCost;
     //原选装件状态
     private String originOptionStatus;
     //现选装件状态
@@ -82,13 +64,26 @@ public class OptionChange {
     //业务发生时间
     private Date businessDate;
     //操作日期
-    private Date operationDate;
+    private Date triggerDate;
     //业务类型
     private String transactionType;
+    //原实际成本
+    private BigDecimal currentActualCost;
 
-    public Integer getId(){return id;}
+    public void setCurrentActualCost(BigDecimal currentActualCost){
+        this.currentActualCost = currentActualCost;
+    }
+    public BigDecimal getCurrentActualCost(){
+        return currentActualCost;
+    }
 
-    public void setId(Integer id){this.id=id;}
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
     public String getDealerNo() {
         return dealerNo;
@@ -104,14 +99,6 @@ public class OptionChange {
 
     public void setCompanyNo(String companyNo) {
         this.companyNo = companyNo;
-    }
-
-    public Long getIdl() {
-        return idl;
-    }
-
-    public void setIdl(Long idl) {
-        this.idl = idl;
     }
 
     public String getCommissionNo() {
@@ -194,44 +181,12 @@ public class OptionChange {
         this.vehicleStatus = vehicleStatus;
     }
 
-    public String getRwoOrderNo() {
-        return rwoOrderNo;
-    }
-
-    public void setRwoOrderNo(String rwoOrderNo) {
-        this.rwoOrderNo = rwoOrderNo;
-    }
-
-    public String getRwoInvoiceNo() {
-        return rwoInvoiceNo;
-    }
-
-    public void setRwoInvoiceNo(String rwoInvoiceNo) {
-        this.rwoInvoiceNo = rwoInvoiceNo;
-    }
-
-    public String getProcurementInvoiceNo() {
-        return procurementInvoiceNo;
-    }
-
-    public void setProcurementInvoiceNo(String procurementInvoiceNo) {
-        this.procurementInvoiceNo = procurementInvoiceNo;
-    }
-
     public String getOptionId() {
         return optionId;
     }
 
     public void setOptionId(String optionId) {
         this.optionId = optionId;
-    }
-
-    public String getPartsNo() {
-        return partsNo;
-    }
-
-    public void setPartsNo(String partsNo) {
-        this.partsNo = partsNo;
     }
 
     public String getOptionCode() {
@@ -266,22 +221,6 @@ public class OptionChange {
         this.optionCategoryCode = optionCategoryCode;
     }
 
-    public BigDecimal getPrice() {
-        return price;
-    }
-
-    public void setPrice(BigDecimal price) {
-        this.price = price;
-    }
-
-    public BigDecimal getPriceWithoutTax() {
-        return priceWithoutTax;
-    }
-
-    public void setPriceWithoutTax(BigDecimal priceWithoutTax) {
-        this.priceWithoutTax = priceWithoutTax;
-    }
-
     public BigDecimal getOriginQuantity() {
         return originQuantity;
     }
@@ -312,22 +251,6 @@ public class OptionChange {
 
     public void setCurrentEstimateCost(BigDecimal currentEstimateCost) {
         this.currentEstimateCost = currentEstimateCost;
-    }
-
-    public BigDecimal getOriginActualCost() {
-        return originActualCost;
-    }
-
-    public void setOriginActualCost(BigDecimal originActualCost) {
-        this.originActualCost = originActualCost;
-    }
-
-    public BigDecimal getCurrentActualCost() {
-        return currentActualCost;
-    }
-
-    public void setCurrentActualCost(BigDecimal currentActualCost) {
-        this.currentActualCost = currentActualCost;
     }
 
     public String getOriginOptionStatus() {
@@ -362,12 +285,12 @@ public class OptionChange {
         this.businessDate = businessDate;
     }
 
-    public Date getOperationDate() {
-        return operationDate;
+    public Date getTriggerDate() {
+        return triggerDate;
     }
 
-    public void setOperationDate(Date operationDate) {
-        this.operationDate = operationDate;
+    public void setTriggerDate(Date triggerDate) {
+        this.triggerDate = triggerDate;
     }
 
     public String getTransactionType() {
@@ -381,10 +304,9 @@ public class OptionChange {
     @Override
     public String toString() {
         return "OptionChange{" +
-                "id='"+ id +'\''+
-                "dealerNo='" + dealerNo + '\'' +
+                "id=" + id +
+                ", dealerNo='" + dealerNo + '\'' +
                 ", companyNo='" + companyNo + '\'' +
-                ", id=" + idl +
                 ", commissionNo='" + commissionNo + '\'' +
                 ", vin='" + vin + '\'' +
                 ", fin='" + fin + '\'' +
@@ -395,29 +317,22 @@ public class OptionChange {
                 ", model='" + model + '\'' +
                 ", typeClass='" + typeClass + '\'' +
                 ", vehicleStatus='" + vehicleStatus + '\'' +
-                ", rwoOrderNo='" + rwoOrderNo + '\'' +
-                ", rwoInvoiceNo='" + rwoInvoiceNo + '\'' +
-                ", procurementInvoiceNo='" + procurementInvoiceNo + '\'' +
                 ", optionId='" + optionId + '\'' +
-                ", partsNo='" + partsNo + '\'' +
                 ", optionCode='" + optionCode + '\'' +
                 ", optionDescription='" + optionDescription + '\'' +
                 ", sourceCode='" + sourceCode + '\'' +
                 ", optionCategoryCode='" + optionCategoryCode + '\'' +
-                ", price=" + price +
-                ", priceWithoutTax=" + priceWithoutTax +
                 ", originQuantity=" + originQuantity +
                 ", currentQuantity=" + currentQuantity +
                 ", originEstimateCost=" + originEstimateCost +
                 ", currentEstimateCost=" + currentEstimateCost +
-                ", originActualCost=" + originActualCost +
-                ", currentActualCost=" + currentActualCost +
                 ", originOptionStatus='" + originOptionStatus + '\'' +
                 ", currentOptionStatus='" + currentOptionStatus + '\'' +
                 ", optionCostChange=" + optionCostChange +
                 ", businessDate=" + businessDate +
-                ", operationDate=" + operationDate +
+                ", triggerDate=" + triggerDate +
                 ", transactionType='" + transactionType + '\'' +
-                '}';
+                ", currentActualCost='" + currentActualCost + '\''+
+        '}';
     }
 }
