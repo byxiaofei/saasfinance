@@ -1996,19 +1996,13 @@ public class ExcelUtil {
             String modelPath = path;
             File file = null;
             String fileName = "";
-            int[][] yearCell1 = {{4, 2}, {4, 2}, {3, 2}, {3, 2}, {4, 1}, {4, 1},{1,1},{1,1},{2,1},{2,1}};//期间坐标
-            int[][] yearCell2 = {{4, 2},  {3, 2}, {4, 1},{1,1},{2,1}};
-            int[][] comCell1 = {{4, 0}, {4, 0}, {3, 0}, {3, 0}, {4, 0}, {4, 0},{1,1},{1,1},{2,0},{2,0}};//报表单位坐标
-            int[][] comCell2 = {{4, 0},  {3, 0}, {4, 0},{1,1},{2,0}};
+            int[][] yearCell2 = {{4, 2},  {3, 2}, {4, 1}};
+            int[][] comCell2 = {{4, 0},  {3, 0}, {4, 0}};
             Integer mergeColIndex = null;
 
-            if(iSMerge.equals("Y")){
-                file = new File(modelPath + "reportAccountA_1.xls");
-                mergeColIndex = 2;
-            }else{
-                file = new File(modelPath + "reportAccountA_1_V1.xls");
-                mergeColIndex = 1;
-            }
+            file = new File(modelPath + "reportAccountA_1_V1.xls");
+            mergeColIndex = 1;
+
             fileName = dtos.get(0).getYearMonthDate() + "会计月度_" + "报表.xls";
 
             FileInputStream fis = new FileInputStream(file);
@@ -2031,7 +2025,7 @@ public class ExcelUtil {
                 //定义sheet里面的列
                 Cell cell;
                 Object value;
-                if( iSMerge.equals("Y") ? (mergeColIndex==d || mergeColIndex==d-1) : mergeColIndex==d ){
+                if(  mergeColIndex==d ){
                     //表示是利润表
                     for (int i = 0; i < datas.size(); i++) {
                         row = sheet.getRow(i + rownum);
@@ -2072,36 +2066,20 @@ public class ExcelUtil {
                 Cell comName ;
                 String yearMonthDate = dto.getYearMonthDate();
                 String unit = dto.getUnit();
-                if (iSMerge.equals("Y") && (d !=6 || d !=7)  ) {
 
-                    c = sheet.getRow(yearCell1[d][0]).getCell(yearCell1[d][1]);
-                    c.setCellValue(yearMonthDate.substring(0,4)+"年"+yearMonthDate.substring(4,6)+"月");
-                    u = sheet.getRow(yearCell1[d][0]).getCell(yearCell1[d][1]+2);
-                    if(dtos.get(d).getUnit().equals("1")){
-                        u.setCellValue("单位：元");
-                    }else{
-                        u.setCellValue("单位：万元");
-                    }
-                    createUser = sheet.getRow(rownum+datas.size()).getCell(yearCell1[d][1]+2);
-                    createUser.setCellValue("制表人：" + CurrentUser.getCurrentUser().getUserName());
-                    comName = sheet.getRow(comCell1[d][0]).getCell(comCell1[d][1]);
-                    comName.setCellValue("报表单位：" + CurrentUser.getCurrentManageBranchName());
+                c = sheet.getRow(yearCell2[d][0]).getCell(yearCell2[d][1]);
+                c.setCellValue(yearMonthDate.substring(0,4)+"年"+yearMonthDate.substring(4,6)+"月");
+                u = sheet.getRow(yearCell2[d][0]).getCell(yearCell2[d][1]+2);
+                if(dtos.get(d).getUnit().equals("1")){
+                    u.setCellValue("单位：元");
+                }else{
+                    u.setCellValue("单位：万元");
+                }
+                createUser = sheet.getRow(rownum+datas.size()).getCell(yearCell2[d][1]+2);
+                createUser.setCellValue("制表人：" + CurrentUser.getCurrentUser().getUserName());
+                comName = sheet.getRow(comCell2[d][0]).getCell(comCell2[d][1]);
+                comName.setCellValue("报表单位：" + CurrentUser.getCurrentManageBranchName());
 
-                }
-                if(iSMerge.equals("N") && d != 3  ) {
-                    c = sheet.getRow(yearCell2[d][0]).getCell(yearCell2[d][1]);
-                    c.setCellValue(yearMonthDate.substring(0,4)+"年"+yearMonthDate.substring(4,6)+"月");
-                    u = sheet.getRow(yearCell2[d][0]).getCell(yearCell2[d][1]+2);
-                    if(dtos.get(d).getUnit().equals("1")){
-                        u.setCellValue("单位：元");
-                    }else{
-                        u.setCellValue("单位：万元");
-                    }
-                    createUser = sheet.getRow(rownum+datas.size()).getCell(yearCell2[d][1]+2);
-                    createUser.setCellValue("制表人：" + CurrentUser.getCurrentUser().getUserName());
-                    comName = sheet.getRow(comCell2[d][0]).getCell(comCell2[d][1]);
-                    comName.setCellValue("报表单位：" + CurrentUser.getCurrentManageBranchName());
-                }
 
             }
 

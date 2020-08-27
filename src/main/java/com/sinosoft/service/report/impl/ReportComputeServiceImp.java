@@ -183,6 +183,7 @@ public class ReportComputeServiceImp implements ReportComputeService {
 					String formulaVAll = getDColV(i, reportCompute);
 					if (formulaVAll!=null&&!"".equals(formulaVAll)) {
 						//获取附加参数（行内计算优先级）
+						formulaVAll = formulaVAll.replace("\n", "");
 						Integer lever = Integer.valueOf(formulaVAll.substring(formulaVAll.lastIndexOf(";")+1));
 						//计算参数取数规则
 						String formulaV = formulaVAll.substring(0, formulaVAll.lastIndexOf(";"));

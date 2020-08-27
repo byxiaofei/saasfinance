@@ -87,52 +87,27 @@ public class FourReportController {
 			String unit = dto.getUnit();//单位
 			String JJreportName = dto.getJJreportName();
 
-			//获取汇总机构
-			List<String>  summaryBranch = new ArrayList();
-			summaryBranch = branchInfoRepository.findByLevel("1");
-			if(!summaryBranch.contains(centerCode)){
-				List<ReportDataDTO> dtos=new ArrayList<ReportDataDTO>();
+			List<ReportDataDTO> dtos=new ArrayList<ReportDataDTO>();
+			String []name1= {"资产负债表","利润表","现金流量表"};
 
-				String []name1= {"资产负债表","利润表","现金流量表","所有者权益变动表","国际化报表"};
+			int []row1={6,5,6};
+			int []cell1={6,6,5};
 
-				int []row1={6,5,6,5,4};
-				int []cell1={6,6,5,15,4};
+			List<String> reportCode =reportDataRepository.getReportCode(accBookCode,"1");
 
-				List<String> reportCode =reportDataRepository.getReportCode(accBookCode,"1");
-
-				for(int i=0;i<name1.length;i++){
-					ReportDataDTO d = new ReportDataDTO();
-					d.setYearMonthDate(yearMonthDate);
-					d.setUnit(unit);
-					d.setAccBookCode(accBookCode);
-					d.setReportCode(reportCode.get(i));//设置报表编号=（报表类型#报表名称）
-					d.setSheetName(name1[i]);
-					d.setRowNum(row1[i]);//设置开始塞数行数
-					d.setCellNum(cell1[i]);//设置一共塞多少列
-					dtos.add(d);
-				}
-				fourReportService.download(request, response,dtos,JJreportName,"N");
-			}else{
-				List<ReportDataDTO> dtos=new ArrayList<ReportDataDTO>();
-				String []name1= {"资产负债表","资产负债表(合并报表)","利润表","利润表(合并报表)","现金流量表","现金流流量表(合并报表)","所有者权益变动表","所有者权益变动表(合并报表)","国际化报表","国际化报表(合并报表)"};
-
-				int []row1={6,6,5,5,6,6,5,5,4,4};
-				int []cell1={6,6,6,6,5,5,15,15,4,4};
-				List<String> reportCode =reportDataRepository.getReportCode(accBookCode);
-
-				for(int i=0;i<name1.length;i++){
-					ReportDataDTO d = new ReportDataDTO();
-					d.setYearMonthDate(yearMonthDate);
-					d.setUnit(unit);
-					d.setAccBookCode(accBookCode);
-					d.setReportCode(reportCode.get(i));//设置报表编号=（报表类型#报表名称）
-					d.setSheetName(name1[i]);
-					d.setRowNum(row1[i]);//设置开始塞数行数
-					d.setCellNum(cell1[i]);//设置一共塞多少列
-					dtos.add(d);
-				}
-				fourReportService.download(request, response,dtos,JJreportName,"Y");
+			for(int i=0;i<name1.length;i++){
+				ReportDataDTO d = new ReportDataDTO();
+				d.setYearMonthDate(yearMonthDate);
+				d.setUnit(unit);
+				d.setAccBookCode(accBookCode);
+				d.setReportCode(reportCode.get(i));//设置报表编号=（报表类型#报表名称）
+				d.setSheetName(name1[i]);
+				d.setRowNum(row1[i]);//设置开始塞数行数
+				d.setCellNum(cell1[i]);//设置一共塞多少列
+				dtos.add(d);
 			}
+			fourReportService.download(request, response,dtos,JJreportName,"N");
+
 
 
 		}catch(Exception e){
