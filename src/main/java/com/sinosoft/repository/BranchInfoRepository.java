@@ -48,7 +48,7 @@ public interface BranchInfoRepository extends BaseRepository<BranchInfo, Integer
      * @param comCode
      * @return
      */
-    @Query(value="select id,flag from BranchInfo where comCode = ?1")
+    @Query(value="select id as id,flag as flag from BranchInfo where comCode = ?1")
     List<Map<String, Object>> checkExistsComCode(String comCode);
 
     @Query(value = "select * from branchinfo b where b.id in (?1) order by id", nativeQuery = true)

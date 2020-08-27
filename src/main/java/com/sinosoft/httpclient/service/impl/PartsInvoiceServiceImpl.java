@@ -78,9 +78,6 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService {
                 partsInvoice.setOrderNo(temp.getOrderNo());
                 partsInvoice.setOperationDate(temp.getOperationDate());
                 branchInfo = temp.getCompanyNo();
-
-
-                BigDecimal sum = new BigDecimal("0.00");
                 for(int j = 0;j < temp.getInvoiceParts().size();j++){
                     PartsInvoiceIn temp1= temp.getInvoiceParts().get(j);
                     partsInvoice.setLine(temp1.getLine());
@@ -274,7 +271,7 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService {
                 return resultMap;
             }
         }
-
+////*****
         // 如果没问题，校验的同时就生成了凭证号了。 这里把createBy 创建人 设置为001 默认系统了
         VoucherDTO voucherDTO = voucherService.setVoucher1(yearMonth, centerCode, branchCode, accbookCode, accbookType,"001");
         if(voucherDTO.getYearMonth() == null || "".equals(voucherDTO.getYearMonth())){
