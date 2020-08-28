@@ -1655,7 +1655,7 @@
                 inputAndSpan = inputAndSpan + input + '&nbsp;' + span;
             }*/
 
-            /*var bankDepositIds = '';
+            var bankDepositIds = '';
             if (((row.subjectCodeS).split("/"))[0]=='1002') {//银行存款类一级科目，以1002开头的
                 inputAndSpan = inputAndSpan + '<br/>';
 
@@ -1767,7 +1767,7 @@
                         }
                     });
                 },20);
-            }*/
+            }
 
             inputAndSpan = needInvoiceNoSubjectDispose(value, row, index, inputAndSpan);
 
@@ -2438,14 +2438,14 @@
                         unitNum = $('#energyCharge_unit_'+i).val();
                         /!*if(!unitPrice || !unitNum){ $.messager.alert('提示',"请输入电费科目单价或数量！");return;}*!/
                     }*/
-                    /*if (((rowSs[i].subjectCodeS).split("/"))[0]=='1002') {//银行存款类
+                    if (((rowSs[i].subjectCodeS).split("/"))[0]=='1002') {//银行存款类
                         settlementType = $('#bankDeposit_type_'+i).combobox('getValue');
                         settlementNo = $('#bankDeposit_no_'+i).textbox('getValue');
                         settlementDate = $('#bankDeposit_date_'+i).datebox('getValue');
-                        /!*if(!settlementType){ $.messager.alert('提示',"请选择银行存款类科目结算类型！");return;}
+                        if(!settlementType){ $.messager.alert('提示',"请选择银行存款类科目结算类型！");return;}
                         if(!settlementNo){ $.messager.alert('提示',"请输入银行存款类科目结算单号！");return;}
-                        if(!settlementDate){ $.messager.alert('提示',"请选择银行存款类科目结算日期！");return;}*!/
-                    }*/
+                        if(!settlementDate){ $.messager.alert('提示',"请选择银行存款类科目结算日期！");return;}
+                    }
                     // js 中 常用split(",")等同于limit<0的情况。
                     if(specialCodeS.split(",").length != specialSuperCodeS.split(",").length){
                         $('#waitMenu').dialog('close');//  关闭等待窗口

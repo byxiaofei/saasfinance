@@ -104,6 +104,16 @@ public class VoucherPrintServiceImpl implements VoucherPrintService {
                     paramsNo++;
                 }
             }
+            if(dto.getVoucherDateStart()!=null&&!dto.getVoucherDateStart().equals("")){
+                sb.append(" and am.voucher_date >= ?" + paramsNo);
+                params.put(paramsNo, dto.getVoucherDateStart());
+                paramsNo++;
+            }
+            if(dto.getVoucherDateEnd()!=null&&!dto.getVoucherDateEnd().equals("")){
+                sb.append(" and am.voucher_date <= ?" + paramsNo);
+                params.put(paramsNo, dto.getVoucherDateEnd());
+                paramsNo++;
+            }
         } else {
             if (dto.getYearMonth()!=null&&!"".equals(dto.getYearMonth())) {
                 sb.append(" AND ac.year_month_date = ?" + paramsNo);

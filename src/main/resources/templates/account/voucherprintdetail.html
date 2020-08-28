@@ -14,6 +14,8 @@
         <span id="printVoucherNoStart" style="display:none" th:text="${map.printVoucherNoStart}"></span>
         <span id="printVoucherNoEnd" style="display:none" th:text="${map.printVoucherNoEnd}"></span>
         <span id="printCreateBy" style="display:none" th:text="${map.printCreateBy}"></span>
+        <span id="voucherDateStart" style="display:none" th:text="${map.voucherDateStart}"></span>
+        <span id="voucherDateEnd" style="display:none" th:text="${map.voucherDateEnd}"></span>
 
         <span id="printSpecialNameP" style="display:none" th:text="${map.printSpecialNameP}"></span>
         <span id="currentManageBranchName" style="display:none" th:text="${session.currentUser.currentManageBranchName}"></span>
@@ -46,7 +48,7 @@
         var url = '/voucherprint/printlist';
         var data = null;
         if ($('#printCopyType').text()=='4') {
-            data = {'copyType':'4','yearMonth':$("#printYearMonth").text(),'yearMonthDate':$("#printYearMonthDate").text(),'voucherNoStart':$("#printVoucherNoStart").text(),'voucherNoEnd':$("#printVoucherNoEnd").text(),'createBy':$("#printCreateBy").text(),'voucherNo':$("#printVoucherNo").text(),'specialNameP':$("#printSpecialNameP").text()};
+            data = {'copyType':'4','yearMonth':$("#printYearMonth").text(),'yearMonthDate':$("#printYearMonthDate").text(),'voucherNoStart':$("#printVoucherNoStart").text(),'voucherNoEnd':$("#printVoucherNoEnd").text(),'createBy':$("#printCreateBy").text(),'voucherNo':$("#printVoucherNo").text(),'specialNameP':$("#printSpecialNameP").text(),'voucherDateStart':$("#voucherDateStart").text(),'voucherDateEnd':$("#voucherDateEnd").text()};
         } else {
             data = {'yearMonth':$("#printYearMonth").text(),'voucherNo':$("#printVoucherNo").text(),'specialNameP':$("#printSpecialNameP").text()};
         }

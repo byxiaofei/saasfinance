@@ -399,7 +399,7 @@
                 inputAndSpan = inputAndSpan + input + '&nbsp;' + span;
             }*/
 
-            /*var bankDepositIds = '';
+            var bankDepositIds = '';
             if (((row.subjectCodeS).split("/"))[0]=='1002') {//银行存款类一级科目，以1002开头的
                 inputAndSpan = inputAndSpan + '<br/>';
 
@@ -417,7 +417,7 @@
                 span = '<span>结算日期:</span>';
                 input = '<input id="'+bankDepositDate+'" name="settlementDate" readonly value="'+row.settlementDate+'"></input>';
                 inputAndSpan = inputAndSpan + span + '&nbsp;' + input;
-            }*/
+            }
 
             inputAndSpan = needInvoiceNoSubjectDispose(value, row, index, inputAndSpan);
 

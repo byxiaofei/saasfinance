@@ -38,7 +38,16 @@
                 <td style="width:18%;">
                     <input style="width:100%;" id="specialNameP" name="specialNameP" class="easyui-combobox" data-options="prompt: '专项名称全级显示'">
                 </td>
+                <!-- TODO 加日期-->
+                <td style="width:8%;text-align: right;" ><label>日期:</label></td>
+                <td  id="s" style="width:42%;text-align: left;">
+                    <input style="width:40%;" id="voucherDateStart" name="voucherDateStart" class="easyui-datebox" data-options="prompt: '开始日期',editable:false">&nbsp;--&nbsp;
+                    <input style="width:40%;" id="voucherDateEnd" name="voucherDateEnd" class="easyui-datebox" data-options="prompt: '结束日期',editable:false">
+                </td>
             </tr>
+
+
+
             <tr>
                 <td colspan="6" style="text-align: right; padding-right: 20px;">
                     <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-print'" style="width: 8%;" onclick="searchAcc()" >打印</a>
@@ -148,6 +157,28 @@
                 }
             }
         });
+
+        //日期校验
+        $('#voucherDateStart').datebox({
+            onSelect:function(record){
+                var start=$('#voucherDateStart').datebox('getValue');
+                var end=$('#voucherDateEnd').datebox('getValue');
+                if(start>end&&end!=null&&end!=""){
+                    $.messager.alert("提示","开始日期不能大于结束日期！","info");
+                    $('#voucherDateStart').datebox('setValue','');
+                }
+            }
+        })
+        $('#voucherDateEnd').datebox({
+            onSelect:function(record){
+                var start=$('#voucherDateStart').datebox('getValue');
+                var end=$('#voucherDateEnd').datebox('getValue');
+                if(start>end&&end!=null&&end!=""){
+                    $.messager.alert("提示","结束日期不能小于开始日期！","info");
+                    $('#voucherDateEnd').datebox('setValue','');
+                }
+            }
+        })
     });
 
     function disabledTrueOrFalse(flag) {
@@ -197,6 +228,9 @@
         data['yearMonthDate'] = $("#yearMonthDate").combobox('getValue');
         data['createBy'] = $("#createBy").textbox('getText');
         data['specialNameP'] = $("#specialNameP").combobox('getValue');
+        data['voucherDateStart'] =$('#voucherDateStart').datebox('getValue');
+        data['voucherDateEnd'] =$('#voucherDateEnd').datebox('getValue');
+
         if ($("#yearMonth").combobox('getValue') == $("#yearMonthDate").combobox('getValue')) {
             data['voucherNoStart'] = $("#voucherNoStart").textbox('getText');
             data['voucherNoEnd'] = $("#voucherNoEnd").textbox('getText');

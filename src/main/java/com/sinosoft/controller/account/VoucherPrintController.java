@@ -61,6 +61,8 @@ public class VoucherPrintController {
 
         map.put("printSpecialNameP", dto.getSpecialNameP());//专项全称全级显示
         map.put("printCopyType", dto.getCopyType());//为4时是凭证批量打印（凭证打印界面）
+        map.put("voucherDateStart", dto.getVoucherDateStart());//专项全称全级显示
+        map.put("voucherDateEnd", dto.getVoucherDateEnd());//为4时是凭证批量打印（凭证打印界面）
 
         ModelAndView modelAndView = new ModelAndView();
         modelAndView.setViewName("account/voucherprintdetail");
