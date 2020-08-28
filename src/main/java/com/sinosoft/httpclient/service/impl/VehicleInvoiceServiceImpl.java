@@ -74,7 +74,6 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
             List<Map<String,Object>> listResultMaps = new ArrayList<>();
             // 错误日志返回信息。
             String branchInfo = null;
-            StringBuilder errorAllMessage = new StringBuilder();
             for(int i = 0 ; i < vehicleInvoiceList.size();i++){
                 VehicleInvoice vehicleInvoice = vehicleInvoiceList.get(i);
                 StringBuilder errorMsg = new StringBuilder();
@@ -82,8 +81,7 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
                 // 看当前必要信息是否都不为空。
                 String judgeMsg = judgeInterfaceInfoQuerstion(vehicleInvoice, errorMsg);
                 if(!"".equals(judgeMsg)){
-                    logger.error(judgeMsg);
-                    errorAllMessage.append("第"+(i+1)+"的错误问题为："+judgeMsg);
+                    logger.error("第"+(i+1)+"的错误问题为："+judgeMsg);
                     continue;
                 }
 
@@ -97,8 +95,7 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
                     Map<String,Object> stringObjectMap = convertBussinessToAccounting(vehicleInvoice,errorMsg,interfaceInfo,interfaceType);
                     String resultMsg = (String) stringObjectMap.get("resultMsg");
                     if (!"success".equals(resultMsg)){
-                        logger.error(resultMsg);
-                        errorAllMessage.append("第"+(i+1)+"Invoice类型错误问题为："+judgeMsg);
+                        logger.error("第"+(i+1)+"Invoice类型错误问题为："+resultMsg);
                         continue;
                     }
                     // 变为第二个接口信息
@@ -106,8 +103,7 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
                     Map<String,Object> stringObjectMap1 = convertBussinessToAccounting(vehicleInvoice,errorMsg,interfaceInfo,interfaceType);
                     String resultMsg1 = (String) stringObjectMap1.get("resultMsg");
                     if (!"success".equals(resultMsg1)){
-                        logger.error(resultMsg1);
-                        errorAllMessage.append("第"+(i+1)+"Invoice类型错误问题为："+judgeMsg);
+                        logger.error("第"+(i+1)+"Invoice类型错误问题为："+resultMsg1);
                         continue;
                     }
 
@@ -121,9 +117,8 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
                     Map<String,Object> stringObjectMap = convertBussinessToAccounting(vehicleInvoice,errorMsg,interfaceInfo,interfaceType);
                     String resultMsg = (String) stringObjectMap.get("resultMsg");
                     if (!"success".equals(resultMsg)){
-                        logger.error(resultMsg);
+                        logger.error("第"+(i+1)+"个Credit类型错误问题为："+resultMsg);
                         // 写个方法直接插入扔库里信息。
-                        errorAllMessage.append("第"+(i+1)+"个Credit类型错误问题为："+judgeMsg);
                         continue;
                     }
                     // 变为第二个接口信息
@@ -131,8 +126,7 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
                     Map<String,Object> stringObjectMap1 = convertBussinessToAccounting(vehicleInvoice,errorMsg,interfaceInfo,interfaceType);
                     String resultMsg1 = (String) stringObjectMap1.get("resultMsg");
                     if (!"success".equals(resultMsg1)){
-                        logger.error(resultMsg1);
-                        errorAllMessage.append("第"+(i+1)+"个Credit类型错误问题为："+judgeMsg);
+                        logger.error("第"+(i+1)+"个Credit类型错误问题为："+resultMsg1);
                         continue;
                     }
                     listResultMaps.add(stringObjectMap);
@@ -148,20 +142,15 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
                 VoucherDTO dto = (VoucherDTO) stringObjectMap.get("dto");
                 String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto);
                 if(!"success".equals(voucherNo)){
-                    logger.error(voucherNo);
-                    errorAllMessage.append("保存当前"+loadTime+"的"+(i+1)+"数据凭证出错");
+                    logger.error("保存当前"+loadTime+"的"+(i+1)+"数据凭证出错");
                 }
             }
             System.out.println("--------------------  上述已经对正确的所有数据进行了入库保存！  ----------------------------");
             vehicleInvoiceRespository.saveAll(vehicleInvoiceList);
             vehicleInvoiceRespository.flush();
             System.out.println("---------------------当前时间范围内的数据，已经全部保存到对接接口表中---------------------------");
-            if("".equals(errorAllMessage.toString())){
-                interfaceInfoService.successSave(branchInfo,loadTime,"当前时间段内的数据没有问题，全部入库！");
-                return "success";
-            }
-            interfaceInfoService.failSave(branchInfo,loadTime,"当前时间段内的信息个别信息有问题"+errorAllMessage.toString());
-            return "halfsuccess";
+            interfaceInfoService.successSave(branchInfo, loadTime, "当前时间段内的数据没有问题，全部入库！");
+            return "success";
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("当前错误信息为:"+e);

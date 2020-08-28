@@ -76,11 +76,10 @@ public class ServiceInvoiceServiceImpl implements ServiceInvoiceService {
             List<Map<String, Object>> listResultMaps = new ArrayList<>();
             // 用于存放处理数据的金额。
             Map<String,BigDecimal> mapsAboutAmount = new HashMap<>();
-            // 错误日志返回信息。
-            StringBuilder errorAllMessage = new StringBuilder();
 
             String branchInfo = null;
             for (int i = 0 ; i<ServiceInvoiceDTOList.size();i++) {
+                // 错误日志返回信息。
                 ServiceInvoiceDTO serviceInvoiceDTO = ServiceInvoiceDTOList.get(i);
                 serviceInvoiceDTO.setBatch(serviceInvoiceDTO.getId());
                 List<ServicePartsInvoiceDTO> invoiceVerifyDTOList = serviceInvoiceDTO.getInvoiceServiceParts();
@@ -165,8 +164,7 @@ public class ServiceInvoiceServiceImpl implements ServiceInvoiceService {
                 StringBuilder errorMsg = new StringBuilder();
                 String judgeMsg = judgeInterfaceInfoQuerstion(serviceInvoiceDTO, errorMsg);
                 if (!"".equals(judgeMsg)) {
-                    logger.error(judgeMsg);
-                    errorAllMessage.append("第"+(i+1)+"个的错误问题为：" + judgeMsg);
+                    logger.error("第"+(i+1)+"个的错误问题为：" + judgeMsg);
                     continue;
                 }
 
@@ -177,8 +175,7 @@ public class ServiceInvoiceServiceImpl implements ServiceInvoiceService {
                     Map<String,Object> stringObjectMap = convertBussinessToAccounting(serviceInvoiceDTO,errorMsg,interfaceInfo,interfaceType,mapsAboutAmount);
                     String resultMsg = (String) stringObjectMap.get("resultMsg");
                     if(!"success".equals(resultMsg)){
-                        logger.error(resultMsg);
-                        errorAllMessage.append("第"+(i+1)+"个的错误问题为："+judgeMsg);
+                        logger.error("第"+(i+1)+"个的错误问题为："+resultMsg);
                         continue;
                     }
 
@@ -189,8 +186,7 @@ public class ServiceInvoiceServiceImpl implements ServiceInvoiceService {
                     Map<String,Object> stringObjectMap = convertBussinessToAccounting(serviceInvoiceDTO,errorMsg,interfaceInfo,interfaceType,mapsAboutAmount);
                     String resultMsg = (String) stringObjectMap.get("resultMsg");
                     if(!"success".equals(resultMsg)){
-                        logger.error(resultMsg);
-                        errorAllMessage.append("第"+(i+1)+"个的错误问题为："+judgeMsg);
+                        logger.error("第"+(i+1)+"个的错误问题为："+resultMsg);
                         continue;
                     }
 
@@ -207,8 +203,7 @@ public class ServiceInvoiceServiceImpl implements ServiceInvoiceService {
                 VoucherDTO dto = (VoucherDTO) stringObjectMap.get("dto");
                 String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto);
                 if(!"success".equals(voucherNo)){
-                    logger.error(voucherNo);
-                    errorAllMessage.append("保存凭证出错");
+                    logger.error("保存当前"+loadTime+"的"+(i+1)+"数据凭证出错");
                 }
             }
             System.out.println("--------------------  上述已经对正确的所有数据进行了入库保存！  ----------------------------");
@@ -216,12 +211,8 @@ public class ServiceInvoiceServiceImpl implements ServiceInvoiceService {
             respository.saveAll(serviceInvoiceList);
             respository.flush();
 
-            if("".equals(errorAllMessage.toString())){
-                interfaceInfoService.successSave(branchInfo,loadTime,"当前时间段内的数据没有问题，全部入库！");
-                return "success";
-            }
-            interfaceInfoService.failSave(branchInfo,loadTime,"当前时间段内的信息个别信息有问题"+errorAllMessage.toString());
-            return "halfsuccess";
+            interfaceInfoService.successSave(branchInfo, loadTime, "当前时间段内的数据没有问题，全部入库！");
+            return "success";
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("当前错误信息为:"+e);

@@ -117,7 +117,7 @@ public class PartsPromotionServiceImpl implements PartsPromotionService {
                 if (!"success".equals(resultMsg)){
                     logger.error(resultMsg);
                     // 写个方法直接插入扔库里信息。
-                    return "fail";
+                    continue;
                 }
                 List<VoucherDTO> list2 = (List<VoucherDTO>) stringObjectMap.get("list2");
                 List<VoucherDTO> list3 = (List<VoucherDTO>) stringObjectMap.get("list3");
@@ -125,7 +125,7 @@ public class PartsPromotionServiceImpl implements PartsPromotionService {
                 String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto1);
                 if(!"success".equals(voucherNo)){
                     logger.error(voucherNo);
-                    return "fail";
+                    continue;
                 }
             }else{
                 String interfaceType = "2";
@@ -134,7 +134,7 @@ public class PartsPromotionServiceImpl implements PartsPromotionService {
                 if (!"success".equals(resultMsg)){
                     logger.error(resultMsg);
                     // 写个方法直接插入扔库里信息。
-                    return "fail";
+                    continue;
                 }
                 List<VoucherDTO> list2 = (List<VoucherDTO>) stringObjectMap.get("list2");
                 List<VoucherDTO> list3 = (List<VoucherDTO>) stringObjectMap.get("list3");
@@ -142,7 +142,7 @@ public class PartsPromotionServiceImpl implements PartsPromotionService {
                 String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto1);
                 if(!"success".equals(voucherNo)){
                     logger.error(voucherNo);
-                    return "fail";
+                    continue;
                 }
             }
         }

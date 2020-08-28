@@ -70,15 +70,14 @@ public class OptionChangeServiceImpl implements OptionChangeService {
     public String saveoptionChangeList(List<OptionChange> optionChangeList,String loadTime){
         try {
             List<Map<String,Object>> listResultMap = new ArrayList<>();
-            StringBuilder errorMsg = new StringBuilder();
             String companyNo =null;
             for (int i=0;i<optionChangeList.size();i++){
+                StringBuilder errorMsg = new StringBuilder();
                 OptionChange optionChange = optionChangeList.get(i);
                 companyNo = optionChange.getCompanyNo();
                 String judgeMsg =judgeInterfaceInfoQuerstion(optionChange,errorMsg);
                 if (!"".equals(judgeMsg)){
-                    logger.error(judgeMsg);
-                    errorMsg.append("第"+(i+1)+"个的错误问题为："+judgeMsg);
+                    logger.error("第"+(i+1)+"个的错误问题为："+judgeMsg);
                     continue;
                 }
                 String sourceCode = optionChange.getSourceCode();
@@ -87,8 +86,7 @@ public class OptionChangeServiceImpl implements OptionChangeService {
                     String interfaceType ="P1";
                     Map<String,Object> stringObjectMap =converBussinessToAccounting(optionChange,errorMsg,interfaceInfo,interfaceType);
                     String resultMsg =(String)stringObjectMap.get("resultMsg");
-                    if (!"success".equals(resultMsg)){
-                        errorMsg.append("第"+(i+1)+"个Invoice类型错误问题为："+judgeMsg);
+                    if (!"success".equals("第"+(i+1)+"个Invoice类型错误问题为："+resultMsg)){
                         continue;
                     }
                     interfaceType = "P2";
@@ -131,20 +129,16 @@ public class OptionChangeServiceImpl implements OptionChangeService {
                 VoucherDTO dto = (VoucherDTO) stringObjectMap.get("dto");
                 String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto);
                 if(!"success".equals(voucherNo)){
-                    logger.error(voucherNo);
-                    errorMsg.append("保存凭证出错");
+                    logger.error("保存当前"+loadTime+"的"+(i+1)+"数据凭证出错");
                 }
             }
             optionChangeRespository.saveAll(optionChangeList);
             optionChangeRespository.flush();
             System.out.println("---------------------当前时间范围内的数据，已经全部保存到对接接口表中---------------------------");
-            // TODO  最后接口改造，需要传入--> 起止时间 ，并把起止时间保存到 任务调度明细表中 (taskschedulingdetailsinfo)。
-            if("".equals(errorMsg.toString())){
-                interfaceInfoService.successSave(companyNo,loadTime,"当前时间段内的数据没有问题，全部入库！");
-                return "success";
-            }
-            interfaceInfoService.failSave(companyNo,loadTime,"当前时间段内的信息个别信息有问题"+errorMsg.toString());
-            return "halfsuccess";
+
+            interfaceInfoService.successSave(companyNo, loadTime, "当前时间段内的数据没有问题，全部入库！");
+            return "success";
+
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("当前异常信息为："+e);

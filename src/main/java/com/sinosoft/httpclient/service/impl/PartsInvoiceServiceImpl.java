@@ -60,7 +60,6 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService {
         try {
             List<PartsInvoice> partsInvoices = new ArrayList<>();
             List<Map<String,Object>> listResultMaps = new ArrayList<>();
-            StringBuilder errorAllMessage = new StringBuilder();
             String branchInfo = null;
 
             for(int i = 0;i < jsonToPartsInvoicesList.size();i++){
@@ -111,8 +110,7 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService {
                 //看当前必要信息是否都不为空。
                 String judgeMsg = judgeInterfaceInfoQuerstion(partsInvoice, errorMsg);
                 if(!"".equals(judgeMsg)){
-                   logger.error(judgeMsg);
-                    errorAllMessage.append("第"+(a+1)+"Invoice类型错误问题为："+judgeMsg);
+                   logger.error("第"+(a+1)+"Invoice类型错误问题为："+judgeMsg);
                    continue;
                 }
                 //看当前数据是什么类型
@@ -127,7 +125,7 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService {
                     String resultMsg = (String)objectMap.get("resultMsg");
                     if(!"success".equals(resultMsg)){
                         logger.error(resultMsg);
-                        return "fail";
+                        continue;
                     }
 
                     listResultMaps.add(objectMap);
@@ -139,7 +137,7 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService {
                     String resultMsg = (String)objectMap.get("resultMsg");
                     if(!"success".equals(resultMsg)){
                         logger.error(resultMsg);
-                        return "fail";
+                        continue;
                     }
 
                     listResultMaps.add(objectMap);
@@ -154,8 +152,7 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService {
                 VoucherDTO dto = (VoucherDTO) stringObjectMap.get("dto");
                 String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto);
                 if(!"success".equals(voucherNo)){
-                    logger.error(voucherNo);
-                    errorAllMessage.append("保存凭证出错");
+                    logger.error("保存当前"+loadTime+"的"+(i+1)+"数据凭证出错");
                 }
             }
 
@@ -164,12 +161,8 @@ public class PartsInvoiceServiceImpl implements PartsInvoiceService {
 
             System.out.println("--------------------  上述已经对正确的所有数据进行了入库保存！  ----------------------------");
 
-            if("".equals(errorAllMessage.toString())){
-                interfaceInfoService.successSave(branchInfo,loadTime,"当前时间段内的数据没有问题，全部入库！");
-                return "success";
-            }
-            interfaceInfoService.failSave(branchInfo,loadTime,"当前时间段内的信息个别信息有问题"+errorAllMessage.toString());
-            return "halfsuccess";
+            interfaceInfoService.successSave(branchInfo, loadTime, "当前时间段内的数据没有问题，全部入库！");
+            return "success";
 
         } catch (Exception e) {
             e.printStackTrace();

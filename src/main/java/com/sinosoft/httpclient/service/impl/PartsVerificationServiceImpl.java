@@ -52,7 +52,6 @@ public class PartsVerificationServiceImpl implements PartsVerificationService {
     @Override
     public String getPartsVerification(List<PartsVerificationDTO> partsVerificationList,String loadTime) {
         try {
-            StringBuilder errorMsg = new StringBuilder();
             //获取时间区间所有的发票信息
             List<PartsVerification> partsVerificationEntityList = new ArrayList<>();
 
@@ -60,15 +59,14 @@ public class PartsVerificationServiceImpl implements PartsVerificationService {
             List<Map<String, Object>> listResultMaps = new ArrayList<>();
 
             // 错误日志返回信息。
-            StringBuilder errorAllMessage = new StringBuilder();
             String branchInfo = null;
             for (int i = 0 ;i < partsVerificationList.size() ;i ++) {
+                StringBuilder errorMsg = new StringBuilder();
                 PartsVerificationDTO partsVerificationDTO = partsVerificationList.get(i);
                 // 校验当前业务数据是否满足生账条件。
                 String judgeMsg = judgeInterfaceInfoQuerstion(partsVerificationDTO, errorMsg);
                 if (!"".equals(judgeMsg)) {
-                    logger.error(judgeMsg);
-                    errorAllMessage.append("第"+ (i + 1) + "个的错误问题为：" + judgeMsg);
+                    logger.error("第"+ (i + 1) + "个的错误问题为：" + judgeMsg);
                     continue;
                 }
                 //账单金额放方向
@@ -97,8 +95,7 @@ public class PartsVerificationServiceImpl implements PartsVerificationService {
                 Map<String, Object> accountingMap = convertBussinessToAccounting(partsVerificationDTO, errorMsg, interfaceInfo, interfaceType);
                 String resultMsg1 = (String) accountingMap.get("resultMsg");
                 if (!"success".equals(resultMsg1)) {
-                    logger.error(resultMsg1);
-                    errorAllMessage.append("第"+(i+1)+"个的错误问题为:"+judgeMsg);
+                    logger.error("第"+(i+1)+"个的错误问题为:"+resultMsg1);
                     continue;
                 }
 
@@ -112,9 +109,7 @@ public class PartsVerificationServiceImpl implements PartsVerificationService {
                 VoucherDTO dto = (VoucherDTO) stringObjectMap.get("dto");
                 String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto);
                 if(!"success".equals(voucherNo)){
-                    logger.error(voucherNo);
-                    //TODO 保存到对应的数据接口表中。
-                    errorAllMessage.append("保存凭证出错");
+                    logger.error("保存当前"+loadTime+"的"+(i+1)+"数据凭证出错");
                 }
             }
 
@@ -123,12 +118,8 @@ public class PartsVerificationServiceImpl implements PartsVerificationService {
             respository.flush();
 
             // 保存日志信息
-            if("".equals(errorAllMessage.toString())){
-                interfaceInfoService.successSave(branchInfo,loadTime,"当前时间段内的数据没有问题，全部入库！");
-                return "success";
-            }
-            interfaceInfoService.failSave(branchInfo,loadTime,"当前时间段内的信息个别信息有问题"+errorAllMessage.toString());
-            return "halfsuccess";
+            interfaceInfoService.successSave(branchInfo, loadTime, "当前时间段内的数据没有问题，全部入库！");
+            return "success";
 
         } catch (Exception e) {
             e.printStackTrace();

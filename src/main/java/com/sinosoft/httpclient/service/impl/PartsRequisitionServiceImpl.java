@@ -76,7 +76,6 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
         // 拿到解析数据，直接进行解析处理
         List<Map<String,Object>> listResultMaps = new ArrayList<>();
         // 错误日志返回信息。
-        StringBuilder errorAllMessage = new StringBuilder();
         String branchInfo = null;
         for(int i= 0; i<jsonToPartsRequisitionList.size(); i++){
             JsonToPartsRequisition jsonToPartsRequisition = jsonToPartsRequisitionList.get(i);
@@ -100,8 +99,7 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
             // 看当前必要信息是否都不为空。
             String judgeMsg = judgeInterfaceInfoQuerstion(jsonToPartsRequisition, errorMsg);
             if(!"".equals(judgeMsg)){
-                logger.error(judgeMsg);
-                errorAllMessage.append("第"+i+1+"的错误问题为："+judgeMsg);
+                logger.error("第"+(i+1)+"的错误问题为："+judgeMsg);
                 continue;
             }
             // 用于最后的当前金额的累加。
@@ -138,8 +136,7 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
                 Map<String,Object> stringObjectMap = convertBussinessToAccounting(jsonToPartsRequisition,errorMsg,interfaceInfo,interfaceType,finalAmount);
                 String resultMsg = (String) stringObjectMap.get("resultMsg");
                 if (!"success".equals(resultMsg)){
-                    logger.error(resultMsg);
-                    errorAllMessage.append("第i"+1+"的错误问题为："+judgeMsg);
+                    logger.error("第"+(i+1)+"的错误问题为："+resultMsg);
                     continue;
                 }
 
@@ -150,8 +147,7 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
                 Map<String,Object> stringObjectMap = convertBussinessToAccounting(jsonToPartsRequisition,errorMsg,interfaceInfo,interfaceType,finalAmount);
                 String resultMsg = (String) stringObjectMap.get("resultMsg");
                 if (!"success".equals(resultMsg)){
-                    logger.error(resultMsg);
-                    errorAllMessage.append("第i"+1+"的错误问题为："+judgeMsg);
+                    logger.error("第"+(i+1)+"的错误问题为："+resultMsg);
                     continue;
                 }
 
@@ -169,8 +165,7 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
             VoucherDTO dto = (VoucherDTO) stringObjectMap.get("dto");
             String voucherNo = voucherService.saveVoucherForFourS(list2, list3, dto);
             if(!"success".equals(voucherNo)){
-                logger.error(voucherNo);
-                errorAllMessage.append("保存凭证出错");
+                logger.error("保存当前"+loadTime+"的"+(i+1)+"数据凭证出错");
             }
         }
         System.out.println("--------------------  上述已经对正确的所有数据进行了入库保存！  ----------------------------");
@@ -179,13 +174,9 @@ public class PartsRequisitionServiceImpl implements PartsRequisitionService {
         partsRequisitionRespository.flush();
 
 
+        interfaceInfoService.successSave(branchInfo, loadTime, "当前时间段内的数据没有问题，全部入库！");
+        return "success";
 
-        if("".equals(errorAllMessage.toString())){
-            interfaceInfoService.successSave(branchInfo,loadTime,"当前时间段内的数据没有问题，全部入库！");
-            return "success";
-        }
-        interfaceInfoService.failSave(branchInfo,loadTime,"当前时间段内的信息个别信息有问题"+errorAllMessage.toString());
-        return "halfsuccess";
     }
 
 
