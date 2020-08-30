@@ -626,7 +626,7 @@ public class VoucherServiceImp implements VoucherService {
 				}
 			}
 		}
-		StringBuffer sql = new StringBuffer("select s.id,s.special_code as mid,s.special_namep as text,s.endflag as endFlag,(select count(ss.id) from specialinfo ss where ss.account = s.account and ss.useflag = s.useflag and ss.super_special = s.id) as childNum from specialinfo s where (s.super_special is null or s.super_special = '')");
+		StringBuffer sql = new StringBuffer("select s.id,s.special_code as mid,s.special_namep as text,s.endflag as endFlag,(CASE WHEN endflag = 1  THEN 1    ELSE 0 END ) AS childNum from specialinfo s where (s.super_special is null or s.super_special = '')");
 		sql.append(" and s.account = ?1");
 		sql.append(" and s.special_code = ?2 order by s.special_code");
 
@@ -706,7 +706,7 @@ public class VoucherServiceImp implements VoucherService {
 				}
 			}
 		}
-		StringBuffer sql = new StringBuffer("select s.id,s.special_code as mid,s.special_namep as text,s.endflag as endFlag,(select count(ss.id) from specialinfo ss where ss.account = s.account and ss.useflag = s.useflag and ss.super_special = s.id) as childNum from specialinfo s where (s.super_special is null or s.super_special = '')");
+		StringBuffer sql = new StringBuffer("select s.id,s.special_code as mid,s.special_namep as text,s.endflag as endFlag,(CASE WHEN endflag = 1  THEN 1    ELSE 0 END ) AS childNum from specialinfo s where (s.super_special is null or s.super_special = '')");
 		sql.append(" and s.account = ?1");
 		sql.append(" and s.special_code = ?2 order by s.special_code");
 
@@ -763,7 +763,7 @@ public class VoucherServiceImp implements VoucherService {
 		List list1=new ArrayList();
 		if (inputValue!=null&&!"".equals(inputValue)) {
 			if (needIds!=null && needIds.size()>0) {
-				StringBuffer sql = new StringBuffer("select s.id,s.special_code as mid,s.special_namep as text,s.endflag as endFlag,(select count(ss.id) from specialinfo ss where ss.account = s.account and ss.useflag = s.useflag and ss.super_special = s.id) as childNum from specialinfo s where s.account = ?1");
+				StringBuffer sql = new StringBuffer("select s.id,s.special_code as mid,s.special_namep as text,s.endflag as endFlag,(CASE WHEN endflag = 1  THEN 1    ELSE 0 END ) AS childNum from specialinfo s where s.account = ?1");
 				sql.append(" and s.super_special = ?2");
 				sql.append(" and s.useflag = '1' ");	// 新增条件，去掉弃用的进行展示
 				sql.append(" order by s.special_code");
@@ -806,7 +806,7 @@ public class VoucherServiceImp implements VoucherService {
 				}
 			}
 		} else {
-			StringBuffer sql = new StringBuffer("select s.id,s.special_code as mid,s.special_namep as text,s.endflag as endFlag,(select count(ss.id) from specialinfo ss where ss.account = s.account and ss.useflag = s.useflag and ss.super_special = s.id) as childNum from specialinfo s where s.account = ?1");
+			StringBuffer sql = new StringBuffer("select s.id,s.special_code as mid,s.special_namep as text,s.endflag as endFlag,(CASE WHEN endflag = 1  THEN 1    ELSE 0 END ) AS childNum from specialinfo s where s.account = ?1");
 			sql.append(" and s.super_special = ?2");
 			sql.append(" and s.useflag = '1' ");	// 新增条件，去掉弃用的进行展示
 			sql.append(" order by s.special_code");
@@ -850,7 +850,7 @@ public class VoucherServiceImp implements VoucherService {
 		List list1=new ArrayList();
 		if (inputValue!=null&&!"".equals(inputValue)) {
 			if (needIds!=null && needIds.size()>0) {
-				StringBuffer sql = new StringBuffer("select s.id,s.special_code as mid,s.special_namep as text,s.endflag as endFlag,(select count(ss.id) from specialinfo ss where ss.account = s.account and ss.useflag = s.useflag and ss.super_special = s.id) as childNum from specialinfo s where s.account = ?1");
+				StringBuffer sql = new StringBuffer("select s.id,s.special_code as mid,s.special_namep as text,s.endflag as endFlag,(CASE WHEN endflag = 1  THEN 1    ELSE 0 END ) AS childNum from specialinfo s where s.account = ?1");
 				sql.append(" and s.super_special = ?2");
 				sql.append(" order by s.special_code");
 
@@ -892,7 +892,7 @@ public class VoucherServiceImp implements VoucherService {
 				}
 			}
 		} else {
-			StringBuffer sql = new StringBuffer("select s.id,s.special_code as mid,s.special_namep as text,s.endflag as endFlag,(select count(ss.id) from specialinfo ss where ss.account = s.account and ss.useflag = s.useflag and ss.super_special = s.id) as childNum from specialinfo s where s.account = ?1");
+			StringBuffer sql = new StringBuffer("select s.id,s.special_code as mid,s.special_namep as text,s.endflag as endFlag,(CASE WHEN endflag = 1  THEN 1    ELSE 0 END ) AS childNum from specialinfo s where s.account = ?1");
 			sql.append(" and s.super_special = ?2");
 			sql.append(" order by s.special_code");
 

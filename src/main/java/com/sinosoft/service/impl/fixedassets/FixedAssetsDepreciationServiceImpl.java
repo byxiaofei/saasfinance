@@ -136,10 +136,6 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
         //判断当前会计期间是否结转，如为结转则不允许进行凭证生成操作
         String centerCode = CurrentUser.getCurrentLoginManageBranch();
         String branchCode = CurrentUser.getCurrentLoginManageBranch();
-//        StringBuffer sql1 = new StringBuffer();
-//        sql1.append("select * from accmonthtrace where center_code='"+CurrentUser.getCurrentLoginManageBranch()+"' and  year_month_date = '"+ dto.getYearMonthDate() +"' and acc_month_stat > 2 " +
-//                " and acc_book_type = '"+ CurrentUser.getCurrentLoginAccountType() +"' and acc_book_code = '"+ CurrentUser.getCurrentLoginAccount() +"' ");//已结转
-//        List<?> list1 = accAssetInfoRepository.queryBySqlSC(sql1.toString());
         List<?> list1 = accMonthTraceRespository.queryAccMonthTraceByChooseMessage(CurrentUser.getCurrentLoginManageBranch(),dto.getYearMonthDate(),CurrentUser.getCurrentLoginAccountType(),CurrentUser.getCurrentLoginAccount());
         if(list1.size()>0){
             return InvokeResult.failure("当前会计期间已结算，不可以进行计提折旧！");
@@ -154,10 +150,6 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
         }else{//不为1月，直接减1
             lastYearMonthDate = String.valueOf(Integer.parseInt(dto.getYearMonthDate())-1);
         }
-//        StringBuffer lastSql = new StringBuffer();
-//        lastSql.append("select * from accgcheckinfo where center_code='"+CurrentUser.getCurrentLoginManageBranch()+"' and  year_month_date = "+ lastYearMonthDate +" " +
-//                " and acc_book_type = '"+ CurrentUser.getCurrentLoginAccountType() +"' and acc_book_code = '"+ CurrentUser.getCurrentLoginAccount() +"' ");
-//        List<?> lastList = accGCheckInfoRepository.queryBySql(lastSql.toString(), AccGCheckInfo.class);
         List<AccGCheckInfo> lastList = accGCheckInfoRepository.queryAccGCheckInfoByCenterCodeAndYearMonthDateAndAccBookTypeAndAccBookCode(CurrentUser.getCurrentLoginManageBranch(),lastYearMonthDate,CurrentUser.getCurrentLoginAccountType(),CurrentUser.getCurrentLoginAccount());
         if(lastList.size()!=0){//size不等于0说明有上个会计期间
             if(((AccGCheckInfo)lastList.get(0)).getFlag().equals("0")){//判断上个会计期间状态 0未折旧
@@ -174,8 +166,6 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
         StringBuffer sql = new StringBuffer();
         int number = 1;
         Map<Integer,Object> maps = new HashMap<>();
-//        sql.append("select * from AccAssetInfo where center_code='"+CurrentUser.getCurrentLoginManageBranch()+"' and  depre_flag = 'Y' and end_depre_amount < dep_years  and left(REPLACE(use_start_date,'-',''),6) <='"+dto.getYearMonthDate() +"'" +
-//                " and ( clear_flag = '0' OR ( clear_flag = '1' AND clear_year_month > '"+df2.format(cal.getTime())+"' )) and acc_book_type = '"+ CurrentUser.getCurrentLoginAccountType() +"' and acc_book_code = '"+ CurrentUser.getCurrentLoginAccount() +"' ");
         sql.append("select * from AccAssetInfo where center_code=?"+number);
         maps.put(number,CurrentUser.getCurrentLoginManageBranch());
         number++;
@@ -192,8 +182,6 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
         maps.put(number,CurrentUser.getCurrentLoginAccount());
         number++;
         List<?> aaiList = accGCheckInfoRepository.queryBySqlSC(sql.toString(),maps);
-//        List<?> aaiList = accAssetInfoRepository.queryAccAssetInfoByCenterCodeAndDepreFlagAndEndDepreAmountAndAccBookTypeAndAccBookCode(CurrentUser.getCurrentLoginManageBranch(),dto.getYearMonthDate(),df2.format(cal.getTime()),CurrentUser.getCurrentLoginAccountType(),CurrentUser.getCurrentLoginAccount());
-        //判断是否有卡片没有生成卡片凭证，若有则提示
         String cards="";
         String flagcard="1";
         if(aaiList.size()>0) {
@@ -254,9 +242,6 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
                 //判断期初折旧月份是否为0，不为0直接折旧，为0当月不折旧，//2019-01-02
                 String useStartdateMonth=String.valueOf(aaiMap.get("use_start_date")).substring(0,4)+String.valueOf(aaiMap.get("use_start_date")).substring(5,7);
                 if(aaiMap.get("init_depre_amount").equals("0") && useStartdateMonth.equals(yearMonthDate)){
-                    //期初折旧月份为0 且会计期间与启用时间相等
-//                        AccAssetInfo aai = accAssetInfoRepository.findById(aaiid).get();
-//                        aai.setEndDepreAmount(String.valueOf((Integer.parseInt(aaiMap.get("end_depre_amount").toString())+1)));//期末累计折旧月份+1
                     continue;
                 }
                 //如果 当前累计折旧==使用年限(月)，则不进行折旧
@@ -300,12 +285,6 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
                 }else{
                     AllDepreQuantity = endDepreAmount.add(new BigDecimal("1"));//当月累计已折旧量
                 }
-                ////////////////////////////////////
-                //计算折旧记录表种的累计折旧金额 //当月折旧金额+折旧记录表中上月累计已折旧金额
-//                StringBuffer sqlh=new StringBuffer();
-                //计提折旧月份 dto.getYearMonthDate()
-//                sqlh.append("select * from accdepre where center_code='"+CurrentUser.getCurrentLoginManageBranch()+"' and  acc_book_code='"+CurrentUser.getCurrentLoginAccount()+"' and asset_type='"+aaiMap.get("asset_type")+"'  and asset_code='"+aaiMap.get("asset_code") +"' order by year_month_data desc");
-//                List<AccDepre> accdepress=(List<AccDepre>)accDepreRepository.queryBySql(sqlh.toString(),AccDepre.class);
                 List<AccDepre> accdepress=accDepreRepository.queryAccDepreByCenterCodeAndAccBookCodeAndAssetTypeAndAssetCodeOrderByYearMonthData(CurrentUser.getCurrentLoginManageBranch(),CurrentUser.getCurrentLoginAccount(),(String) aaiMap.get("asset_type"), (String) aaiMap.get("asset_code"));
                 if(accdepress==null||accdepress.size()<1){
                     ad.setAllDepreMoney(monthDepreMoney.add(new BigDecimal("0")));//累计已折旧金额
@@ -384,10 +363,6 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
     @Override
     public InvokeResult revokeDepreciation(AccGCheckInfoDTO dto) {
         //判断当前会计期间是否结转，如为结转则不允许进行凭证生成操作
-//        StringBuffer sql1 = new StringBuffer();
-//        sql1.append("select * from accmonthtrace where center_code='"+CurrentUser.getCurrentLoginManageBranch()+"' and  year_month_date = '"+ dto.getYearMonthDate() +"' and acc_month_stat > 2 " +
-//                " and acc_book_type = '"+ CurrentUser.getCurrentLoginAccountType() +"' and acc_book_code = '"+ CurrentUser.getCurrentLoginAccount() +"' ");//已结转
-//        List<?> list1 = accGCheckInfoRepository.queryBySqlSC(sql1.toString());
         List<?> list1 = accMonthTraceRespository.queryAccMonthTraceByChooseMessage(CurrentUser.getCurrentLoginManageBranch(),dto.getYearMonthDate(),CurrentUser.getCurrentLoginAccountType(),CurrentUser.getCurrentLoginAccount());
         if(list1.size()>0){
             return InvokeResult.failure("当前会计期间已结算，不可以进行折旧反处理！");
@@ -400,10 +375,6 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
         }else{//如果不为12月，则下个会计期间直接+1
             nextYearMonthDate = String.valueOf(Integer.parseInt(dto.getYearMonthDate())+1);
         }
-//        StringBuffer nextSql = new StringBuffer();
-//        nextSql.append("select * from accgcheckinfo where  center_code='"+CurrentUser.getCurrentLoginManageBranch()+"' and  year_month_date = "+ nextYearMonthDate +" " +
-//                " and acc_book_type = '"+ CurrentUser.getCurrentLoginAccountType() +"' and acc_book_code = '"+ CurrentUser.getCurrentLoginAccount() +"' ");
-//        List<?> nextList = accGCheckInfoRepository.queryBySql(nextSql.toString(), AccGCheckInfo.class);
         List<?> nextList = accGCheckInfoRepository.queryAccGCheckInfoByCenterCodeAndYearMonthDateAndAccBookTypeAndAccBookCode(CurrentUser.getCurrentLoginManageBranch(),nextYearMonthDate,CurrentUser.getCurrentLoginAccountType(),CurrentUser.getCurrentLoginAccount());
         if(nextList.size()!=0){//size不等于0，说明有下个会计期间
             if(!((AccGCheckInfo)nextList.get(0)).getFlag().equals("0")){//不为未折旧状态
@@ -411,36 +382,15 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
             }
         }
         //获取折旧表所有信息
-//        StringBuffer sqls=new StringBuffer();
-//        sqls.append("select * from  accdepre where center_code='"+CurrentUser.getCurrentLoginManageBranch()+"' and  acc_book_code='"+CurrentUser.getCurrentLoginAccount()+"' and year_month_data='"+dto.getYearMonthDate()+"'");
-//        List<AccDepre> accdepreList=(List<AccDepre>)accDepreRepository.queryBySql(sqls.toString(),AccDepre.class);
         List<AccDepre> accdepreList=accDepreRepository.queryAccDepreByChooseMessage(CurrentUser.getCurrentLoginManageBranch(),CurrentUser.getCurrentLoginAccount(),dto.getYearMonthDate());
         if(accdepreList.size()>0){
             for(int i=0;i<accdepreList.size();i++){
                 String assetCode=accdepreList.get(i).getId().getAssetCode();
                 BigDecimal monthDepreMoney=accdepreList.get(i).getMonthDepreMoney();
                 BigDecimal monthDepreQuantity=accdepreList.get(i).getMonthDepreQuantity();
-//                StringBuffer asqls=new StringBuffer("select * from accassetinfo where center_code='"+CurrentUser.getCurrentLoginManageBranch()+"' and  acc_book_code='"+CurrentUser.getCurrentLoginAccount()+"' and code_type='"+accdepreList.get(i).getId().getCodeType()+"' and asset_code='"+assetCode+"'");
-//                List<AccAssetInfo> accass=(List<AccAssetInfo>) accDepreRepository.queryBySql(asqls.toString(),AccAssetInfo.class);
                 List<AccAssetInfo> accass=accAssetInfoRepository.queryAccAssetInfoByCenterCodeAndAccBookCodeAndCodeTypeAndAssetCode(CurrentUser.getCurrentLoginManageBranch(),CurrentUser.getCurrentLoginAccount(),accdepreList.get(i).getId().getCodeType(),assetCode);
                 AccAssetInfo acca=accass.get(0);
-                String str1 =acca.getDepYears().toString();
-                String str2 =acca.getEndDepreAmount();
-                   /* if(accass.size() == 0 && !acca.getInitDepreAmount().equals("0")){//当前会计期间没进行折旧操作，不对累计折旧月份和金额进项修改
-//                    if(list.size() == 0){//当前会计期间没进行折旧操作，不对累计折旧月份和金额进项修改
-                        continue;
-                    }else if(accass.size() == 0 && str1.equals(str2)){
-                        continue;
-                    }
-                    //如果期初为0，期末为1，则不需要修改基本信息表中的累计期末值，但累计折旧月份-1
-                    String useStartdateMonth=acca.getUseStartDate().substring(0,4)+acca.getUseStartDate().substring(5,7);
-                    if(acca.getInitDepreAmount().equals("0") && useStartdateMonth.equals(dto.getYearMonthDate())){
-                          continue;
-                    }
-                    //如果 期末累计折旧月份==期初折旧月份，则不进行折旧
-                    if(acca.getEndDepreAmount().equals(acca.getInitDepreAmount())){
-                        continue;
-                    }*/
+
                 //期末累计折旧月份=期末已折旧月份-系统计提折旧月份
                 acca.setEndDepreAmount(new BigDecimal(acca.getEndDepreAmount()).subtract(new BigDecimal("1")).toString());
                 //期末累计折旧金额=期末折旧金额-系统计提折旧金额(当月折旧金额)
@@ -448,8 +398,6 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
                 //将卡片的已折旧至日期改为上一次的折旧操作时的日期，如果在折旧记录中找不到，就设置为卡片的起始折旧日期
                 //获取上一个会计期间 201901
                 String yearMonthDate=dto.getYearMonthDate();
-//                StringBuffer lastaccde=new StringBuffer("select * from  accdepre where center_code='"+CurrentUser.getCurrentLoginManageBranch()+"' and  acc_book_code='"+CurrentUser.getCurrentLoginAccount()+"'  and asset_code='"+assetCode+"' order by year_month_data desc");
-//                List<AccDepre> accDeprup= (List<AccDepre>)accDepreRepository.queryBySql(lastaccde.toString(),AccDepre.class);
                 List<AccDepre> accDeprup= accDepreRepository.queryAccDepreByCenterCodeAndAccBookCodeAndAssetCodeOrderByYearMonthData(CurrentUser.getCurrentLoginManageBranch(),CurrentUser.getCurrentLoginAccount(),assetCode);
                 if(accDeprup.size()==1){
                     acca.setDepreToDate(acca.getDepreFromDate());
@@ -467,74 +415,6 @@ public class FixedAssetsDepreciationServiceImpl implements FixedAssetsDepreciati
             accDepreRepository.flush();
         }
 
-
-        //先从固定资产基本信息表(AccAssetInfo)中获取所有基本信息
-           /* StringBuffer sql = new StringBuffer();
-            sql.append("select * from AccAssetInfo where depre_flag = 'Y' and end_depre_amount <= dep_years and left(REPLACE(use_start_date,'-',''),6) <="+dto.getYearMonthDate() +"" +
-                    " and acc_book_type = '"+ CurrentUser.getCurrentLoginAccountType() +"' and acc_book_code = '"+ CurrentUser.getCurrentLoginAccount() +"' ");
-            List<?> aaiList = accGCheckInfoRepository.queryBySqlSC(sql.toString());
-            if(aaiList.size()>0) {
-                Map aaiMap = new HashMap();
-                for (Object obj : aaiList) {
-                    aaiMap.putAll((Map) obj);
-
-                    //先判断当前数据是否参与计提折旧
-                    String depreFromDate = aaiMap.get("depre_from_date").toString();//固定资产折旧起始日期
-                    int dy = Integer.parseInt(aaiMap.get("dep_years").toString());//使用年限（月）
-                    String yearAddNum = yearAddNum(depreFromDate, dy);
-                    String overdue = yearAddNum.substring(0, 4) + yearAddNum.substring(5, 7);//折旧结束年月 2019-04
-                    String yearMonthDate = dto.getYearMonthDate();//当前会计期间
-                    String depreFromDate2 = depreFromDate.substring(0,4)+depreFromDate.substring(5,7);
-
-                    //根据固定资产编号和折旧会计期间从折旧记录表中获取计提折旧金额
-                    StringBuffer sql2 = new StringBuffer();
-                    sql2.append("select * from AccDepre where asset_code = "+ aaiMap.get("asset_code") +" and year_month_data = "+ dto.getYearMonthDate() +" " +
-                            " and acc_book_type = '"+ CurrentUser.getCurrentLoginAccountType() +"' and acc_book_code = '"+ CurrentUser.getCurrentLoginAccount() +"' ");
-                    List<?> list = accDepreRepository.queryBySql(sql2.toString(), AccDepre.class);
-                    String str1 =aaiMap.get("dep_years").toString();
-                    String str2 =aaiMap.get("end_depre_amount").toString();
-                    if(list.size() == 0 && !aaiMap.get("init_depre_amount").equals("0")){//当前会计期间没进行折旧操作，不对累计折旧月份和金额进项修改
-//                    if(list.size() == 0){//当前会计期间没进行折旧操作，不对累计折旧月份和金额进项修改
-                            continue;
-                    }else if(list.size() == 0 && str1.equals(str2)){
-                        continue;
-                    }
-
-
-                    //固定资产基本信息表数据回退
-                    AccAssetInfoId aaiid = new AccAssetInfoId();
-                    aaiid.setCenterCode(aaiMap.get("center_code").toString());//核算单位
-                    aaiid.setBranchCode(aaiMap.get("branch_code").toString());//基层单位
-                    aaiid.setAccBookType(aaiMap.get("acc_book_type").toString());//账套类型
-                    aaiid.setAccBookCode(aaiMap.get("acc_book_code").toString());//账套编码
-                    aaiid.setCodeType(aaiMap.get("code_type").toString());//管理类别编码
-                    aaiid.setCardCode(aaiMap.get("card_code").toString());//卡片编码
-                    AccAssetInfo aai = accAssetInfoRepository.findById(aaiid).get();//通过ID获取当前固定资产基本信息
-
-
-                    //如果期初为0，期末为1，则不需要修改基本信息表中的累计期末值，但累计折旧月份-1
-                    String useStartdateMonth=String.valueOf(aaiMap.get("use_start_date")).substring(0,4)+String.valueOf(aaiMap.get("use_start_date")).substring(5,7);
-                    if(aaiMap.get("init_depre_amount").equals("0") && useStartdateMonth.equals(yearMonthDate)){
-                     continue;
-                    }
-                    //如果 期末累计折旧月份==期初折旧月份，则不进行折旧
-                    if(aaiMap.get("end_depre_amount").equals(aaiMap.get("init_depre_amount"))){
-                        continue;
-                    }
-
-                    BigDecimal monthDepreMoney = ((AccDepre)list.get(0)).getMonthDepreMoney();//获取当前固定资产编码下的计提折旧金额
-                    //期末累计折旧月份=期末已折旧月份-系统计提折旧月份
-                    aai.setEndDepreAmount(new BigDecimal(aaiMap.get("end_depre_amount").toString()).subtract(new BigDecimal("1")).toString());//期末累计折旧月份+1
-                    //期末累计折旧金额=期末折旧金额-系统计提折旧金额(当月折旧金额)
-                    aai.setEndDepreMoney(new BigDecimal(aaiMap.get("end_depre_money").toString()).subtract(monthDepreMoney));//期末累计折旧金额
-                    aai.setDepreToDate(yearAddNum(aaiMap.get("depre_to_date").toString(),-1));//固定资产折旧至日期-1
-                    accAssetInfoRepository.save(aai);//保存
-                }
-            }
-
-
-            accDepreRepository.delByYearMonthData(dto.getYearMonthDate());//根据会计期间删除折旧记录表信息
-*/
         //固定资产会计期间表状态修改
         AccGCheckInfoId agid = new AccGCheckInfoId();
         agid.setCenterCode(dto.getCenterCode());//核算单位

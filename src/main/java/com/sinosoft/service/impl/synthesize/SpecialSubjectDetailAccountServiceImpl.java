@@ -696,7 +696,7 @@ public class SpecialSubjectDetailAccountServiceImpl implements SpecialSubjectDet
         List<Object> result = new ArrayList<Object>();
         String accBookCode = CurrentUser.getCurrentLoginAccount();
         //查询专项分类，即一级专项
-        String superSql = "SELECT s.id AS id,s.special_code AS code,s.special_name AS name,s.special_namep AS nameP,s.endflag AS endFlag,(SELECT COUNT(ss.id) FROM specialinfo ss WHERE ss.account = s.account AND ss.useflag = s.useflag AND ss.super_special = s.id) AS childNum FROM specialinfo s WHERE s.account = ?1 AND s.useflag='1' AND (s.super_special = '' or s.super_special is null) ORDER By code";
+        String superSql = "SELECT s.id AS id,s.special_code AS code,s.special_name AS name,s.special_namep AS nameP,s.endflag AS endFlag, (CASE WHEN endflag = 1 THEN 1 ELSE 0 END ) AS childNum FROM specialinfo s WHERE s.account = ?1 AND s.useflag='1' AND (s.super_special = '' or s.super_special is null) ORDER By code";
 
         Map<Integer, Object> params = new HashMap<>();
         params.put(1, accBookCode);
@@ -733,7 +733,7 @@ public class SpecialSubjectDetailAccountServiceImpl implements SpecialSubjectDet
      */
     private List<?> queryChildrenSpecial(Integer id, String accBookCode){
         List<Object> result = new ArrayList<Object>();
-        String sql = "SELECT s.id AS id,s.special_code AS code,s.special_name AS name,s.special_namep AS nameP,s.endflag AS endFlag,(SELECT COUNT(ss.id) FROM specialinfo ss WHERE ss.account = s.account AND ss.useflag = s.useflag AND ss.super_special = s.id) AS childNum FROM specialinfo s WHERE s.account = ?1 AND s.useflag='1' AND s.super_special = ?2 ORDER By code";
+        String sql = "SELECT s.id AS id,s.special_code AS code,s.special_name AS name,s.special_namep AS nameP,s.endflag AS endFlag,(CASE WHEN endflag = 1 THEN 1 ELSE 0 END ) AS childNum FROM specialinfo s WHERE s.account = ?1 AND s.useflag='1' AND s.super_special = ?2 ORDER By code";
 
         Map<Integer, Object> params = new HashMap<>();
         params.put(1, accBookCode);
@@ -764,7 +764,7 @@ public class SpecialSubjectDetailAccountServiceImpl implements SpecialSubjectDet
 
     private List<?> queryChildrenSpecial2(Integer id, String accBookCode){
         List<Object> result = new ArrayList<Object>();
-        String sql = "SELECT s.id AS id,s.special_code AS code,s.special_name AS name,s.special_namep AS nameP,s.endflag AS endFlag,(SELECT COUNT(ss.id) FROM specialinfo ss WHERE ss.account = s.account AND ss.useflag = s.useflag AND ss.super_special = s.id) AS childNum FROM specialinfo s WHERE s.account = ?1 AND s.useflag='1' AND s.super_special = ?2 ORDER By code";
+        String sql = "SELECT s.id AS id,s.special_code AS code,s.special_name AS name,s.special_namep AS nameP,s.endflag AS endFlag, (CASE WHEN endflag = 1 THEN 1 ELSE 0 END ) AS childNum  FROM specialinfo s WHERE s.account = ?1 AND s.useflag='1' AND s.super_special = ?2 ORDER By code";
 
         Map<Integer, Object> params = new HashMap<>();
         params.put(1, accBookCode);
@@ -839,7 +839,7 @@ public class SpecialSubjectDetailAccountServiceImpl implements SpecialSubjectDet
             }
 
             //查询专项分类，即一级专项
-            String superSql = "SELECT s.id AS id,s.special_code AS code,s.special_name AS name,s.special_namep AS nameP,s.endflag AS endFlag,(SELECT COUNT(ss.id) FROM specialinfo ss WHERE ss.account = s.account AND ss.useflag = s.useflag AND ss.super_special = s.id) AS childNum FROM specialinfo s WHERE s.account = ?1 AND s.useflag='1' AND (s.super_special = '' or s.super_special is null) ORDER By code";
+            String superSql = "SELECT s.id AS id,s.special_code AS code,s.special_name AS name,s.special_namep AS nameP,s.endflag AS endFlag, (CASE WHEN endflag = 1 THEN 1 ELSE 0 END ) AS childNum  FROM specialinfo s WHERE s.account = ?1 AND s.useflag='1' AND (s.super_special = '' or s.super_special is null) ORDER By code";
 
             params = new HashMap<>();
             params.put(paramsNo, accBookCode);
@@ -875,7 +875,7 @@ public class SpecialSubjectDetailAccountServiceImpl implements SpecialSubjectDet
 
     private List<?> queryChildrenSpecialByValue(Integer id, String accBookCode, Set<Integer> set){
         List<Object> result = new ArrayList<Object>();
-        String sql = "SELECT s.id AS id,s.special_code AS code,s.special_name AS name,s.special_namep AS nameP,s.endflag AS endFlag,(SELECT COUNT(ss.id) FROM specialinfo ss WHERE ss.account = s.account AND ss.useflag = s.useflag AND ss.super_special = s.id) AS childNum FROM specialinfo s WHERE s.account = ?1 AND s.useflag='1' AND s.super_special = ?2 ORDER By code";
+        String sql = "SELECT s.id AS id,s.special_code AS code,s.special_name AS name,s.special_namep AS nameP,s.endflag AS endFlag, (CASE WHEN endflag = 1 THEN 1 ELSE 0 END ) AS childNum  FROM specialinfo s WHERE s.account = ?1 AND s.useflag='1' AND s.super_special = ?2 ORDER By code";
 
         Map<Integer, Object> params = new HashMap<>();
         params.put(1, accBookCode);
