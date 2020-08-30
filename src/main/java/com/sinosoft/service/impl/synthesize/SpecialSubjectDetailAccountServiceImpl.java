@@ -733,7 +733,7 @@ public class SpecialSubjectDetailAccountServiceImpl implements SpecialSubjectDet
      */
     private List<?> queryChildrenSpecial(Integer id, String accBookCode){
         List<Object> result = new ArrayList<Object>();
-        String sql = "SELECT s.id AS id,s.special_code AS code,s.special_name AS name,s.special_namep AS nameP,s.endflag AS endFlag,(CASE WHEN endflag = 1 THEN 1 ELSE 0 END ) AS childNum FROM specialinfo s WHERE s.account = ?1 AND s.useflag='1' AND s.super_special = ?2 ORDER By code";
+        String sql = "SELECT s.id AS id,s.special_code AS code,s.special_name AS name,s.special_namep AS nameP,s.endflag AS endFlag,(CASE WHEN endflag = 1 THEN 1 ELSE 0 END ) AS childNum FROM specialinfo s WHERE s.account = ?"+1+" AND s.useflag='1' AND s.super_special = ?"+2+" ORDER By code";
 
         Map<Integer, Object> params = new HashMap<>();
         params.put(1, accBookCode);
@@ -764,7 +764,7 @@ public class SpecialSubjectDetailAccountServiceImpl implements SpecialSubjectDet
 
     private List<?> queryChildrenSpecial2(Integer id, String accBookCode){
         List<Object> result = new ArrayList<Object>();
-        String sql = "SELECT s.id AS id,s.special_code AS code,s.special_name AS name,s.special_namep AS nameP,s.endflag AS endFlag, (CASE WHEN endflag = 1 THEN 1 ELSE 0 END ) AS childNum  FROM specialinfo s WHERE s.account = ?1 AND s.useflag='1' AND s.super_special = ?2 ORDER By code";
+        String sql = "SELECT s.id AS id,s.special_code AS code,s.special_name AS name,s.special_namep AS nameP,s.endflag AS endFlag, (CASE WHEN endflag = 1 THEN 1 ELSE 0 END ) AS childNum  FROM specialinfo s WHERE s.account = ?"+1+" AND s.useflag='1' AND s.super_special = ?"+2+" ORDER By code";
 
         Map<Integer, Object> params = new HashMap<>();
         params.put(1, accBookCode);
@@ -838,11 +838,12 @@ public class SpecialSubjectDetailAccountServiceImpl implements SpecialSubjectDet
                 set.add(m.get("id"));
             }
 
+            int paramsNoForSuperSql = 1;
             //查询专项分类，即一级专项
-            String superSql = "SELECT s.id AS id,s.special_code AS code,s.special_name AS name,s.special_namep AS nameP,s.endflag AS endFlag, (CASE WHEN endflag = 1 THEN 1 ELSE 0 END ) AS childNum  FROM specialinfo s WHERE s.account = ?1 AND s.useflag='1' AND (s.super_special = '' or s.super_special is null) ORDER By code";
+            String superSql = "SELECT s.id AS id,s.special_code AS code,s.special_name AS name,s.special_namep AS nameP,s.endflag AS endFlag, (CASE WHEN endflag = 1 THEN 1 ELSE 0 END ) AS childNum  FROM specialinfo s WHERE s.account = ?"+1+" AND s.useflag='1' AND (s.super_special = '' or s.super_special is null) ORDER By code";
 
             params = new HashMap<>();
-            params.put(paramsNo, accBookCode);
+            params.put(paramsNoForSuperSql, accBookCode);
 
             List<?> superList = voucherRepository.queryBySqlSC(superSql, params);
             if (superList!=null&&superList.size()>0) {
@@ -875,11 +876,11 @@ public class SpecialSubjectDetailAccountServiceImpl implements SpecialSubjectDet
 
     private List<?> queryChildrenSpecialByValue(Integer id, String accBookCode, Set<Integer> set){
         List<Object> result = new ArrayList<Object>();
-        String sql = "SELECT s.id AS id,s.special_code AS code,s.special_name AS name,s.special_namep AS nameP,s.endflag AS endFlag, (CASE WHEN endflag = 1 THEN 1 ELSE 0 END ) AS childNum  FROM specialinfo s WHERE s.account = ?1 AND s.useflag='1' AND s.super_special = ?2 ORDER By code";
+        String sql = "SELECT s.id AS id,s.special_code AS code,s.special_name AS name,s.special_namep AS nameP,s.endflag AS endFlag, (CASE WHEN endflag = 1 THEN 1 ELSE 0 END ) AS childNum  FROM specialinfo s WHERE s.account = ?"+1+" AND s.useflag='1' AND s.super_special = ?"+2+" ORDER By code";
 
         Map<Integer, Object> params = new HashMap<>();
         params.put(1, accBookCode);
-        params.put(1, id);
+        params.put(2, id);
 
         List<?> sqlList = voucherRepository.queryBySqlSC(sql, params);
         if (sqlList!=null&&sqlList.size()>0) {
