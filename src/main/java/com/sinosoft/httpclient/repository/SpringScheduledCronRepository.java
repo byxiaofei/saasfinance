@@ -24,7 +24,7 @@ public interface SpringScheduledCronRepository extends JpaRepository<SpringSched
      */
     @Modifying
     @Transactional(rollbackFor = Exception.class)
-    @Query(value = "update spring_scheduled_cron set cron_expression=?1 where cron_key=?2", nativeQuery = true)
+    @Query(value = "update bz_spring_scheduled_cron set cron_expression=?1 where cron_key=?2", nativeQuery = true)
     int updateCronExpressionByCronKey(String newCron, String cronKey);
 
     /**
@@ -36,7 +36,7 @@ public interface SpringScheduledCronRepository extends JpaRepository<SpringSched
      */
     @Modifying
     @Transactional(rollbackFor = Exception.class)
-    @Query(value = "update spring_scheduled_cron set status=?1 where cron_key=?2", nativeQuery = true)
+    @Query(value = "update bz_spring_scheduled_cron set status=?1 where cron_key=?2", nativeQuery = true)
     int updateStatusByCronKey(Integer status, String cronKey);
 
 }
