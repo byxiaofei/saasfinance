@@ -36,6 +36,7 @@ public class PartsPromotionController implements ScheduledOfTask {
     @Override
     public void execute() {
         try {
+            long start = System.currentTimeMillis();
             Long endTime = new Date().getTime();
             Tasksdetailsinfo tasksdetailsinfo = new Tasksdetailsinfo();
             tasksdetailsinfo.setBatch("Parts_Promotion");
@@ -62,7 +63,7 @@ public class PartsPromotionController implements ScheduledOfTask {
                 // 保存入库
                 str = partsPromotionService.savePartsPromotionList(jsonToPartsPromotion,tasksdetailsinfo.getEndTime());
             }
-            System.out.println(str);
+            System.out.println("Parts_Promotion 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("当前异常结果为："+e);

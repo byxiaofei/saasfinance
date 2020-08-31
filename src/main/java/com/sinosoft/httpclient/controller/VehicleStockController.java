@@ -42,12 +42,11 @@ public class VehicleStockController  implements ScheduledOfTask {
     @Override
     public void execute() {
         try {
+            long start = System.currentTimeMillis();
             Long endTime = new Date().getTime();
             Tasksdetailsinfo tasksdetailsinfo = new Tasksdetailsinfo();
             tasksdetailsinfo.setBatch("Vehicle_Stock");
             tasksdetailsinfo = tasksdetailsService.findTasksdetails(tasksdetailsinfo);
-
-
             String url = tasksdetailsinfo.getUrl();
             //添加参数
             Map<String, Long> uriMap = new HashMap<>(6);
@@ -69,7 +68,7 @@ public class VehicleStockController  implements ScheduledOfTask {
                 //保存入库
                  str =  vehicleStockService.savevehicleStockList(vehicleStockList,tasksdetailsinfo.getEndTime());
             }
-            System.out.println(str);
+            System.out.println("Vehicle_Stock 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("当前异常结果为："+e);

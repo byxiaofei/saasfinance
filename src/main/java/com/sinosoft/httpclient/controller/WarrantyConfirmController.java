@@ -35,6 +35,8 @@ public class WarrantyConfirmController  implements ScheduledOfTask {
     @Override
     public void execute() {
         try {
+            long start = System.currentTimeMillis();
+
             Long endTime = new Date().getTime();
             Tasksdetailsinfo tasksdetailsinfo = new Tasksdetailsinfo();
             tasksdetailsinfo.setBatch("Warranty_Confirm");
@@ -63,7 +65,7 @@ public class WarrantyConfirmController  implements ScheduledOfTask {
                 //保存入库
                 message = warrantyConfirmService.saveWarrantyConfirmList(jsonToWarrantyConfirms);
             }
-            System.out.println(message);
+            System.out.println("Warranty_Confirm 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("当前异常结果为："+e);

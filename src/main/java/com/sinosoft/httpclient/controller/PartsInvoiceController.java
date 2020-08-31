@@ -35,7 +35,7 @@ public class PartsInvoiceController implements ScheduledOfTask {
     @Override
     public void execute() {
         try {
-
+            long start = System.currentTimeMillis();
             Long endTime = new Date().getTime();
             Tasksdetailsinfo tasksdetailsinfo = new Tasksdetailsinfo();
             tasksdetailsinfo.setBatch("Parts_Invoice");
@@ -64,7 +64,7 @@ public class PartsInvoiceController implements ScheduledOfTask {
                 //保存入库
                 message = partsInvoiceService.savePartsInvoiceList(jsonToPartsInvoices,tasksdetailsinfo.getEndTime());
             }
-            System.out.println(message);
+            System.out.println("Parts_Invoice 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("当前异常结果为："+e);

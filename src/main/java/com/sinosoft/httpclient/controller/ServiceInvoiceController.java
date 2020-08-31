@@ -36,6 +36,7 @@ public class ServiceInvoiceController implements ScheduledOfTask {
     public void execute() {
 
         try {
+            long start = System.currentTimeMillis();
             Long endTime = new Date().getTime();
             Tasksdetailsinfo tasksdetailsinfo = new Tasksdetailsinfo();
             tasksdetailsinfo.setBatch("Service_Invoice");
@@ -68,8 +69,7 @@ public class ServiceInvoiceController implements ScheduledOfTask {
                 System.out.println(serviceInvoiceDTOList);
                 str =  serviceInvoiceService.getServiceInvoiceService(serviceInvoiceDTOList,tasksdetailsinfo.getEndTime());
             }
-
-            System.out.println(str);
+            System.out.println("Service_Invoice 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("当前异常结果为："+e);

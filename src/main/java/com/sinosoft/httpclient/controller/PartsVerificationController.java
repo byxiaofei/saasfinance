@@ -39,6 +39,7 @@ public class PartsVerificationController implements ScheduledOfTask {
     public void execute() {
 
         try {
+            long start = System.currentTimeMillis();
             Long endTime = new Date().getTime();
             Tasksdetailsinfo tasksdetailsinfo = new Tasksdetailsinfo();
             tasksdetailsinfo.setBatch("Parts_Verification");
@@ -67,7 +68,7 @@ public class PartsVerificationController implements ScheduledOfTask {
                 System.out.println(partsVerificationList);
                 str =  partsVerificationService.getPartsVerification(partsVerificationList,tasksdetailsinfo.getEndTime());
             }
-            System.out.println(str);
+            System.out.println("Parts_Verification 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("当前异常结果为："+e);

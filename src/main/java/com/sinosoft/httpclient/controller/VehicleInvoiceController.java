@@ -38,6 +38,7 @@ public class VehicleInvoiceController implements ScheduledOfTask {
     public void execute() {
 
         try {
+            long start = System.currentTimeMillis();
             Long endTime = new Date().getTime();
             Tasksdetailsinfo tasksdetailsinfo = new Tasksdetailsinfo();
             tasksdetailsinfo.setBatch("Vehicle_Invoice");
@@ -65,7 +66,7 @@ public class VehicleInvoiceController implements ScheduledOfTask {
                 //保存入库
                 str = vehicleInvoiceService.saveVehicleInvoiceList(vehicleInvoices,tasksdetailsinfo.getEndTime());
             }
-            System.out.println(str);
+            System.out.println("Vehicle_Invoice 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("当前异常结果为："+e);
