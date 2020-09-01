@@ -15,6 +15,7 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.util.Assert;
 
+import javax.annotation.Resource;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -22,12 +23,12 @@ import java.util.concurrent.Executors;
  * @author yudong
  * @date 2019/5/10
  */
-@Configuration
+//@Configuration
 public class ScheduledConfig implements SchedulingConfigurer {
 
     @Autowired
     private ApplicationContext context;
-    @Autowired
+    @Resource
     private SpringScheduledCronRepository cronRepository;
 
     @Override

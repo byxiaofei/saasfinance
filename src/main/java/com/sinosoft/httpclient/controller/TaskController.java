@@ -1,6 +1,7 @@
 package com.sinosoft.httpclient.controller;
 
 import com.sinosoft.httpclient.config.AppConsts;
+import com.sinosoft.httpclient.config.SysTaskConfig;
 import com.sinosoft.httpclient.domain.SpringScheduledCron;
 import com.sinosoft.httpclient.dto.Result;
 import com.sinosoft.httpclient.repository.SpringScheduledCronRepository;
@@ -14,6 +15,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -57,6 +59,11 @@ public class TaskController {
             throw new IllegalArgumentException("失败,非法表达式:" + newCron);
         }
         cronRepository.updateCronExpressionByCronKey(newCron, cronKey);
+        //状态为 1时 更新 scheduledFutureMap 集合 重启定时任务
+        SpringScheduledCron task = cronRepository.findByCronKey(cronKey);
+        if(task.getStatus()==1){
+            SysTaskConfig.reset(task);
+        }
         return new Result<>(AppConsts.SUCCESS, "更新成功");
     }
 
@@ -76,6 +83,17 @@ public class TaskController {
     @ResponseBody
     @RequestMapping("/changeStatusTaskCron")
     public Result<Void> changeStatusTaskCron(Integer status, String cronKey) {
+
+        SpringScheduledCron task = cronRepository.findByCronKey(cronKey);
+        if( status ==1 ){
+            if(!SysTaskConfig.checkOneData(task).equalsIgnoreCase("success")){
+                return new Result<>(AppConsts.FAILED, "操作失败01");
+            }else {
+                SysTaskConfig.start(task);
+            }
+        }else {
+            SysTaskConfig.cancel(task);
+        }
         cronRepository.updateStatusByCronKey(status, cronKey);
         return new Result<>(AppConsts.SUCCESS, "操作成功");
 

@@ -47,6 +47,7 @@
         <td>
             <a style="cursor: pointer" th:data-cron-key="${cron.cronKey}"
                th:data-cron-expression="${cron.cronExpression}"
+               th:data-cron-status="${cron.status}"
                onclick="editTaskCron(this)">编辑</a>
             <a style="cursor: pointer" th:data-cron-key="${cron.cronKey}"
                th:data-cron-expression="${cron.cronExpression}"
@@ -70,6 +71,11 @@
     function editTaskCron(aObj) {
         let cronKey = aObj.getAttribute("data-cron-key");
         let cronExpression = aObj.getAttribute("data-cron-expression");
+        let status = aObj.getAttribute("data-cron-status");
+        if(status==1){
+            alert("请先停止运行此任务");
+            return;
+        }
         let newCron = window.prompt("请输入新的表达式:", cronExpression);
         if (newCron === null || newCron === '') {
             return;
@@ -77,7 +83,7 @@
         let formData = new FormData();
         formData.append("newCron", newCron);
         formData.append("cronKey", cronKey);
-        post("/scheduled/task/editTaskCron", "/scheduled/task/taskList", formData);
+         post("/scheduled/task/editTaskCron", "/scheduled/task/taskList", formData);
     }
 
     function runTaskCron(aObj) {

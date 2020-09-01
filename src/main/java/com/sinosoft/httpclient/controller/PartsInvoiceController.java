@@ -2,18 +2,14 @@ package com.sinosoft.httpclient.controller;
 
 import com.alibaba.fastjson.JSONArray;
 import com.sinosoft.httpclient.domain.JsonToPartsInvoice;
-import com.sinosoft.httpclient.domain.PartsInvoice;
 import com.sinosoft.httpclient.domain.Tasksdetailsinfo;
 import com.sinosoft.httpclient.service.HttpClient;
 import com.sinosoft.httpclient.service.PartsInvoiceService;
 import com.sinosoft.httpclient.service.TasksdetailsService;
-import com.sinosoft.httpclient.task.ScheduledOfTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -22,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class PartsInvoiceController implements ScheduledOfTask {
+public class PartsInvoiceController  {
 
     private Logger logger = LoggerFactory.getLogger(PartsInvoiceController.class);
 
@@ -32,7 +28,7 @@ public class PartsInvoiceController implements ScheduledOfTask {
     PartsInvoiceService partsInvoiceService;
     @Resource
     TasksdetailsService tasksdetailsService;
-    @Override
+
     public void execute() {
         try {
             long start = System.currentTimeMillis();
