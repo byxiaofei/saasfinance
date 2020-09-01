@@ -261,7 +261,7 @@ public class OptionChangeServiceImpl implements OptionChangeService {
             dto.setBranchCode(branchCode);
             dto.setCenterCode(centerCode);
             //  凭证类型 1 为自动对接的默认类型，类型具体是什么暂定
-            dto.setVoucherType("1");
+            dto.setVoucherType("2");
             //  数据来源 1.为外围当前外围系统对接 2 为手工
             dto.setDataSource("1");
             //  凭证录入方式是否为自动（1） 手工（2）

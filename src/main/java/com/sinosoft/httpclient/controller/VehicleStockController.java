@@ -37,7 +37,7 @@ public class VehicleStockController  {
     @Resource
     TasksdetailsService tasksdetailsService;
     /**
-     * VehicleStock 接口接收解析报文
+     * VehicleStock 接口接收解析报文 第一个接口
      */
     public void execute() {
         try {

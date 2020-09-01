@@ -173,7 +173,7 @@ public class PartsStockServiceImpl implements PartsStockService {
         dto.setAccBookType(voucherDTO.getAccBookType());
         dto.setBranchCode(branchCode);
         dto.setCenterCode(centerCode);
-        dto.setVoucherType("1");
+        dto.setVoucherType("2");
         dto.setDataSource("1");
         //  凭证录入方式是否为自动（1） 手工（2）
         dto.setGenerateWay("1");

@@ -6,7 +6,6 @@ import com.sinosoft.httpclient.domain.SpringScheduledCron;
 import com.sinosoft.httpclient.repository.SpringScheduledCronRepository;
 import com.sinosoft.httpclient.task.ScheduledOfTask;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,7 +25,7 @@ import java.util.concurrent.Executors;
 //@Configuration
 public class ScheduledConfig implements SchedulingConfigurer {
 
-    @Autowired
+    @Resource
     private ApplicationContext context;
     @Resource
     private SpringScheduledCronRepository cronRepository;
