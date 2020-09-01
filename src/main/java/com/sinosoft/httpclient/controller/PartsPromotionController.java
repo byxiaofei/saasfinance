@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class PartsPromotionController implements ScheduledOfTask {
+public class PartsPromotionController {
 
     private Logger logger = LoggerFactory.getLogger(PartsPromotionController.class);
 
@@ -33,7 +33,7 @@ public class PartsPromotionController implements ScheduledOfTask {
     private HttpClient httpClient;
     @Resource
     TasksdetailsService tasksdetailsService;
-    @Override
+
     public void execute() {
         try {
             long start = System.currentTimeMillis();

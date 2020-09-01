@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class ServiceInvoiceController implements ScheduledOfTask {
+public class ServiceInvoiceController {
 
     private Logger logger = LoggerFactory.getLogger(ServiceInvoiceController.class);
 
@@ -32,7 +32,6 @@ public class ServiceInvoiceController implements ScheduledOfTask {
     HttpClient httpClient;
     @Resource
     TasksdetailsService tasksdetailsService;
-    @Override
     public void execute() {
 
         try {

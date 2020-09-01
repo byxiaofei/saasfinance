@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 @Component
-public class PartsStockController implements ScheduledOfTask {
+public class PartsStockController {
 
     private Logger logger = LoggerFactory.getLogger(PartsStockController.class);
 
@@ -36,7 +36,6 @@ public class PartsStockController implements ScheduledOfTask {
     /**
      * 3. Parts stock in / checking 接口接收解析报文
      */
-    @Override
     public void execute() {
         try {
             long start = System.currentTimeMillis();

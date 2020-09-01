@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class PartsRequisitionController implements ScheduledOfTask {
+public class PartsRequisitionController {
 
     private Logger logger = LoggerFactory.getLogger(PartsRequisitionController.class);
 
@@ -37,7 +37,6 @@ public class PartsRequisitionController implements ScheduledOfTask {
     /**
      * 6. Parts Requisition 接口解析报文,范本
      */
-    @Override
     public void execute() {
         try {
             long start = System.currentTimeMillis();

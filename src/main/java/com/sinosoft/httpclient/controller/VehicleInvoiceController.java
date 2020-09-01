@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class VehicleInvoiceController implements ScheduledOfTask {
+public class VehicleInvoiceController {
 
 
     private Logger logger = LoggerFactory.getLogger(VehicleInvoiceController.class);
@@ -34,7 +34,6 @@ public class VehicleInvoiceController implements ScheduledOfTask {
     /**
      *
      */
-    @Override
     public void execute() {
 
         try {

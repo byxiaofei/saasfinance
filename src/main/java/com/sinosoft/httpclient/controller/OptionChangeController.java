@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class OptionChangeController implements ScheduledOfTask {
+public class OptionChangeController {
 
     private Logger logger = LoggerFactory.getLogger(OptionChangeController.class);
 
@@ -31,7 +31,7 @@ public class OptionChangeController implements ScheduledOfTask {
     /**
     *OptionChange 接口解析报文
     */
-    @Override
+
     public void execute(){
         try {
             long start = System.currentTimeMillis();

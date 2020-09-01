@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class VehicleStockController  implements ScheduledOfTask {
+public class VehicleStockController  {
 
     private Logger logger = LoggerFactory.getLogger(VehicleStockController.class);
 
@@ -39,7 +39,6 @@ public class VehicleStockController  implements ScheduledOfTask {
     /**
      * VehicleStock 接口接收解析报文
      */
-    @Override
     public void execute() {
         try {
             long start = System.currentTimeMillis();

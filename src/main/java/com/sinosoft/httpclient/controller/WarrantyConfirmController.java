@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class WarrantyConfirmController  implements ScheduledOfTask {
+public class WarrantyConfirmController  {
 
     private Logger logger = LoggerFactory.getLogger(WarrantyConfirmController.class);
 
@@ -32,7 +32,6 @@ public class WarrantyConfirmController  implements ScheduledOfTask {
     @Resource
     TasksdetailsService tasksdetailsService;
 
-    @Override
     public void execute() {
         try {
             long start = System.currentTimeMillis();
