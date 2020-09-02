@@ -23,6 +23,7 @@ import com.sinosoft.repository.fixedassets.AccDepreRepository;
 import com.sinosoft.repository.intangibleassets.IntangibleAccAssetInfoRepository;
 import com.sinosoft.repository.intangibleassets.IntangibleAccDepreRepository;
 import com.sinosoft.service.account.VoucherManageService;
+import com.sinosoft.service.account.VoucherPrintService;
 import com.sinosoft.util.ExcelUtil;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +31,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +59,8 @@ public class VoucherManageServiceImpl implements VoucherManageService {
     private IntangibleAccDepreRepository intangibleAccDepreRepository;
     @Resource
     private AccVoucherNoRespository accVoucherNoRespository;
+    @Resource
+    private VoucherPrintService voucherPrintService;
 
     @Override
     public List<?> getApproveListData(VoucherDTO dto) {
@@ -895,6 +899,35 @@ public class VoucherManageServiceImpl implements VoucherManageService {
         // 4. 导出
         excelUtil.exportu(request, response, name, cols, dataList);
 
+    }
+
+    @Override
+    public void exportAboutDetailsByCondition(HttpServletRequest request, HttpServletResponse response, String name, String queryConditions, String cols) {
+        VoucherDTO dto = new VoucherDTO();
+        try {
+            dto = new ObjectMapper().readValue(queryConditions,VoucherDTO.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        // 获取的是页面展示的数据信息样子
+        List<VoucherDTO> voucherNoList = new ArrayList<>();
+
+        // 对于凭证管理页面根据条件查询出来的总体结果。
+        List<?> dataList = getApproveListData(dto);
+        for(Object o  : dataList){
+            Map maps  = new HashMap();
+            maps.putAll((Map) o);
+            VoucherDTO voucherDTO  = new VoucherDTO();
+            voucherDTO.setVoucherNo(maps.get("voucherNo").toString());
+            // 会计期间。(必要)
+            voucherDTO.setYearMonthDate(dto.getYearMonth());
+            // 是否为专项名称全级显示(必要)
+            voucherDTO.setSpecialNameP(dto.getSpecialNameP());
+            // 把一张凭证的重要信息放入到集合中去。
+            voucherNoList.add(voucherDTO);
+        }
+        // 在list集合中拿出来凭证号，凭证月，
+        voucherPrintService.voucherExportAboutDetails(request,response,voucherNoList);
     }
 
 }

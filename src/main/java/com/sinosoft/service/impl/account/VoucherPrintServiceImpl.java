@@ -417,4 +417,186 @@ public class VoucherPrintServiceImpl implements VoucherPrintService {
         ExcelUtil excelUtil = new ExcelUtil();
         excelUtil.exportVoucher(request,response,result, Constant.MODELPATH);
     }
+
+    @Override
+    public void voucherExportAboutDetails(HttpServletRequest request, HttpServletResponse response, List<VoucherDTO> voucherDTO) {
+
+        String centerCode = CurrentUser.getCurrentLoginManageBranch();
+        String branchCode = CurrentUser.getCurrentLoginManageBranch();
+        String accBookType = CurrentUser.getCurrentLoginAccountType();
+        String accBookCode = CurrentUser.getCurrentLoginAccount();
+
+        // 把信息都存放好，去进行导出。
+        List<Map<String,Object>> resultListAboutMaps = new ArrayList<>();
+
+        // 取的是每一张凭证号和会计期间。
+        for(VoucherDTO voucherDTOMsg : voucherDTO){
+
+            Map<Integer, Object> params = new HashMap<>();
+            params.put(1, centerCode);
+            params.put(2, branchCode);
+            params.put(3, accBookType);
+            params.put(4, accBookCode);
+            params.put(5, voucherDTOMsg.getVoucherNo());
+            params.put(6, voucherDTOMsg.getYearMonthDate());
+
+            StringBuffer sql1 = new StringBuffer(" SELECT am.voucher_no AS 'voucherNo', am.year_month_date AS 'yearMonthDate'," +
+                    " am.aux_number AS 'auxNumber', am.voucher_date AS 'voucherDate', u1.user_name AS 'createBy', c.code_name AS 'voucherFlag'," +
+                    " u2.user_name AS 'approveBy', u3.user_name AS 'geneBy' FROM accmainvoucher am LEFT JOIN userinfo u1 ON u1.id = am.create_by " +
+                    " LEFT JOIN userinfo u2 ON u2.id = am.approve_by LEFT JOIN userinfo u3 ON u3.id = am.gene_by" +
+                    " LEFT JOIN codemanage c ON c.code_type = 'voucherFlag' AND c.code_code = am.voucher_flag WHERE am.center_code = ?1" +
+                    " AND am.branch_code = ?2 AND am.acc_book_type = ?3 AND am.acc_book_code = ?4" +
+                    " AND am.voucher_no = ?5 AND am.year_month_date = ?6"  +
+                    " union all  SELECT am.voucher_no AS 'voucherNo', am.year_month_date AS 'yearMonthDate'," +
+                    " am.aux_number AS 'auxNumber', am.voucher_date AS 'voucherDate', u1.user_name AS 'createBy', c.code_name AS 'voucherFlag'," +
+                    " u2.user_name AS 'approveBy', u3.user_name AS 'geneBy' FROM accmainvoucherhis am LEFT JOIN userinfo u1 ON u1.id = am.create_by " +
+                    " LEFT JOIN userinfo u2 ON u2.id = am.approve_by  LEFT JOIN userinfo u3 ON u3.id = am.gene_by" +
+                    " LEFT JOIN codemanage c ON c.code_type = 'voucherFlag' AND c.code_code = am.voucher_flag WHERE am.center_code = ?1" +
+                    " AND am.branch_code = ?2 AND am.acc_book_type = ?3 AND am.acc_book_code = ?4" +
+                    " AND am.voucher_no = ?5 AND am.year_month_date = ?6");
+
+            List<?> list1 = voucherRepository.queryBySqlSC(sql1.toString(), params);
+
+//            StringBuffer sql2 = new StringBuffer(" SELECT ab.flag AS 'tagCode', ab.remark AS 'remark'," +
+//                    " ab.direction_idx AS 'subjectCode', ab.direction_idx_name AS 'subjectName', ab.debit_dest AS 'debitDest'," +
+//                    " ab.credit_dest AS 'creditDest' FROM accsubvoucher ab WHERE ab.center_code = ?1 AND ab.branch_code = ?2" +
+//                    " AND ab.acc_book_type = ?3 AND ab.acc_book_code = ?4 AND ab.voucher_no = ?5" +
+//                    " AND ab.year_month_date = ?6"  +
+//                    " union all SELECT ab.flag AS 'tagCode', ab.remark AS 'remark'," +
+//                    " ab.direction_idx AS 'subjectCode', ab.direction_idx_name AS 'subjectName', ab.debit_dest AS 'debitDest'," +
+//                    " ab.credit_dest AS 'creditDest' FROM accsubvoucherhis ab WHERE ab.center_code = ?1 AND ab.branch_code = ?2" +
+//                    " AND ab.acc_book_type = ?3 AND ab.acc_book_code = ?4 AND ab.voucher_no = ?5" +
+//                    " AND ab.year_month_date = ?6");
+//            List<?> list2 = voucherRepository.queryBySqlSC(sql2.toString(), params);
+
+
+            StringBuffer sql3 = new StringBuffer("SELECT ab.flag AS 'tagCode',ab.remark AS 'remark'," +
+                    "  ab.debit_dest AS 'debitDest', ab.credit_dest AS 'creditDest' ," +
+                    "  ab.direction_idx AS 'subjectCode', ab.direction_idx_name AS 'subjectName', ab.direction_other AS 'specialCode'," +
+                    "  ab.d01 AS 'unitPrice',ab.d02 AS 'num'," +
+                    "  (SELECT  code_name  FROM codemanage " +
+                    "  WHERE code_type = 'settlementType' " +
+                    "    AND code_code = ab.d03) AS 'settlementType'," +
+                    "  ab.d04 AS 'settlementCode'," +
+                    "  ab.d05 AS 'settlementDate'," +
+                    "  ab.check_no AS 'checkNo'," +
+                    "  ab.invoice_no AS 'invoiceNo' " +
+                    "FROM" +
+                    "  accsubvoucher ab " +
+                    "WHERE ab.center_code = ?1 " +
+                    "  AND ab.branch_code = ?2 " +
+                    "  AND ab.acc_book_type = ?3 " +
+                    "  AND ab.acc_book_code = ?4 " +
+                    "  AND ab.voucher_no = ?5 " +
+                    "  AND ab.year_month_date = ?6 " +
+                    "UNION " +
+                    "ALL " +
+                    "SELECT " +
+                    "  ab.flag AS 'tagCode'," +
+                    "  ab.remark AS 'remark'," +
+                    "  ab.debit_dest AS 'debitDest'," +
+                    "  ab.credit_dest AS 'creditDest' ," +
+                    "  ab.direction_idx AS 'subjectCode'," +
+                    "  ab.direction_idx_name AS 'subjectName'," +
+                    "  ab.direction_other AS 'specialCode'," +
+                    "  ab.d01 AS 'unitPrice'," +
+                    "  ab.d02 AS 'num'," +
+                    "  (SELECT " +
+                    "    code_name " +
+                    "  FROM " +
+                    "    codemanage " +
+                    "  WHERE code_type = 'settlementType' " +
+                    "    AND code_code = ab.d03) AS 'settlementType'," +
+                    "  ab.d04 AS 'settlementCode'," +
+                    "  ab.d05 AS 'settlementDate'," +
+                    "  ab.check_no AS 'checkNo'," +
+                    "  ab.invoice_no AS 'invoiceNo' " +
+                    "FROM " +
+                    "  accsubvoucherhis ab " +
+                    "WHERE ab.center_code = ?1 " +
+                    "  AND ab.branch_code = ?2 " +
+                    "  AND ab.acc_book_type = ?3 " +
+                    "  AND ab.acc_book_code = ?4 " +
+                    "  AND ab.voucher_no = ?5 " +
+                    "  AND ab.year_month_date = ?6 ");
+
+
+            List<?> list3 = voucherRepository.queryBySqlSC(sql3.toString(),params);
+            Map<String,Object> result = new HashMap<>();
+            result.putAll((Map<String,Object>)list1.get(0));
+
+
+            //查询专项简称
+            for (int i=0;i<list3.size();i++){
+
+                Map<String,Object> map = (Map<String,Object>) list3.get(i);
+
+                String specialName = "";
+                String specialMessage = "";
+
+                String specialCode = (String) map.get("specialCode");
+                if (specialCode != null && !"".equals(specialCode)) {
+                    if (specialCode.contains(",")){
+                        //如果包含“，”
+                        String []str = specialCode.split(",");
+                        for (int j=0;j<str.length;j++){
+                            specialName =voucherRepository.getSpecialName(accBookCode,str[j]);
+                            specialMessage += (" "+ specialName +" ");//专项信息
+                        }
+                    }else {
+                        specialName = voucherRepository.getSpecialName(accBookCode,specialCode);
+                        specialMessage = " "+specialName;
+                    }
+                }else {
+                    specialMessage= "无关联专项";
+                }
+
+                String settlementType = (String) map.get("settlementType");
+                String settlementCode = (String) map.get("settlementCode");
+                String settlementDate = (String) map.get("settlementDate");
+                if ( settlementCode != null && !"".equals(settlementCode) ){
+                    settlementType = " 结算类型：" + settlementType+ " ";
+                    settlementCode = " 结算单号：" + settlementCode+ " ";
+                    settlementDate = " 结算日期：" + settlementDate+ " ";
+
+                    specialMessage += (settlementType+settlementCode+settlementDate);
+
+                }
+
+                String unitPrice = (String) map.get("unitPrice");
+                String num = (String) map.get("num");
+                if (unitPrice != null && !"".equals(unitPrice) ){
+                    unitPrice = " 单价：" + unitPrice + " ";
+                    num = " 数量：" + num + " ";
+                    specialMessage +=(unitPrice+num);
+                }
+
+                String checkNo = (String) map.get("checkNo");
+                if ( checkNo != null && !"".equals(checkNo) ){
+                    checkNo = " 支票号：" + checkNo + " ";
+
+                    specialMessage += checkNo;
+                }
+
+                String invoiceNo = (String) map.get("invoiceNo");
+                if ( invoiceNo != null && !"".equals(invoiceNo)){
+                    invoiceNo = " 发票号：" + invoiceNo+ " ";
+
+                    specialMessage += invoiceNo;
+                }
+
+                ((Map<String, Object>) list3.get(i)).put("specialMessage",specialMessage);
+            }
+
+
+            Map data2 = new HashMap();
+            data2.put("data2",list3);
+            result.putAll(data2);
+            // 把上述存放好的结果result 放入到list集合中。为了批量写入到excel 表格中。
+            resultListAboutMaps.add(result);
+        }
+
+        ExcelUtil excelUtil = new ExcelUtil();
+        excelUtil.exportVoucherAboutDetails(request,response,resultListAboutMaps,Constant.MODELPATH);
+    }
 }

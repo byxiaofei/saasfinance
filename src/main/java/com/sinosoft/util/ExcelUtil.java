@@ -2,10 +2,7 @@ package com.sinosoft.util;
 
 import java.io.*;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import javax.annotation.Resource;
@@ -4183,6 +4180,182 @@ public class ExcelUtil {
 
     }
 
+    /**
+     *  凭证管理分录明细批量
+     */
+    public void exportVoucherAboutDetails(HttpServletRequest request, HttpServletResponse response, List<Map<String, Object>> result,String path ){
+        try {
+            String modelPath = path;
+            File file = new File(modelPath + "voucherExportDetails.xls");
+            String fileName = UUID.randomUUID() + "凭证信息表.xls";
+            FileInputStream fis = null;
+            fis = new FileInputStream(file);
+            Workbook wb = WorkbookFactory.create(fis);
+
+            Sheet sheet = wb.getSheet("凭证信息");
+            sheet.setDefaultRowHeight((short) 500);//设置默认行高
+            Row row;
+            Cell cell;
+
+            Font font = wb.createFont();
+            font.setFontName("宋体");
+            font.setFontHeightInPoints((short) 11);
+
+            CellStyle style = wb.createCellStyle();
+            style.setAlignment(HSSFCellStyle.ALIGN_LEFT);
+            style.setBorderBottom(HSSFCellStyle.BORDER_THIN);//边框全包
+            style.setBorderLeft(HSSFCellStyle.BORDER_THIN);
+            style.setBorderRight(HSSFCellStyle.BORDER_THIN);
+            style.setBorderTop(HSSFCellStyle.BORDER_THIN);
+            //设置标题单元格格式-title3
+            CellStyle titleStyle = wb.createCellStyle();
+            titleStyle.setFillForegroundColor(IndexedColors.SKY_BLUE.getIndex());
+            titleStyle.setFillBackgroundColor((short) 40);
+            titleStyle.setAlignment(HSSFCellStyle.ALIGN_CENTER);//单元格居中
+            titleStyle.setBorderBottom(HSSFCellStyle.BORDER_THIN);//边框全包
+            titleStyle.setBorderLeft(HSSFCellStyle.BORDER_THIN);
+            titleStyle.setBorderRight(HSSFCellStyle.BORDER_THIN);
+            titleStyle.setBorderTop(HSSFCellStyle.BORDER_THIN);
+            titleStyle.setFillBackgroundColor(IndexedColors.SKY_BLUE.getIndex());//设置单元格背景色
+            titleStyle.setFont(font);
+            //设置文本单元格
+            CellStyle cellStyle = wb.createCellStyle();
+            cellStyle.setAlignment(HSSFCellStyle.ALIGN_LEFT);//单元格靠左
+            cellStyle.setBorderBottom(HSSFCellStyle.BORDER_THIN);//边框全包
+            cellStyle.setBorderLeft(HSSFCellStyle.BORDER_THIN);
+            cellStyle.setBorderRight(HSSFCellStyle.BORDER_THIN);
+            cellStyle.setBorderTop(HSSFCellStyle.BORDER_THIN);
+            cellStyle.setFont(font);
+
+            CellStyle balanceStyle = wb.createCellStyle();
+            balanceStyle.setAlignment(HSSFCellStyle.ALIGN_RIGHT);//单元格靠右
+            balanceStyle.setBorderBottom(HSSFCellStyle.BORDER_THIN);//边框全包
+            balanceStyle.setBorderLeft(HSSFCellStyle.BORDER_THIN);
+            balanceStyle.setBorderRight(HSSFCellStyle.BORDER_THIN);
+            balanceStyle.setBorderTop(HSSFCellStyle.BORDER_THIN);
+
+            CellStyle totalStyle = wb.createCellStyle();
+            totalStyle.setAlignment(HSSFCellStyle.ALIGN_RIGHT);//单元格靠左
+            totalStyle.setBorderBottom(HSSFCellStyle.BORDER_THIN);//边框全包
+            totalStyle.setBorderLeft(HSSFCellStyle.BORDER_THIN);
+            totalStyle.setBorderRight(HSSFCellStyle.BORDER_THIN);
+            totalStyle.setBorderTop(HSSFCellStyle.BORDER_THIN);
+            totalStyle.setFont(font);
+
+            //开始写样式  从第三行开始写入数据信息
+            int rownum = 3;
+            for (Map<String,Object> resultMaps : result) {
+                // 凭证号
+                String voucherNo =resultMaps.get("voucherNo").toString();
+                // 制单日期
+                String voucherDate = resultMaps.get("voucherDate").toString();
+                // 会计月度
+                String yearMonthDate = resultMaps.get("yearMonthDate").toString();
+                resultMaps.get("data2");
+                List<Map<String, Object>> data1 = (List<Map<String, Object>>) resultMaps.get("data2");
+                for(int i = 0 ; i < data1.size(); i ++){
+                    String remark = data1.get(i).get("remark").toString();
+
+                    row = sheet.createRow(rownum);
+                    row.setHeight((short) 500);//通过row设置行高
+                    cell = sheet.getRow(rownum).createCell(0);//凭证号
+                    cell.setCellStyle(cellStyle);
+                    if (voucherNo != null) {
+                        cell.setCellValue(voucherNo);
+                    } else {
+                        cell.setCellValue("");
+                    }
+
+                    cell = sheet.getRow(rownum).createCell(1);//日期
+                    cell.setCellStyle(cellStyle);
+                    if (voucherDate != null) {
+                        cell.setCellValue(voucherDate);
+                    } else {
+                        cell.setCellValue("");
+                    }
+
+                    cell = sheet.getRow(rownum).createCell(2);// 摘要
+                    cell.setCellStyle(cellStyle);
+                    if(data1.get(i).get("remark") != null){
+                        cell.setCellValue(data1.get(i).get("remark").toString());
+                    }else{
+                        cell.setCellValue("");
+                    }
+
+                    cell = sheet.getRow(rownum).createCell(3);//科目代码
+                    cell.setCellStyle(cellStyle);
+                    if (data1.get(i).get("subjectCode") != null) {
+                        cell.setCellValue(data1.get(i).get("subjectCode").toString());
+                    } else {
+                        cell.setCellValue("");
+                    }
+                    cell = sheet.getRow(rownum).createCell(4);//科目名称
+                    cell.setCellStyle(cellStyle);
+                    if (data1.get(i).get("subjectName") != null) {
+                        cell.setCellValue(data1.get(i).get("subjectName").toString());
+                    } else {
+                        cell.setCellValue("");
+                    }
+
+                    cell = sheet.getRow(rownum).createCell(5);//借方金额
+                    cell.setCellStyle(balanceStyle);
+                    if (data1.get(i).get("debitDest") != null) {
+                        cell.setCellValue(data1.get(i).get("debitDest").toString());
+                    } else {
+                        cell.setCellValue("");
+                    }
+
+                    cell = sheet.getRow(rownum).createCell(6);//贷方金额
+                    cell.setCellStyle(balanceStyle);
+                    if (data1.get(i).get("creditDest") != null) {
+                        cell.setCellValue(data1.get(i).get("creditDest").toString());
+                    } else {
+                        cell.setCellValue("");
+                    }
+
+                    cell = sheet.getRow(rownum).createCell(7);//专项代码
+                    cell.setCellStyle(balanceStyle);
+                    if (data1.get(i).get("specialCode") != null) {
+                        cell.setCellValue(data1.get(i).get("specialCode").toString());
+                    } else {
+                        cell.setCellValue("");
+                    }
+
+                    cell = sheet.getRow(rownum).createCell(8);//专项名称
+                    cell.setCellStyle(balanceStyle);
+                    if (data1.get(i).get("specialMessage") != null) {
+                        cell.setCellValue(data1.get(i).get("specialMessage").toString());
+                    } else {
+                        cell.setCellValue("");
+                    }
+                    rownum++;//加一行
+                }
+                rownum++;// 当一条凭证分录记录后，新加一行作为空行进行分割。
+            }
+
+
+
+            fileName = new String(fileName.getBytes("GBK"), "iso8859-1");
+            response.reset();
+            response.setHeader("Content-Disposition", "sttachment;filename=" + fileName);
+            response.setContentType("application/vnd.ms-excel");
+            response.setHeader("Pragma", "no-cache");
+            response.setHeader("Cache-Control", "no-cache");
+            response.setDateHeader("Expires", 0);
+            BufferedOutputStream out = new BufferedOutputStream(response.getOutputStream());
+            wb.write(out);
+            out.flush();
+            out.close();
+
+        } catch (InvalidFormatException e) {
+            e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     //水电费查询导出
     public void exportAgeAnalysis(HttpServletRequest request, HttpServletResponse response, List<?> result, String path, String computeDate, Integer version, String ageAnalysisTypeName, String centerCodeName, String accBookCodeName, String unit) {
 
@@ -4275,4 +4448,5 @@ public class ExcelUtil {
             e.printStackTrace();
         }
     }
+
 }

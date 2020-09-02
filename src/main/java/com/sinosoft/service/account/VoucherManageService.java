@@ -57,4 +57,15 @@ public interface VoucherManageService {
 
     public void exportByCondition(HttpServletRequest request, HttpServletResponse response, String name,
                                   String queryConditions, String cols);
+
+
+    /**
+     *  凭证管理中，所有凭证信息的分录形式导出
+     * @param request
+     * @param response
+     * @param name
+     * @param queryConditions
+     * @param cols
+     */
+    public void exportAboutDetailsByCondition(HttpServletRequest request, HttpServletResponse response, String name, String queryConditions, String cols);
 }

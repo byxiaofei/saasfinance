@@ -104,4 +104,14 @@ public class VoucherManageController {
         System.out.println(path);
         voucherManageService.exportByCondition(request, response, name, queryConditions, cols);
     }
+
+    /**
+     *  导出凭证管理带明细分录的凭证信息
+     */
+    @RequestMapping(path = "/vouchermanagedownloadAboutDetails")
+    public void exprotAboutDetails(HttpServletRequest request,HttpServletResponse response,String name,String queryConditions,String cols){
+        String path = request.getSession().getServletContext().getRealPath("/");
+        System.out.println(path);
+        voucherManageService.exportAboutDetailsByCondition(request,response,name,queryConditions,cols);
+    }
 }

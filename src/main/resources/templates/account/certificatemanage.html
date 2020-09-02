@@ -69,6 +69,7 @@
                     <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-search'" style="width: 20%;" onclick="searchF()" >查询</a>
                     <a href="#" class="easyui-linkbutton" data-options="iconCls:'e-icon fa fa-refresh'" style="width: 20%;" onclick="reset()">重置</a>
                     <a href="javascript:void(0)" class="easyui-linkbutton"  data-options="iconCls:'e-icon fa fa-download'" style="width: 20%;" onclick="exported('凭证管理信息表')">导出</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton"  data-options="iconCls:'e-icon fa fa-download'" style="width: 20%;" onclick="exportedAboutDetails('凭证管理信息表明细')">导出明细</a>
                 </td>
             </tr>
            <!-- <tr>
@@ -473,6 +474,16 @@
         jsutil.core.download(
             'vouchermanagedownload',
             result);
+    }
+
+    // 导出明细
+    function exportedAboutDetails(xlsName) {
+        var result  = prepareParam(xlsName);
+        if(result == "false"){
+            return false;
+        }
+        console.log(result);
+        jsutil.core.download('vouchermanagedownloadAboutDetails',result);
     }
 
     function prepareParam(xlsName) {

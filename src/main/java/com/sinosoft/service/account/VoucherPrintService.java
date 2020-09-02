@@ -21,4 +21,12 @@ public interface VoucherPrintService {
      * @param voucherDTO
      */
     void  voucherExport(HttpServletRequest request, HttpServletResponse response,VoucherDTO voucherDTO);
+
+    /**
+     *  多个凭证导出
+     * @param request
+     * @param response
+     * @param voucherDTO
+     */
+    void voucherExportAboutDetails(HttpServletRequest request, HttpServletResponse response,List<VoucherDTO> voucherDTO);
 }
