@@ -116,7 +116,8 @@ public class MyRealm extends AuthorizingRealm {
      * 将一些数据放到ShiroSession中,以便于其它地方使用 
      * @key  比如Controller,使用时直接用HttpSession.getAttribute(key)就可以取到
      */  
-    private void setSession(Object key, Object value){  
+    private void setSession(Object key, Object value){
+    	SecurityUtils.getSubject().getSession().setTimeout(18000000);
         Subject currentUser = SecurityUtils.getSubject();
         if(null != currentUser){  
             Session session = currentUser.getSession();

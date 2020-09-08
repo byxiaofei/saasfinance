@@ -54,7 +54,7 @@ public class WarrantyConfirmController  {
             tasksdetailsService.saveTasksdetails(tasksdetailsinfo);
 
             //通过url和uriMap拼接调用远端的接口，返回结果
-            String returnMessage = httpClient.sendGet(url,uriMap);
+            String returnMessage = httpClient.sendGet(url,uriMap,null);
             System.out.println(returnMessage);
             String message;
             if(returnMessage.equals("接口调用失败")){

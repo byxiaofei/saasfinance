@@ -40,13 +40,14 @@ public class HttpClient {
      * @return
      */
 
-    public String sendGet(String url, Map<String, Long> uriMap) {
+    public String sendGet(String url, Map<String, Long> uriMap,String headerValue) {
 
         RestTemplate restTemplate = new RestTemplate();
         //添加请求头
         HttpHeaders headers = new HttpHeaders();
        // headers.add("x-api-key", "c18f9f88-b85a-4585-9593-b0df09f05680");
-        headers.add("x-api-key", "c9423f7e-0240-44d6-afe3-95bf29db2308");
+//        headers.add("x-api-key", "c9423f7e-0240-44d6-afe3-95bf29db2308");
+        headers.add("x-api-key", headerValue);
 
         //添加请求的实体类，这里第一个参数是要发送的参数，第二个参数是请求头里的数据
         HttpEntity<Object> requestEntity = new HttpEntity<>(null, headers);

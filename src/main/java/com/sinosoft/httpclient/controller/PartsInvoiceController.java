@@ -1,6 +1,7 @@
 package com.sinosoft.httpclient.controller;
 
 import com.alibaba.fastjson.JSONArray;
+import com.sinosoft.httpclient.config.SecretKey;
 import com.sinosoft.httpclient.domain.JsonToPartsInvoice;
 import com.sinosoft.httpclient.domain.Tasksdetailsinfo;
 import com.sinosoft.httpclient.service.HttpClient;
@@ -49,18 +50,26 @@ public class PartsInvoiceController  {
             tasksdetailsinfo.setEndTime(endTime.toString());
             tasksdetailsService.saveTasksdetails(tasksdetailsinfo);
 
-            //通过url和uriMap拼接调用远端的接口，返回结果
-            String returnMessage = httpClient.sendGet(url,uriMap);
-            System.out.println(returnMessage);
-            String message;
-            if(returnMessage.equals("接口调用失败")){
-                message = "接口调用失败";  //TODO 循环请求...
-            }else{
-                List<JsonToPartsInvoice> jsonToPartsInvoices = JSONArray.parseArray(returnMessage, JsonToPartsInvoice.class);
-                //保存入库
-                message = partsInvoiceService.savePartsInvoiceList(jsonToPartsInvoices,tasksdetailsinfo.getEndTime());
+            for(int i = 0 ; i < 2 ; i ++ ){
+                String headerValue ;
+                if( i == 0 ){
+                    headerValue = SecretKey.FIRST_KEY_MESSAGE;
+                }else{
+                    headerValue = SecretKey.SECOND_KEY_MESSAGE;
+                }
+                //通过url和uriMap拼接调用远端的接口，返回结果
+                String returnMessage = httpClient.sendGet(url,uriMap,headerValue);
+                System.out.println(returnMessage);
+                String message;
+                if(returnMessage.equals("接口调用失败")){
+                    message = "接口调用失败";  //TODO 循环请求...
+                }else{
+                    List<JsonToPartsInvoice> jsonToPartsInvoices = JSONArray.parseArray(returnMessage, JsonToPartsInvoice.class);
+                    //保存入库
+                    message = partsInvoiceService.savePartsInvoiceList(jsonToPartsInvoices,tasksdetailsinfo.getEndTime());
+                }
+                System.out.println("Parts_Invoice 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
             }
-            System.out.println("Parts_Invoice 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("当前异常结果为："+e);

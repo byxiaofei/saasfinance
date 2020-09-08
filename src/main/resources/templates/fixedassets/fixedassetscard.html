@@ -1705,7 +1705,6 @@
                 if(flags){
                     return;
                 }
-
                 var useStartDate = $('#useStartDate').datebox('getValue');
                 if (useStartDate) {
                     $.ajax({
@@ -1730,7 +1729,6 @@
                 if(flags){
                     return;
                 }
-
                 $.post(url, data, function (result) {
                     $('#waitMenu').dialog('close');//关闭等待窗口
                     if (result.success) {

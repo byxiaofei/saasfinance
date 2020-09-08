@@ -2,6 +2,7 @@ package com.sinosoft.httpclient.controller;
 
 
 import com.alibaba.fastjson.JSONArray;
+import com.sinosoft.httpclient.config.SecretKey;
 import com.sinosoft.httpclient.domain.JsonToPartsRequisition;
 import com.sinosoft.httpclient.domain.Tasksdetailsinfo;
 import com.sinosoft.httpclient.service.HttpClient;
@@ -57,17 +58,26 @@ public class PartsRequisitionController {
             tasksdetailsinfo.setEndTime(endTime.toString());
             tasksdetailsService.saveTasksdetails(tasksdetailsinfo);
 
-            String returnStr = httpClient.sendGet(url,uriMap);
-            System.out.println(returnStr);
-            String string;
-            if(returnStr.equals("接口调用失败")){
-                string = "接口调用失败"; // TODO 循环请求 或者其他原因导致的请求失败的原因
-            }else{
-                List<JsonToPartsRequisition> jsonToPartsRequisitions = JSONArray.parseArray(returnStr, JsonToPartsRequisition.class);
-                //  保存入库
-                string = partsRequisitionService.savePartsRequisitionList(jsonToPartsRequisitions,tasksdetailsinfo.getEndTime());
+            for(int i = 0 ; i < 2 ; i ++){
+
+                String headerValue ;
+                if( i == 0 ){
+                    headerValue = SecretKey.FIRST_KEY_MESSAGE;
+                }else{
+                    headerValue = SecretKey.SECOND_KEY_MESSAGE;
+                }
+                String returnStr = httpClient.sendGet(url,uriMap,headerValue);
+                System.out.println(returnStr);
+                String string;
+                if(returnStr.equals("接口调用失败")){
+                    string = "接口调用失败"; // TODO 循环请求 或者其他原因导致的请求失败的原因
+                }else{
+                    List<JsonToPartsRequisition> jsonToPartsRequisitions = JSONArray.parseArray(returnStr, JsonToPartsRequisition.class);
+                    //  保存入库
+                    string = partsRequisitionService.savePartsRequisitionList(jsonToPartsRequisitions,tasksdetailsinfo.getEndTime());
+                }
+                System.out.println("Parts_Requisition 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
             }
-            System.out.println("Parts_Requisition 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("当前异常结果为："+e);

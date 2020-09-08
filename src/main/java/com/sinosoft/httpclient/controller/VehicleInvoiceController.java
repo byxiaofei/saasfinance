@@ -1,6 +1,7 @@
 package com.sinosoft.httpclient.controller;
 
 import com.alibaba.fastjson.JSONArray;
+import com.sinosoft.httpclient.config.SecretKey;
 import com.sinosoft.httpclient.domain.Tasksdetailsinfo;
 import com.sinosoft.httpclient.domain.VehicleInvoice;
 import com.sinosoft.httpclient.service.HttpClient;
@@ -55,17 +56,25 @@ public class VehicleInvoiceController {
             tasksdetailsinfo.setEndTime(endTime.toString());
             tasksdetailsService.saveTasksdetails(tasksdetailsinfo);
 
-            String returnStr = httpClient.sendGet(url, uriMap);
-            String str;
-            if (returnStr.equals("接口调用失败")) {
-                str = "接口调用失败"; // TODO 循环请求或者 其他原因导致请求失败，具体原因分析
-            } else {
-                List<VehicleInvoice> vehicleInvoices = JSONArray.parseArray(returnStr, VehicleInvoice.class);
+            for(int i = 0 ; i < 2 ; i ++){
+                String headerValue ;
+                if( i == 0 ){
+                    headerValue = SecretKey.FIRST_KEY_MESSAGE;
+                }else{
+                    headerValue = SecretKey.SECOND_KEY_MESSAGE;
+                }
+                String returnStr = httpClient.sendGet(url, uriMap,headerValue);
+                String str;
+                if (returnStr.equals("接口调用失败")) {
+                    str = "接口调用失败"; // TODO 循环请求或者 其他原因导致请求失败，具体原因分析
+                } else {
+                    List<VehicleInvoice> vehicleInvoices = JSONArray.parseArray(returnStr, VehicleInvoice.class);
 
-                //保存入库
-                str = vehicleInvoiceService.saveVehicleInvoiceList(vehicleInvoices,tasksdetailsinfo.getEndTime());
+                    //保存入库
+                    str = vehicleInvoiceService.saveVehicleInvoiceList(vehicleInvoices,tasksdetailsinfo.getEndTime());
+                }
+                System.out.println("Vehicle_Invoice 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
             }
-            System.out.println("Vehicle_Invoice 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("当前异常结果为："+e);

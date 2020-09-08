@@ -1,6 +1,7 @@
 package com.sinosoft.httpclient.controller;
 
 import com.alibaba.fastjson.JSONArray;
+import com.sinosoft.httpclient.config.SecretKey;
 import com.sinosoft.httpclient.domain.Tasksdetailsinfo;
 import com.sinosoft.httpclient.dto.PartsVerificationDTO;
 import com.sinosoft.httpclient.service.HttpClient;
@@ -56,18 +57,28 @@ public class PartsVerificationController {
             tasksdetailsinfo.setEndTime(endTime.toString());
             tasksdetailsService.saveTasksdetails(tasksdetailsinfo);
 
-            String returnStr = httpClient.sendGet(url,uriMap);
-            System.out.println(returnStr );
-            String str=null  ;
-            if(returnStr.equals("接口调用失败")){
-                str = "接口调用失败"; // TODO 循环请求或者 其他原因导致请求失败，具体原因分析
-            }else{
-                List<PartsVerificationDTO> partsVerificationList = JSONArray.parseArray(returnStr, PartsVerificationDTO.class);
-                //保存入库
-                System.out.println(partsVerificationList);
-                str =  partsVerificationService.getPartsVerification(partsVerificationList,tasksdetailsinfo.getEndTime());
+            for(int i = 0 ; i < 2 ; i ++){
+
+                String headerValue ;
+                if( i == 0 ){
+                    headerValue = SecretKey.FIRST_KEY_MESSAGE;
+                }else{
+                    headerValue = SecretKey.SECOND_KEY_MESSAGE;
+                }
+
+                String returnStr = httpClient.sendGet(url,uriMap,headerValue);
+                System.out.println(returnStr );
+                String str=null  ;
+                if(returnStr.equals("接口调用失败")){
+                    str = "接口调用失败"; // TODO 循环请求或者 其他原因导致请求失败，具体原因分析
+                }else{
+                    List<PartsVerificationDTO> partsVerificationList = JSONArray.parseArray(returnStr, PartsVerificationDTO.class);
+                    //保存入库
+                    System.out.println(partsVerificationList);
+                    str =  partsVerificationService.getPartsVerification(partsVerificationList,tasksdetailsinfo.getEndTime());
+                }
+                System.out.println("第"+(i+1)+"次 Parts_Verification 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
             }
-            System.out.println("Parts_Verification 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("当前异常结果为："+e);

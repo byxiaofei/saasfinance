@@ -1,6 +1,7 @@
 package com.sinosoft.httpclient.controller;
 
 import com.alibaba.fastjson.JSONArray;
+import com.sinosoft.httpclient.config.SecretKey;
 import com.sinosoft.httpclient.domain.OptionChange;
 import com.sinosoft.httpclient.domain.Tasksdetailsinfo;
 import com.sinosoft.httpclient.service.HttpClient;
@@ -51,17 +52,26 @@ public class OptionChangeController {
             tasksdetailsinfo.setEndTime(endTime.toString());
             tasksdetailsService.saveTasksdetails(tasksdetailsinfo);
 
-            String returnStr =httpClient.sendGet(url,uriMap);
-            String str;
+            for(int i = 0 ;  i < 2 ; i ++){
+                String headerValue ;
+                if( i == 0 ){
+                    headerValue = SecretKey.FIRST_KEY_MESSAGE;
+                }else{
+                    headerValue = SecretKey.SECOND_KEY_MESSAGE;
+                }
 
-            if (returnStr.equals("接口调用失败")){
-                str = "接口调用失败";
-            }else {
-                List<OptionChange> optionChanges = JSONArray.parseArray(returnStr,OptionChange.class);
-                //保存入库
-                str =optionChangeService.saveoptionChangeList(optionChanges,tasksdetailsinfo.getEndTime());
+                String returnStr =httpClient.sendGet(url,uriMap,headerValue);
+                String str;
+
+                if (returnStr.equals("接口调用失败")){
+                    str = "接口调用失败";
+                }else {
+                    List<OptionChange> optionChanges = JSONArray.parseArray(returnStr,OptionChange.class);
+                    //保存入库
+                    str =optionChangeService.saveoptionChangeList(optionChanges,tasksdetailsinfo.getEndTime());
+                }
+                System.out.println("Option_Change 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
             }
-            System.out.println("Option_Change 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("当前异常结果为："+e);

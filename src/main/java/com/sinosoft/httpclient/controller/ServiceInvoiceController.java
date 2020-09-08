@@ -1,6 +1,7 @@
 package com.sinosoft.httpclient.controller;
 
 import com.alibaba.fastjson.JSONArray;
+import com.sinosoft.httpclient.config.SecretKey;
 import com.sinosoft.httpclient.domain.Tasksdetailsinfo;
 import com.sinosoft.httpclient.dto.PartsVerificationDTO;
 import com.sinosoft.httpclient.dto.ServiceInvoiceDTO;
@@ -61,19 +62,29 @@ public class ServiceInvoiceController {
             tasksdetailsinfo.setEndTime(endTime.toString());
             tasksdetailsService.saveTasksdetails(tasksdetailsinfo);
 
-            String returnStr = httpClient.sendGet(url,uriMap);
+            for(int i = 0 ; i < 2 ; i++){
 
-            System.out.println(returnStr );
-            String str=null  ;
-            if(returnStr.equals("接口调用失败")){
-                str = "接口调用失败"; // TODO 循环请求或者 其他原因导致请求失败，具体原因分析
-            }else{
-                List<ServiceInvoiceDTO> serviceInvoiceDTOList = JSONArray.parseArray(returnStr, ServiceInvoiceDTO.class);
-                //保存入库
-                System.out.println(serviceInvoiceDTOList);
-                str =  serviceInvoiceService.getServiceInvoiceService(serviceInvoiceDTOList,tasksdetailsinfo.getEndTime());
+                String headerValue ;
+                if( i == 0 ){
+                    headerValue = SecretKey.FIRST_KEY_MESSAGE;
+                }else{
+                    headerValue = SecretKey.SECOND_KEY_MESSAGE;
+                }
+
+                String returnStr = httpClient.sendGet(url,uriMap,headerValue);
+
+                System.out.println(returnStr );
+                String str=null  ;
+                if(returnStr.equals("接口调用失败")){
+                    str = "接口调用失败"; // TODO 循环请求或者 其他原因导致请求失败，具体原因分析
+                }else{
+                    List<ServiceInvoiceDTO> serviceInvoiceDTOList = JSONArray.parseArray(returnStr, ServiceInvoiceDTO.class);
+                    //保存入库
+                    System.out.println(serviceInvoiceDTOList);
+                    str =  serviceInvoiceService.getServiceInvoiceService(serviceInvoiceDTOList,tasksdetailsinfo.getEndTime());
+                }
+                System.out.println("Service_Invoice 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
             }
-            System.out.println("Service_Invoice 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("当前异常结果为："+e);
