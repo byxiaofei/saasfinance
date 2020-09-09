@@ -32,6 +32,11 @@ public class TestController1{
             String format2 = sdfLast.format(date2);
             System.out.println("time4的时间为："+format2);
 
+            System.out.println("----------------到此划开分割---------------------");
+            String firstTime = "2020-09-03 00:00:00";
+            Date parse1 = sdfLast.parse(firstTime);
+            System.out.println("2020-09-03 开始日期"+parse1.getTime());
+            System.out.println("当前日期为:"+new Date().getTime());
 
         } catch (ParseException e) {
             e.printStackTrace();

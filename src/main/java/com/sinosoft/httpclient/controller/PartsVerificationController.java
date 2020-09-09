@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class PartsVerificationController {
+public class PartsVerificationController implements ScheduledOfTask{
 
     private Logger logger = LoggerFactory.getLogger(PartsVerificationController.class);
 
@@ -36,6 +36,7 @@ public class PartsVerificationController {
     /**
      *  第四个接口信息
      */
+    @Override
     public void execute() {
 
         try {
@@ -67,7 +68,6 @@ public class PartsVerificationController {
                 }
 
                 String returnStr = httpClient.sendGet(url,uriMap,headerValue);
-                System.out.println(returnStr );
                 String str=null  ;
                 if(returnStr.equals("接口调用失败")){
                     str = "接口调用失败"; // TODO 循环请求或者 其他原因导致请求失败，具体原因分析
@@ -75,9 +75,19 @@ public class PartsVerificationController {
                     List<PartsVerificationDTO> partsVerificationList = JSONArray.parseArray(returnStr, PartsVerificationDTO.class);
                     //保存入库
                     System.out.println(partsVerificationList);
+
+                    for(PartsVerificationDTO partsVerificationDTO : partsVerificationList){
+                        String companyNo = partsVerificationDTO.getCompanyNo();
+                        if(SecretKey.FIRST_COMPANY_NO.equals(companyNo)){
+                            partsVerificationDTO.setCompanyNo(SecretKey.FIRST_BRANCH_CODE);
+                        }else if(SecretKey.SECOND_COMPANY_NO.equals(companyNo)){
+                            partsVerificationDTO.setCompanyNo(SecretKey.SECOND_BRANCH_CODE);
+                        }
+                    }
                     str =  partsVerificationService.getPartsVerification(partsVerificationList,tasksdetailsinfo.getEndTime());
                 }
                 System.out.println("第"+(i+1)+"次 Parts_Verification 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
+                System.out.println("第"+(i+1)+"个接口调用完毕！");
             }
         } catch (Exception e) {
             e.printStackTrace();

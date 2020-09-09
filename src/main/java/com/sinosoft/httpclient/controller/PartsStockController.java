@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 @Component
-public class PartsStockController {
+public class PartsStockController implements ScheduledOfTask{
 
     private Logger logger = LoggerFactory.getLogger(PartsStockController.class);
 
@@ -37,6 +37,7 @@ public class PartsStockController {
     /**
      * 3. Parts stock in / checking 接口接收解析报文
      */
+    @Override
     public void execute() {
         try {
             long start = System.currentTimeMillis();
@@ -66,16 +67,25 @@ public class PartsStockController {
                 }
 
                 String returnStr = httpClient.sendGet(url, uriMap,headerValue);
-                System.out.println(returnStr);
                 String str;
                 if (returnStr.equals("接口调用失败")) {
                     str = "接口调用失败"; // TODO 循环请求或者 其他原因导致请求失败，具体原因分析
                 } else {
                     List<JsonToPartsStock> partsStockList = (List<JsonToPartsStock>) JSONArray.parseArray(returnStr, JsonToPartsStock.class);
                     //保存入库
+                    System.out.println(partsStockList);
+                    for(JsonToPartsStock jsonToPartsStock : partsStockList){
+                        String companyNo = jsonToPartsStock.getCompanyNo();
+                        if(SecretKey.FIRST_COMPANY_NO.equals(companyNo)){
+                            jsonToPartsStock.setCompanyNo(SecretKey.FIRST_BRANCH_CODE);
+                        }else if(SecretKey.SECOND_COMPANY_NO.equals(companyNo)){
+                            jsonToPartsStock.setCompanyNo(SecretKey.SECOND_BRANCH_CODE);
+                        }
+                    }
                     str = partsStockService.savePartsStockListList(partsStockList,tasksdetailsinfo.getEndTime());
                 }
-                System.out.println("Parts_Stock_In_Checking 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
+                System.out.println("第"+(i+1)+"次Parts_Stock_In_Checking 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
+                System.out.println("第"+(i+1)+"个接口调用完毕！");
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class WarrantyConfirmController  {
+public class WarrantyConfirmController implements ScheduledOfTask {
 
     private Logger logger = LoggerFactory.getLogger(WarrantyConfirmController.class);
 

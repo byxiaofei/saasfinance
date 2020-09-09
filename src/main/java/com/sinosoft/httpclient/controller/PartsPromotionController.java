@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class PartsPromotionController {
+public class PartsPromotionController implements ScheduledOfTask{
 
     private Logger logger = LoggerFactory.getLogger(PartsPromotionController.class);
 

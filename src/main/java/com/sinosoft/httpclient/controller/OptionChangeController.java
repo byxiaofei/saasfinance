@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class OptionChangeController {
+public class OptionChangeController implements ScheduledOfTask{
 
     private Logger logger = LoggerFactory.getLogger(OptionChangeController.class);
 
@@ -67,10 +67,20 @@ public class OptionChangeController {
                     str = "接口调用失败";
                 }else {
                     List<OptionChange> optionChanges = JSONArray.parseArray(returnStr,OptionChange.class);
+                    System.out.println(optionChanges);
+                    for(OptionChange optionChange : optionChanges){
+                        String companyNo = optionChange.getCompanyNo();
+                        if(SecretKey.FIRST_COMPANY_NO.equals(companyNo)){
+                            optionChange.setCompanyNo(SecretKey.FIRST_BRANCH_CODE);
+                        }else if(SecretKey.SECOND_COMPANY_NO.equals(companyNo)){
+                            optionChange.setCompanyNo(SecretKey.SECOND_BRANCH_CODE);
+                        }
+                    }
                     //保存入库
                     str =optionChangeService.saveoptionChangeList(optionChanges,tasksdetailsinfo.getEndTime());
                 }
-                System.out.println("Option_Change 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
+                System.out.println("第"+(i+1)+" 次Option_Change 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
+                System.out.println("第"+(i+1)+"个接口调用完毕！");
             }
         } catch (Exception e) {
             e.printStackTrace();

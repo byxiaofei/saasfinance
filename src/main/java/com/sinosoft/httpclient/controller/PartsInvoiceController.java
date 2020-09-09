@@ -7,6 +7,7 @@ import com.sinosoft.httpclient.domain.Tasksdetailsinfo;
 import com.sinosoft.httpclient.service.HttpClient;
 import com.sinosoft.httpclient.service.PartsInvoiceService;
 import com.sinosoft.httpclient.service.TasksdetailsService;
+import com.sinosoft.httpclient.task.ScheduledOfTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -19,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class PartsInvoiceController  {
+public class PartsInvoiceController  implements ScheduledOfTask {
 
     private Logger logger = LoggerFactory.getLogger(PartsInvoiceController.class);
 
@@ -30,6 +31,7 @@ public class PartsInvoiceController  {
     @Resource
     TasksdetailsService tasksdetailsService;
 
+    @Override
     public void execute() {
         try {
             long start = System.currentTimeMillis();
@@ -65,10 +67,19 @@ public class PartsInvoiceController  {
                     message = "接口调用失败";  //TODO 循环请求...
                 }else{
                     List<JsonToPartsInvoice> jsonToPartsInvoices = JSONArray.parseArray(returnMessage, JsonToPartsInvoice.class);
+                    for(JsonToPartsInvoice jsonToPartsInvoice : jsonToPartsInvoices){
+                        String companyNo = jsonToPartsInvoice.getCompanyNo();
+                        if(SecretKey.FIRST_COMPANY_NO.equals(companyNo)){
+                            jsonToPartsInvoice.setCompanyNo(SecretKey.FIRST_BRANCH_CODE);
+                        }else if(SecretKey.SECOND_COMPANY_NO.equals(companyNo)){
+                            jsonToPartsInvoice.setCompanyNo(SecretKey.SECOND_BRANCH_CODE);
+                        }
+                    }
                     //保存入库
                     message = partsInvoiceService.savePartsInvoiceList(jsonToPartsInvoices,tasksdetailsinfo.getEndTime());
                 }
-                System.out.println("Parts_Invoice 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
+                System.out.println("第"+(i+1)+"次Parts_Invoice 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
+                System.out.println("第"+(i+1)+"个接口调用完毕！");
             }
         } catch (Exception e) {
             e.printStackTrace();

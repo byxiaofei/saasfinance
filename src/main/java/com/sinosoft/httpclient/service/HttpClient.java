@@ -65,4 +65,29 @@ public class HttpClient {
 
     }
 
+    public String sendGet(String url, Map<String, Long> uriMap) {
+
+        RestTemplate restTemplate = new RestTemplate();
+        //添加请求头
+        HttpHeaders headers = new HttpHeaders();
+        // headers.add("x-api-key", "c18f9f88-b85a-4585-9593-b0df09f05680");
+        headers.add("x-api-key", "bfca08fa-1a0d-4788-a7c5-e23498c1639b");
+//        headers.add("x-api-key", headerValue);
+
+        //添加请求的实体类，这里第一个参数是要发送的参数，第二个参数是请求头里的数据
+        HttpEntity<Object> requestEntity = new HttpEntity<>(null, headers);
+        url = generateRequestParameters(url, uriMap);
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.GET, requestEntity, String.class);
+
+        if (HttpStatus.OK == responseEntity.getStatusCode()) {
+            return (String) responseEntity.getBody();
+        } else {
+            // log.error("#method# 远程调用失败 httpCode = [{}]", responseEntity.getStatusCode());
+            return (String) "接口调用失败";
+
+        }
+
+    }
+
 }

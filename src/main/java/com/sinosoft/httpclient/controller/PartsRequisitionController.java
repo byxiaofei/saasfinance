@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class PartsRequisitionController {
+public class PartsRequisitionController  implements ScheduledOfTask {
 
     private Logger logger = LoggerFactory.getLogger(PartsRequisitionController.class);
 
@@ -38,6 +38,7 @@ public class PartsRequisitionController {
     /**
      * 6. Parts Requisition 接口解析报文,范本
      */
+    @Override
     public void execute() {
         try {
             long start = System.currentTimeMillis();
@@ -67,16 +68,25 @@ public class PartsRequisitionController {
                     headerValue = SecretKey.SECOND_KEY_MESSAGE;
                 }
                 String returnStr = httpClient.sendGet(url,uriMap,headerValue);
-                System.out.println(returnStr);
                 String string;
                 if(returnStr.equals("接口调用失败")){
                     string = "接口调用失败"; // TODO 循环请求 或者其他原因导致的请求失败的原因
                 }else{
                     List<JsonToPartsRequisition> jsonToPartsRequisitions = JSONArray.parseArray(returnStr, JsonToPartsRequisition.class);
+                    System.out.println(jsonToPartsRequisitions);
+                    for(JsonToPartsRequisition jsonToPartsRequisition : jsonToPartsRequisitions){
+                        String companyNo = jsonToPartsRequisition.getCompanyNo();
+                        if(SecretKey.FIRST_COMPANY_NO.equals(companyNo)){
+                            jsonToPartsRequisition.setCompanyNo(SecretKey.FIRST_BRANCH_CODE);
+                        }else if(SecretKey.SECOND_COMPANY_NO.equals(companyNo)){
+                            jsonToPartsRequisition.setCompanyNo(SecretKey.SECOND_BRANCH_CODE);
+                        }
+                    }
                     //  保存入库
                     string = partsRequisitionService.savePartsRequisitionList(jsonToPartsRequisitions,tasksdetailsinfo.getEndTime());
                 }
-                System.out.println("Parts_Requisition 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
+                System.out.println("第"+(i+1)+"次Parts_Requisition 接口调用耗时："+(System.currentTimeMillis()-start)+"ms");
+                System.out.println("第"+(i+1)+"个接口调用完毕！");
             }
         } catch (Exception e) {
             e.printStackTrace();
