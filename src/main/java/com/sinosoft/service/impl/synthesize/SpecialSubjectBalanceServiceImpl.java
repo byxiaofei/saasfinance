@@ -822,7 +822,7 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
         boolean settleFlag = getSettleState(centerCode, accBookType, accBookCode, _yearMonth);//判断期间是否结转
         if(!settleFlag) _yearMonth = getClosestSettledYearMonth(centerCode, accBookType, accBookCode, _yearMonth);//获取最接近的结转期间
         Map<String, Map<String, String>> resultMap = new HashMap<>();
-        StringBuffer sql = new StringBuffer("select * from ( ");
+        StringBuffer sql = new StringBuffer("select accountBookCode,yearMonth,itemCode,specialCode,CAST(SUM(balanceQc) AS CHAR) AS balanceQc,CAST(SUM(debitBq) AS CHAR) as debitBq,CAST(SUM(creditBq) AS CHAR)  as creditBq,CAST(SUM(balanceQm) AS CHAR) as balanceQm,CAST(SUM(debitBn) AS CHAR) as debitBn,CAST(SUM(creditBn) AS CHAR) as creditBn from ( ");
         sql.append("select a.acc_book_code as accountBookCode,a.year_month_date as yearMonth,a.direction_idx as itemCode,substring_index(substring_index(a.direction_other,',',b.id+ 1),',' ,- 1) as specialCode,cast(a.balance_begin_dest as char) as balanceQc,cast(a.debit_dest as char) as debitBq,cast(a.credit_dest as char) as creditBq,cast(a.balance_dest as char) as balanceQm,cast(debit_dest_year as char) as debitBn,cast(credit_dest_year as char) as creditBn from (" +
                 "select * from accarticlebalance ac where 1=1 and ac.center_code in (?1) and ac.branch_code  in (?2) and ac.acc_book_type = ?3 and ac.acc_book_code = ?4 and ac.year_month_date = ?5 ) a " +
                 "join splitstringsort b ON b.id< (length(a.direction_other) - length(REPLACE (a.direction_other, ',', '')) + 1) " +
@@ -851,7 +851,7 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
             paramsNo++;
         }
 
-        sql.append(" order by t.itemCode, t.specialCode");
+        sql.append(" GROUP BY t.itemCode,t.specialCode order by t.itemCode, t.specialCode");
 
         List list = voucherRepository.queryBySqlSC(sql.toString(), params);
         if(list != null && !list.isEmpty()){
@@ -876,7 +876,7 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
         boolean settleFlag = getSettleState(centerCode, accBookType, accBookCode, _yearMonth);//判断期间是否结转
         if(!settleFlag) _yearMonth = getClosestSettledYearMonth(centerCode, accBookType, accBookCode, _yearMonth);//获取最接近的结转期间
         Map<String, Map<String, String>> resultMap = new HashMap<>();
-        StringBuffer sql = new StringBuffer("select * from ( ");
+        StringBuffer sql = new StringBuffer("select accountBookCode,yearMonth,itemCode,specialCode,CAST(SUM(balanceQc) AS CHAR) AS balanceQc,CAST(SUM(debitBq) AS CHAR) AS debitBq,CAST(SUM(creditBq) AS CHAR)  AS creditBq,CAST(SUM(balanceQm) AS CHAR) AS balanceQm,CAST(SUM(debitBn) AS CHAR) AS debitBn,CAST(SUM(creditBn) AS CHAR) AS creditBn from ( ");
         sql.append("select a.acc_book_code as accountBookCode,a.year_month_date as yearMonth,a.direction_idx as itemCode,substring_index(substring_index(a.direction_other,',',b.id+ 1),',' ,- 1) as specialCode,cast(a.balance_begin_dest as char) as balanceQc,cast(a.debit_dest as char) as debitBq,cast(a.credit_dest as char) as creditBq,cast(a.balance_dest as char) as balanceQm,cast(debit_dest_year as char) as debitBn,cast(credit_dest_year as char) as creditBn from (" +
                 "select * from accarticlebalance ac where 1=1 and ac.center_code in (?1) and ac.branch_code in (?2) and ac.acc_book_type = ?3 and ac.acc_book_code = ?4 and ac.year_month_date = ?5 ) a " +
                 "join splitstringsort b ON b.id< (length(a.direction_other) - length(REPLACE (a.direction_other, ',', '')) + 1) " +
@@ -924,7 +924,7 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
             paramsNo++;
         }
 
-        sql.append(" order by t.specialCode, t.itemCode");
+        sql.append(" GROUP BY t.itemCode,t.specialCode order by t.specialCode, t.itemCode");
 
         List list = voucherRepository.queryBySqlSC(sql.toString(), params);
         if(list != null && !list.isEmpty()){
