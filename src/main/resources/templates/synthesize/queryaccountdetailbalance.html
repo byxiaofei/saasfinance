@@ -62,7 +62,7 @@
         <table cellpadding="2" style="width: 100%; overflow: hidden;table-layout: fixed;" border="0">
             <tr>
                 <td style="text-align: left; padding-left: 10px"><label>核算单位：<span id="centerCode"></span></label></td>
-                <td style="text-align: center; padding-right: 20px"><label>期间：自&nbsp;<span id="yearMonth1"></span>&nbsp;至&nbsp;<span id="yearMonthDate1"></span></label></td>
+                <td style="text-align: center; padding-right: 20px"><label>期间:&nbsp;<span id="yearMonth1"></span></label></td>
                 <td style="text-align: right; padding-right: 10px"><label>单位：<span>人民币元</span></label></td>
             </tr>
         </table>
@@ -132,48 +132,8 @@
                 }
             },
             onChange:function (newValue) {
-                var data = $('#yearMonthDate').combobox('getValue');
-                if (newValue && data && newValue.substring(0,4) != data.substring(0,4)) {
-                    $.messager.alert('提示','会计期间不允许跨年，请重新选择','warning');
-                    $('#yearMonth').combobox('setValue', '');
-                    return false;
-                }
-                if (!compareYearMonth(newValue, data)) {
-                    $.messager.alert('提示','会计期间选择有误，请重新选择','warning');
-                    $('#yearMonth').combobox('setValue', '');
-                    return false;
-                }
-            }
-        });
-        $('#yearMonthDate').combobox({
-            url:'/codeSelect?type=yearMonthAllAndNotJS',
-            method:'GET',
-            valueField:'value',
-            textField:'text',
-            onLoadSuccess:function () {
-                var data = $('#yearMonthDate').combobox('getData');
-                if (data.length>0) {
-                    var year = getCurrentYear();
-                    for (var i=0;i<data.length;i++) {
-                        if ((data[i].value).substring(0,4)==year) {//倒序的
-                            $('#yearMonthDate').combobox('setValue',data[i].value);
-                            break;
-                        }
-                    }
-                }
-            },
-            onChange:function (newValue) {
-                var data = $('#yearMonth').combobox('getValue');
-                if (newValue && data && newValue.substring(0,4) != data.substring(0,4)) {
-                    $.messager.alert('提示','会计期间不允许跨年，请重新选择','warning');
-                    $('#yearMonthDate').combobox('setValue', '');
-                    return false;
-                }
-                if (!compareYearMonth(data, newValue)) {
-                    $.messager.alert('提示','会计期间选择有误，请重新选择','warning');
-                    $('#yearMonthDate').combobox('setValue', '');
-                    return false;
-                }
+
+
             }
         });
         //起始科目层级
@@ -295,9 +255,8 @@
                     //起始期间
                     var startYearMonth = $('#yearMonth').combobox('getValue');
                     //结束期间
-                    var endYearMonth = $('#yearMonthDate').combobox('getValue');
+                    var endYearMonth = startYearMonth;
                     $('#yearMonth1').html(startYearMonth);
-                    $('#yearMonthDate1').html(endYearMonth);
                     $('#centerCode').html(data.rows[0].centerCode);
                     $('#printDate').html(getCurrentData());
                     //核算单位
@@ -373,7 +332,7 @@
             var directionIdx = row.itemCode;
             var itemName = row.subjectName;
             var yearMonth = $('#yearMonth').combobox('getValue');
-            var lastDay = $('#yearMonthDate').combobox('getValue');
+            var lastDay = yearMonth;
             var year=lastDay.substring(0,4);
             var month=lastDay.substring(4,7);
             var endDate1= new Date(year,month,0).getDate();
@@ -614,16 +573,7 @@
                 $('#yearMonth').combobox('setValue',getCurrentYear()+"01");
             }
         }
-        data = $('#yearMonthDate').combobox('getData');
-        if (data.length>0) {
-            var year = getCurrentYear();
-            for (var i=0;i<data.length;i++) {
-                if ((data[i].value).substring(0,4)==year) {//倒序的
-                    $('#yearMonthDate').combobox('setValue',data[i].value);
-                    break;
-                }
-            }
-        }
+
         var level = $('#level').combobox('getData');
         if (level.length>0) {
             $('#level').combobox('setValue',level[0].value);
@@ -681,9 +631,7 @@
             }
         });
         var Date1 = $('#yearMonth').combobox('getValue');
-        var Date2 = $('#yearMonthDate').combobox('getValue');
         params['Date1'] = Date1;
-        params['Date2'] = Date2;
         $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
 
         $.ajax({

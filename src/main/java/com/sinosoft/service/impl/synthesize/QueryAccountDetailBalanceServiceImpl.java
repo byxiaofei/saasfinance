@@ -65,7 +65,7 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
         //2.凭证处理
         dealNoChargeVoucher2(voucherGene, centerCode, branchCode, accBookType, accBookCode, startYearMonth, endYearMonth, itemStart, itemEnd, itemBalanceMap);
         //3.科目(层级)汇总
-        Map<String, Map<String, String>> itemSumaryMap = itemSummary2(accBookCode, startYearMonth, itemEnd, itemBalanceMap);
+        Map<String, Map<String, String>> itemSumaryMap = itemSummary2(accBookCode, itemStart, itemEnd, itemBalanceMap);
         //4.数据封装，返给前端
         List resultList = getDataResult2(accBookCode, itemStart, itemEnd, itemLevelStart, itemLevelEnd, itemSumaryMap, cumulativeAmount);
         System.out.println("科目余额查询用时："+(System.currentTimeMillis()-start)+"ms");
@@ -468,6 +468,8 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
                             summaryMap.put("itemCode", "权益小计");
                         }else if("4".equals(subjectType)){
                             summaryMap.put("itemCode", "损益小计");
+                        }else if("0".equals(subjectType)){
+                            summaryMap.put("itemCode", "非会计科目类型");
                         }
                         //2.期初合计
                         if(sumBalanceQc.compareTo(BigDecimal.ZERO) >= 0){
@@ -549,6 +551,8 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
                         summaryMap.put("itemCode", "权益小计");
                     }else if("4".equals(subjectType)){
                         summaryMap.put("itemCode", "损益小计");
+                    }else if("0".equals(subjectType)){
+                        summaryMap.put("itemCode", "非会计科目类型");
                     }
                     //2.期初合计
                     if(sumBalanceQc.compareTo(BigDecimal.ZERO) >= 0){
