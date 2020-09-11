@@ -49,7 +49,7 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
 
         //期间范围
         String startYearMonth = dto.getYearMonth();
-        String endYearMonth = dto.getYearMonthDate();
+        String endYearMonth = startYearMonth;
 
         //科目范围
         String itemStart = dto.getItemCode1();
@@ -61,13 +61,13 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
         String voucherGene = dto.getVoucherGene();
 
         //1.科目余额查询，将结果放在map集合中
-        Map<String, Map<String, String>> itemBalanceMap = getItemBalance2(centerCode, branchCode, accBookType, accBookCode, startYearMonth, endYearMonth, itemStart, itemEnd);
+        Map<String, Map<String, String>> itemBalanceMap = getItemBalance2(centerCode, branchCode, accBookType, accBookCode, startYearMonth,itemStart, itemEnd);
         //2.凭证处理
         dealNoChargeVoucher2(voucherGene, centerCode, branchCode, accBookType, accBookCode, startYearMonth, endYearMonth, itemStart, itemEnd, itemBalanceMap);
         //3.科目(层级)汇总
-        Map<String, Map<String, String>> itemSumaryMap = itemSummary2(accBookCode, startYearMonth, endYearMonth, itemStart, itemEnd, itemBalanceMap);
+        Map<String, Map<String, String>> itemSumaryMap = itemSummary2(accBookCode, startYearMonth, itemEnd, itemBalanceMap);
         //4.数据封装，返给前端
-        List resultList = getDataResult2(accBookCode, startYearMonth, endYearMonth, itemStart, itemEnd, itemLevelStart, itemLevelEnd, itemSumaryMap, cumulativeAmount);
+        List resultList = getDataResult2(accBookCode, itemStart, itemEnd, itemLevelStart, itemLevelEnd, itemSumaryMap, cumulativeAmount);
         System.out.println("科目余额查询用时："+(System.currentTimeMillis()-start)+"ms");
         return resultList;
     }
@@ -112,7 +112,7 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
     /**
      * 末级科目余额查询
      */
-    public Map<String, Map<String, String>> getItemBalance2(List centerCode, List branchCode, String accBookType, String accBookCode, String startYearMonth, String endYearMonth, String itemStart, String itemEnd){
+    public Map<String, Map<String, String>> getItemBalance2(List centerCode, List branchCode, String accBookType, String accBookCode, String startYearMonth, String itemStart, String itemEnd){
         Map<String, Map<String, String>> resultMap = new HashMap();
         StringBuffer sql = new StringBuffer("select t.center_code as centerCode,t.direction_idx as itemCode,cast(t.balance_dest as char) as balanceQc,cast(0.00 as char) as debitBq,cast(0.00 as char) as creditBq,cast(t.balance_dest as char) as balanceQm,cast(debit_dest_year as char) as debitBn,cast(credit_dest_year as char) as creditBn from ");
         sql.append("(select concat(all_subject, subject_code, '/') as itemCode from subjectinfo where end_flag = '0' and useflag = '1' and account = ?1 and ((concat(all_subject, subject_code) >= ?2 and concat(all_subject, subject_code) <= ?3 ) or concat(all_subject, subject_code) like ?4 )) s");
@@ -141,7 +141,7 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
         params.put(5, centerCode);
         params.put(6, branchCode);
         params.put(7, accBookType);
-        params.put(8, detailAccountService.getLastYearMonth(startYearMonth));
+        params.put(8, startYearMonth);
 
         List list = accDetailBalanceRepository.queryBySqlSC(sql.toString(), params);
         if(list != null && !list.isEmpty()){
@@ -246,7 +246,7 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
     /**
      * 科目汇总
      */
-    public Map<String, Map<String, String>> itemSummary2(String accBookCode,String startYearMonth, String endYearMonth, String itemStart, String itemEnd, Map<String, Map<String, String>> itemBalanceMap){
+    public Map<String, Map<String, String>> itemSummary2(String accBookCode, String itemStart, String itemEnd, Map<String, Map<String, String>> itemBalanceMap){
         Map<String, Map<String, String>> resultMap = new HashMap();
         //获取科目汇总规则
         Map<String, List> relationMap = getSummaryRelation(accBookCode, itemStart, itemEnd);
@@ -377,7 +377,7 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
     /**
      * 封装返回结果
      */
-    public List getDataResult2(String accountBookCode, String startYearMonth, String endYearMonth, String itemStart, String itemEnd, String itemLevelStart, String itemLevelEnd, Map<String, Map<String, String>> itemSumaryMap, String cumulativeAmount){
+    public List getDataResult2(String accountBookCode, String itemStart, String itemEnd, String itemLevelStart, String itemLevelEnd, Map<String, Map<String, String>> itemSumaryMap, String cumulativeAmount){
         List resultList = new ArrayList();
         //查询符合条件的科目
         List itemList = getItemList(accountBookCode, itemStart, itemEnd, itemLevelStart, itemLevelEnd);
