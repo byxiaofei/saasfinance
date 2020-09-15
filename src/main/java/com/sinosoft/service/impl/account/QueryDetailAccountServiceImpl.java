@@ -309,7 +309,7 @@ public class QueryDetailAccountServiceImpl implements QueryDetailAccountService 
         String accBookType = CurrentUser.getCurrentLoginAccountType();//session获取
         String accBookCode = CurrentUser.getCurrentLoginAccount();//session获取
 
-        StringBuffer initialBalanceSql = new StringBuffer("SELECT DISTINCT cast(IFNULL(a.balance_dest,0.00) as char) AS 'initialBalance',cast(IFNULL(a.debit_dest_year,0.00) as char) AS 'debitYearTotal',cast(IFNULL(a.credit_dest_year,0.00) as char) AS 'creditYearTotal' FROM accarticlebalance a WHERE 1=1");
+        StringBuffer initialBalanceSql = new StringBuffer("SELECT * FROM accarticlebalance a WHERE 1=1");
         StringBuffer sql = new StringBuffer("SELECT DISTINCT am.voucher_date AS 'voucherDate',am.voucher_no AS 'voucherNo',am.year_month_date AS 'yearMonthDate',ac.suffix_no AS 'suffixNo',ac.remark AS 'remark',ac.direction_other AS directionOther,ac.d01 AS 'unitPrice',ac.d02 AS 'amount',CAST(IFNULL(ac.debit_dest,0.00) AS char) AS 'debitDest',CAST(IFNULL(ac.credit_dest,0.00) AS char) AS 'creditDest',CAST((IFNULL(ac.debit_dest,0.00)-IFNULL(ac.credit_dest,0.00)) AS char) AS 'balanceDest' FROM accsubvoucher ac LEFT JOIN accmainvoucher am ON am.center_code = ac.center_code AND am.branch_code = ac.branch_code AND am.acc_book_type = ac.acc_book_type AND am.acc_book_code = ac.acc_book_code AND am.year_month_date = ac.year_month_date AND am.voucher_no = ac.voucher_no WHERE 1=1");
 
         int paramsNo = 1;
