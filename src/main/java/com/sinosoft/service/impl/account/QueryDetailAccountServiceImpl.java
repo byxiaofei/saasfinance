@@ -187,16 +187,7 @@ public class QueryDetailAccountServiceImpl implements QueryDetailAccountService 
 
         List<Map<String,Object>> list = new ArrayList<>();
         Map<String,Object> map = new HashMap<String,Object>();
-        map.put("voucherDate","");
-        map.put("voucherNo","");
-        map.put("remark","期初余额");
-        map.put("unitPrice","");
-        map.put("amount","");
-        map.put("debitDest","");
-        map.put("creditDest","");
-        setMapBalanceAndFX(map, initialBalance, balanceFX);
-        map.put("flag","");
-        list.add(map);
+
         if (listBySql!=null&&listBySql.size()>0) {
 
             Map<String, String> specialNameMap = new HashMap<>();
@@ -286,6 +277,17 @@ public class QueryDetailAccountServiceImpl implements QueryDetailAccountService 
                 }
             }
         }
+        map = new HashMap<String,Object>();
+        map.put("voucherDate","");
+        map.put("voucherNo","");
+        map.put("remark","期初余额");
+        map.put("unitPrice","");
+        map.put("amount","");
+        map.put("debitDest","");
+        map.put("creditDest","");
+        setMapBalanceAndFX(map, balance, balanceFX);
+        map.put("flag","");
+        list.add(0,map);
 
         return list;
     }
