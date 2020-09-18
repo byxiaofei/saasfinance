@@ -207,7 +207,7 @@ public class FixedassetsReportServiceImpl implements FixedassetsReportService {
                     String ymdEnd = df2.format(cal.getTime());// 月末
 
                     StringBuffer sql = new StringBuffer();
-                    sql.append("SELECT SUM(asset_origin_value) AS assetOriginValue, SUM(init_depre_money) AS initDepreMoney FROM AccAssetInfo WHERE 1 = 1");
+                    sql.append("SELECT SUM(asset_origin_value) AS assetOriginValue, SUM(end_depre_money) AS initDepreMoney FROM AccAssetInfo WHERE 1 = 1");
                     sql.append(" AND center_code = '" + centerCode + "'");
                     sql.append(" AND branch_code = '" + branchCode + "'");
                     sql.append(" AND acc_book_type = '" + accBookType + "'");

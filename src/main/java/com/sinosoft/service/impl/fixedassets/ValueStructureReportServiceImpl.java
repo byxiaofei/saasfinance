@@ -103,7 +103,7 @@ public class ValueStructureReportServiceImpl implements ValueStructureReportServ
                     int paramsNo = 1;
                     Map<Integer,Object> params = new HashMap<>();
                     StringBuffer sql = new StringBuffer();
-                    sql.append("SELECT SUM(CAST(quantity AS DECIMAL(5,2))) AS quantity, SUM(asset_origin_value) AS assetOriginValue, SUM(init_depre_money) AS initDepreMoney FROM AccAssetInfo WHERE 1 = 1");
+                    sql.append("SELECT SUM(CAST(quantity AS DECIMAL(5,2))) AS quantity, SUM(asset_origin_value) AS assetOriginValue, SUM(end_depre_money) AS initDepreMoney FROM AccAssetInfo WHERE 1 = 1");
 
                     sql.append(" AND center_code = ?"+paramsNo );
                     params.put(paramsNo,centerCode);
