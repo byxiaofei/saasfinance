@@ -230,8 +230,9 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
                     BigDecimal debitBq = new BigDecimal(dataMap.get("debitBq")).add(debitNoCharge);
                     BigDecimal creditBq = new BigDecimal(dataMap.get("creditBq")).add(creditNoCharge);
                     BigDecimal balanceQm = new BigDecimal(dataMap.get("balanceQc")).add(debitNoCharge.subtract(creditNoCharge));
-                    BigDecimal debitBn = new BigDecimal(dataMap.get("debitBn")).add(debitNoCharge);
-                    BigDecimal creditBn = new BigDecimal(dataMap.get("creditBn")).add(creditNoCharge);
+                    // 当前月的本年累计发生额已经进行了对之前所有月的本期发生额的加和+年初余额的最终数据结果的保存。所以不需要再进行增加一遍本期发生额。
+                    BigDecimal debitBn = new BigDecimal(dataMap.get("debitBn"));
+                    BigDecimal creditBn = new BigDecimal(dataMap.get("creditBn"));
                     dataMap.put("debitBq", debitBq.toString());
                     dataMap.put("creditBq", creditBq.toString());
                     dataMap.put("balanceQm", balanceQm.toString());
