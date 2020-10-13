@@ -455,7 +455,7 @@ public class SpecialInfoServiceImpl implements SpecialInfoService {
             return "EXISTE";
         }
         if("0".equals(s.getEndflag())){
-            String seg=specialInfoRepository.findSOx(s.getSpecialCode().substring(0,2));
+            String seg=specialInfoRepository.findSOx(s.getSpecialCode().substring(0,2)+"%");
             if(seg!=null&&!"".equals(seg)){
                 List<?> list= getIsNotexist(seg, s.getSpecialCode(), s.getAccount());
                 if(list!=null&&list.size()!=0){
@@ -520,7 +520,7 @@ public class SpecialInfoServiceImpl implements SpecialInfoService {
             return "EXISTE";
         }
         if("0".equals(s.getEndflag())){
-            String seg=specialInfoRepository.findSOx(s.getSpecialCode().substring(0,2));
+            String seg=specialInfoRepository.findSOx(s.getSpecialCode().substring(0,2)+"%");
             if(seg!=null&&!"".equals(seg)){
                 List<?> list= getIsNotexist(seg, s.getSpecialCode(), s.getAccount());
                 if(list!=null&&list.size()!=0){

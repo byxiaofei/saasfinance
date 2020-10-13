@@ -114,7 +114,7 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
      */
     public Map<String, Map<String, String>> getItemBalance2(List centerCode, List branchCode, String accBookType, String accBookCode, String startYearMonth, String itemStart, String itemEnd){
         Map<String, Map<String, String>> resultMap = new HashMap();
-        StringBuffer sql = new StringBuffer("select t.center_code as centerCode,t.direction_idx as itemCode,cast(t.balance_dest as char) as balanceQc,cast(0.00 as char) as debitBq,cast(0.00 as char) as creditBq,cast(t.balance_dest as char) as balanceQm,cast(debit_dest_year as char) as debitBn,cast(credit_dest_year as char) as creditBn from ");
+        StringBuffer sql = new StringBuffer("select t.center_code as centerCode,t.direction_idx as itemCode,cast(t.balance_begin_dest as char) as balanceQc,cast(0.00 as char) as debitBq,cast(0.00 as char) as creditBq,cast(t.balance_dest as char) as balanceQm,cast(debit_dest_year as char) as debitBn,cast(credit_dest_year as char) as creditBn from ");
         sql.append("(select concat(all_subject, subject_code, '/') as itemCode from subjectinfo where end_flag = '0' and useflag = '1' and account = ?1 and ((concat(all_subject, subject_code) >= ?2 and concat(all_subject, subject_code) <= ?3 ) or concat(all_subject, subject_code) like ?4 )) s");
         sql.append(" left join (");
         sql.append("select * from accdetailbalance where 1 = 1");
@@ -229,7 +229,7 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
                     //加入凭证数据
                     BigDecimal debitBq = new BigDecimal(dataMap.get("debitBq")).add(debitNoCharge);
                     BigDecimal creditBq = new BigDecimal(dataMap.get("creditBq")).add(creditNoCharge);
-                    BigDecimal balanceQm = new BigDecimal(dataMap.get("balanceQm")).add(debitNoCharge.subtract(creditNoCharge));
+                    BigDecimal balanceQm = new BigDecimal(dataMap.get("balanceQc")).add(debitNoCharge.subtract(creditNoCharge));
                     BigDecimal debitBn = new BigDecimal(dataMap.get("debitBn")).add(debitNoCharge);
                     BigDecimal creditBn = new BigDecimal(dataMap.get("creditBn")).add(creditNoCharge);
                     dataMap.put("debitBq", debitBq.toString());

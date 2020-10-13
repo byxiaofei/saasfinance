@@ -63,7 +63,7 @@ public interface SpecialInfoRepository extends BaseRepository<SpecialInfo,Long>{
      * @param segentCol
      * @return
      */
-    @Query(value = "select segment_flag from accsegmentdefine  where segment_col=?1",nativeQuery = true)
+    @Query(value = "select segment_flag from accsegmentdefine  where segment_col like ?1",nativeQuery = true)
     String findSOx(String segentCol);
     /**
      * 财产险
