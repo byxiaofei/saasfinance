@@ -118,7 +118,7 @@ public class AccCheckInfoServiceImpl implements AccCheckInfoService {
             params.put(paramsNo, accBookCode);
             paramsNo++;
 
-            sb.append(" GROUP BY a.direction_idx,a.direction_idx_name ORDER BY a.direction_idx");
+            sb.append(" GROUP BY a.direction_idx ORDER BY a.direction_idx");
 
             if (isCarry!=null&&!"".equals(isCarry)&&"Y".equals(isCarry)) {
                 //查历史表
@@ -167,8 +167,8 @@ public class AccCheckInfoServiceImpl implements AccCheckInfoService {
             params.put(paramsNo, accBookCode);
             paramsNo++;
 
-            sb.append(" GROUP BY aab.direction_idx,aab.direction_idx_name ORDER BY aab.direction_idx) temp");
-            sb.append(" ON temp.itemCode = a.direction_idx AND temp.itemName = a.direction_idx_name WHERE 1=1");
+            sb.append(" GROUP BY aab.direction_idx ORDER BY aab.direction_idx) temp");
+            sb.append(" ON temp.itemCode = a.direction_idx WHERE 1=1");
 
             sb.append(" AND a.year_month_date = ?" + paramsNo);
             params.put(paramsNo, yearMonthDate);
@@ -190,7 +190,7 @@ public class AccCheckInfoServiceImpl implements AccCheckInfoService {
 
 
 
-            sb.append(" GROUP BY a.direction_idx,a.direction_idx_name ORDER BY a.direction_idx");
+            sb.append(" GROUP BY a.direction_idx ORDER BY a.direction_idx");
 
             if (isCarry!=null&&!"".equals(isCarry)&&"Y".equals(isCarry)) {
                 //查历史表
@@ -218,14 +218,14 @@ public class AccCheckInfoServiceImpl implements AccCheckInfoService {
             }
         }
         if (assistAndDetail!=null && "Y".equals(assistAndDetail)) {
-            //辅助账与明细账对账
+            //明细账DB与辅助账对账AB
             sb.setLength(0);
 
             int paramsNo = 1;
             Map<Integer, Object> params = new HashMap<>();
 
             sb.append("SELECT adb.direction_idx AS itemCode,adb.direction_idx_name AS itemName,adb.debit_dest AS debitDestDB,adb.credit_dest AS creditDestDB,(adb.balance_dest-adb.balance_begin_dest) AS balanceSumDB,temp.debitDestAB,temp.creditDestAB,temp.balanceSumAB,(adb.debit_dest-temp.debitDestAB) AS debitDestSumR,(adb.credit_dest-temp.creditDestAB) AS creditDestSumR,((adb.balance_dest-adb.balance_begin_dest)-temp.balanceSumAB) AS balanceSumR FROM accsubvoucher a");
-            sb.append(" LEFT JOIN accdetailbalance adb ON adb.center_code = a.center_code AND adb.acc_book_type = a.acc_book_type AND adb.acc_book_code = a.acc_book_code AND adb.year_month_date = a.year_month_date AND adb.direction_idx = a.direction_idx AND adb.direction_idx_name = a.direction_idx_name");
+            sb.append(" LEFT JOIN accdetailbalance adb ON adb.center_code = a.center_code AND adb.acc_book_type = a.acc_book_type AND adb.acc_book_code = a.acc_book_code AND adb.year_month_date = a.year_month_date AND adb.direction_idx = a.direction_idx ");
             sb.append(" LEFT JOIN (SELECT aab.direction_idx AS itemCode,aab.direction_idx_name AS itemName,SUM(aab.debit_dest) AS debitDestAB,SUM(aab.credit_dest) AS creditDestAB,(SUM(aab.balance_dest)-SUM(aab.balance_begin_dest)) AS balanceSumAB FROM accarticlebalance aab WHERE 1=1");
 
             sb.append(" AND aab.year_month_date = ?" + paramsNo);
@@ -241,8 +241,8 @@ public class AccCheckInfoServiceImpl implements AccCheckInfoService {
             params.put(paramsNo, accBookCode);
             paramsNo++;
 
-            sb.append(" GROUP BY aab.direction_idx,aab.direction_idx_name ORDER BY aab.direction_idx) temp");
-            sb.append(" ON temp.itemCode = adb.direction_idx AND temp.itemName = adb.direction_idx_name WHERE 1=1");
+            sb.append(" GROUP BY aab.direction_idx ORDER BY aab.direction_idx) temp");
+            sb.append(" ON temp.itemCode = adb.direction_idx  WHERE 1=1");
 
             sb.append(" AND a.year_month_date = ?" + paramsNo);
             params.put(paramsNo, yearMonthDate);
@@ -262,7 +262,7 @@ public class AccCheckInfoServiceImpl implements AccCheckInfoService {
             paramsNo++;
             sb.append(" AND a.direction_other is not null ");
 
-            sb.append(" GROUP BY a.direction_idx,a.direction_idx_name ORDER BY a.direction_idx");
+            sb.append(" GROUP BY a.direction_idx ORDER BY a.direction_idx");
 
             if (isCarry!=null&&!"".equals(isCarry)&&"Y".equals(isCarry)) {
                 //查历史表
@@ -524,6 +524,8 @@ public class AccCheckInfoServiceImpl implements AccCheckInfoService {
                 }
                 flag = false;
             }
+
+
             if (map.get("balanceSumR")!=null && ((BigDecimal)map.get("balanceSumR")).compareTo(new BigDecimal("0.00"))!=0) {
                 String detail = str[type+3][4]+((BigDecimal)map.get(str[type][4])).toString()+str[type+3][5]+((BigDecimal)map.get(str[type][5])).toString();
                 if (result!=null) {
