@@ -153,6 +153,11 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
             String branchCode = CurrentUser.getCurrentLoginManageBranch();
             String accBookType = CurrentUser.getCurrentLoginAccountType();
             String accBookCode = CurrentUser.getCurrentLoginAccount();
+            //获取该机构当月全部科目余额数据
+            List<AccDetailBalance> accDetailBalancelList = accDetailBalanceRepository.qryAccDetailBalanceByYearMonthDateAndDirectionIdx(centerCode, branchCode,accBookType, accBookCode, dto.getYearMonthDate());
+            //获取该机构当月全部专项余额数据
+            List<AccArticleBalance> accArticleBalanceList = accArticleBalanceRepository.qryAccArticleBalanceByYearMonthDateAndDirectionIdxAndDirectionOther(centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate());
+
 
             String[] voucherNo=dto.getVoucherNo().split(",");
             //先判断本月会计期间是否结转
@@ -213,22 +218,6 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
                     }
                 } else {
                     //记账
-                    //专项余额表
-                    AccArticleBalanceId aaid = new AccArticleBalanceId();
-                    aaid.setCenterCode(centerCode);//核算单位
-                    aaid.setBranchCode(branchCode);//基层单位
-                    aaid.setAccBookType(CurrentUser.getCurrentLoginAccountType());//账套类型
-                    aaid.setAccBookCode(CurrentUser.getCurrentLoginAccount());//账套编码
-                    aaid.setYearMonthDate(dto.getYearMonthDate());//年月
-
-                    //当月明细账余额表
-                    AccDetailBalanceId adbid = new AccDetailBalanceId();
-                    adbid.setCenterCode(centerCode);//核算单位
-                    adbid.setBranchCode(branchCode);//基层单位
-                    adbid.setAccBookType(CurrentUser.getCurrentLoginAccountType());//账套类型
-                    adbid.setAccBookCode(CurrentUser.getCurrentLoginAccount());//账套编码
-                    adbid.setYearMonthDate(dto.getYearMonthDate());//年月
-
                     String yearmonth = dto.getYearMonthDate();
                     List<?> asList = voucherRepository.getSource(centerCode, branchCode, accBookType, accBookCode, yearmonth, voucherNo[i]);
                     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
@@ -243,9 +232,6 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
                             directionOther = map.get("direction_other").toString();//专项方向段
                         }
 
-                        //判断科目余额表是否有该科目，如果有则累加，没有则新增
-                        List<?> strSqlList = accDetailBalanceRepository.qryAccDetailBalanceByYearMonthDateAndDirectionIdx(centerCode, branchCode,accBookType, accBookCode, dto.getYearMonthDate(), itemCode, directionIdx);
-
                         BigDecimal debitDest = new BigDecimal("0.00");//本位币借方金额
                         BigDecimal creditDest = new BigDecimal("0.00");//本位币贷方金额
                         BigDecimal debitSource = new BigDecimal("0.00");//原币借方金额
@@ -259,11 +245,16 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
                             creditSource = (BigDecimal) map.get("credit_source");//原币贷方金额
                         }
 
-                        if(strSqlList.size()>0){//不等于0说明已经有该科目
-                            adbid.setItemCode(itemCode);
-                            adbid.setDirectionIdx(directionIdx);
+
+                        Optional<AccDetailBalance> firstAccDetailBalance= accDetailBalancelList.stream()
+                                .filter(a -> directionIdx.equals(a.getId().getDirectionIdx()))
+                                .findFirst();
+
+
+                        if(firstAccDetailBalance.isPresent()){//不等于0说明已经有该科目
                             //科目余额表
-                            AccDetailBalance adb = accDetailBalanceRepository.findById(adbid).get();
+                            AccDetailBalance adb = new AccDetailBalance();
+                            adb = firstAccDetailBalance.get();
 
                             //借方+当前值
                             adb.setDebitSource(adb.getDebitSource().add(debitSource));//原币本月借方金额
@@ -286,23 +277,23 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
                             //期末+借-贷
                             adb.setBalanceDest(adb.getBalanceDest().add(debitDest).subtract(creditDest));//本位币期末余额
 
-                            //当月明细账余额表保存
-                            accDetailBalanceRepository.save(adb);
-                            accDetailBalanceRepository.flush();
 
                             //判断专项字段是否为空，为空则不处理专项余额表
+                            String directionOtherTemp = directionOther;
                             if(directionOther != null && !directionOther.equals("")){
                                 //有专项
                                 //判断专项余额表中 该科目下是否存在该专项 有则累加 无则新增
-                                List<?> accSqlList = accArticleBalanceRepository.qryAccArticleBalanceByYearMonthDateAndDirectionIdxAndDirectionOther(centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate(), itemCode, directionIdx, directionOther);
 
-                                if(accSqlList.size() > 0){
-                                    aaid.setItemCode(itemCode);
-                                    aaid.setDirectionIdx(directionIdx);
-                                    aaid.setDirectionOther(directionOther);//专项方向段
+                                Optional<AccArticleBalance> firstAccArticleBalance= accArticleBalanceList.stream()
+                                        .filter(a -> directionIdx.equals(a.getId().getDirectionIdx()))
+                                        .filter(a -> directionOtherTemp.equals(a.getId().getDirectionOther()))
+                                        .findFirst();
+
+                                if(firstAccArticleBalance.isPresent()){
 
                                     //专项余额表
-                                    AccArticleBalance aa = accArticleBalanceRepository.findById(aaid).get();
+                                    AccArticleBalance aa = new AccArticleBalance();
+                                    aa = firstAccArticleBalance.get();
                                     //大于零说明专项余额表中该科目下有该专项 累加
                                     //借方+当前值
                                     aa.setDebitSource(aa.getDebitSource().add(debitSource));//原币本月借方金额
@@ -328,18 +319,21 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
 
                                     //期末+借-贷
                                     aa.setBalanceSource(aa.getBalanceSource().add(debitSource).subtract(creditSource));//原币期末余额------------------------
-
                                     //期末+借-贷
                                     aa.setBalanceDest(aa.getBalanceDest().add(debitDest.subtract(creditDest)));//本位币期末余额
 
-                                    //专项余额表保存
-                                    accArticleBalanceRepository.save(aa);
-                                    accArticleBalanceRepository.flush();
                                 }else{
                                     //专项余额表中该科目下没有该专项 新增
+                                    AccArticleBalanceId aaid = new AccArticleBalanceId();
+                                    aaid.setCenterCode(centerCode);//核算单位
+                                    aaid.setBranchCode(branchCode);//基层单位
+                                    aaid.setAccBookType(CurrentUser.getCurrentLoginAccountType());//账套类型
+                                    aaid.setAccBookCode(CurrentUser.getCurrentLoginAccount());//账套编码
+                                    aaid.setYearMonthDate(dto.getYearMonthDate());//年月
                                     aaid.setItemCode(itemCode);
                                     aaid.setDirectionIdx(directionIdx);
-                                    aaid.setDirectionOther(directionOther);
+                                    aaid.setDirectionOther(directionOther);//专项方向段
+
                                     AccArticleBalance aa = new AccArticleBalance(aaid);//专项余额表
 
                                     aa.setDirectionIdxName(map.get("direction_idx_name").toString());
@@ -423,16 +417,25 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
                                     aa.setS20(map.get("s20") == null ? null : map.get("s20").toString());
 
                                     //专项余额表保存
-                                    accArticleBalanceRepository.save(aa);
-                                    accArticleBalanceRepository.flush();
+                                    accArticleBalanceList.add(aa);
+                                    aaid = null ;
+                                    aa = null;
                                 }
                             }
 
                         }else{
                             //没有该科目直接insert操作
                             //当月明细账余额表
+                            //当月明细账余额表
+                            AccDetailBalanceId adbid = new AccDetailBalanceId();
+                            adbid.setCenterCode(centerCode);//核算单位
+                            adbid.setBranchCode(branchCode);//基层单位
+                            adbid.setAccBookType(CurrentUser.getCurrentLoginAccountType());//账套类型
+                            adbid.setAccBookCode(CurrentUser.getCurrentLoginAccount());//账套编码
+                            adbid.setYearMonthDate(dto.getYearMonthDate());//年月
                             adbid.setItemCode(itemCode);
                             adbid.setDirectionIdx(directionIdx);
+
                             AccDetailBalance adb = new AccDetailBalance(adbid);//科目余额表
 
                             String currency = map.get("currency").toString();//原币别编码
@@ -493,12 +496,18 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
                             adb.setF30(map.get("f30") == null ? null : map.get("f30").toString());
 
                             //当月明细账余额表保存
-                            accDetailBalanceRepository.save(adb);
-                            accDetailBalanceRepository.flush();
-
+                            accDetailBalancelList.add(adb);
+                            adbid = null;
+                            adb = null;
                             //判断专项字段是否为空，为空则不处理专项余额表
                             if(directionOther != null && !directionOther.equals("")){
                                 //专项余额表
+                                AccArticleBalanceId aaid = new AccArticleBalanceId();
+                                aaid.setCenterCode(centerCode);//核算单位
+                                aaid.setBranchCode(branchCode);//基层单位
+                                aaid.setAccBookType(CurrentUser.getCurrentLoginAccountType());//账套类型
+                                aaid.setAccBookCode(CurrentUser.getCurrentLoginAccount());//账套编码
+                                aaid.setYearMonthDate(dto.getYearMonthDate());//年月
                                 aaid.setItemCode(itemCode);
                                 aaid.setDirectionIdx(directionIdx);
                                 aaid.setDirectionOther(directionOther);
@@ -587,9 +596,9 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
                                 aa.setS19(map.get("s19") == null ? null : map.get("s19").toString());
                                 aa.setS20(map.get("s20") == null ? null : map.get("s20").toString());
 
-                                //专项余额表保存
-                                accArticleBalanceRepository.save(aa);
-                                accArticleBalanceRepository.flush();
+                                accArticleBalanceList.add(aa);
+                                aaid = null;
+                                aa = null;
                             }
                         }
                     }
@@ -609,6 +618,8 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
                     voucherRepository.flush();
                 }
             }
+            accArticleBalanceRepository.saveAll(accArticleBalanceList);
+            accDetailBalanceRepository.saveAll(accDetailBalancelList);
 
             if (!"".equals(result)) {
                 if (result.split(",").length!=voucherNo.length) {

@@ -47,4 +47,8 @@ public interface AccDetailBalanceRepository extends  BaseRepository<AccDetailBal
 
     @Query(value = "select * from accdetailbalance a where a.center_code = ?1 and a.branch_code = ?2 and a.acc_book_type = ?3 and a.acc_book_code = ?4 and a.year_month_date = ?5 and item_code = ?6 and a.direction_idx = ?7", nativeQuery = true)
     List<AccDetailBalance> qryAccDetailBalanceByYearMonthDateAndDirectionIdx(String centerCode, String branchCode, String accBookType, String accBookCode, String yearMonthDate, String itemCode, String directionIdx);
+
+    @Query(value = "select * from accdetailbalance a where a.center_code = ?1 and a.branch_code = ?2 and a.acc_book_type = ?3 and a.acc_book_code = ?4 and a.year_month_date = ?5 ", nativeQuery = true)
+    List<AccDetailBalance> qryAccDetailBalanceByYearMonthDateAndDirectionIdx(String centerCode, String branchCode, String accBookType, String accBookCode, String yearMonthDate);
+
 }

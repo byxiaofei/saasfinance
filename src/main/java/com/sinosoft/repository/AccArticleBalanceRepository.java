@@ -49,4 +49,8 @@ public interface AccArticleBalanceRepository extends  BaseRepository<AccArticleB
 
     @Query(value = "select * from accarticlebalance a where a.center_code = ?1 and a.branch_code = ?2 and a.acc_book_type = ?3 and a.acc_book_code = ?4 and a.year_month_date = ?5 and item_code = ?6 and a.direction_idx = ?7 and direction_other = ?8", nativeQuery = true)
     List<AccArticleBalance> qryAccArticleBalanceByYearMonthDateAndDirectionIdxAndDirectionOther(String centerCode, String branchCode, String accBookType, String accBookCode, String yearMonthDate, String itemCode, String directionIdx, String directionOther);
+
+    @Query(value = "select * from accarticlebalance a where a.center_code = ?1 and a.branch_code = ?2 and a.acc_book_type = ?3 and a.acc_book_code = ?4 and a.year_month_date = ?5 ", nativeQuery = true)
+    List<AccArticleBalance> qryAccArticleBalanceByYearMonthDateAndDirectionIdxAndDirectionOther(String centerCode, String branchCode, String accBookType, String accBookCode, String yearMonthDate);
+
 }
