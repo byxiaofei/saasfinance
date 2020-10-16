@@ -61,7 +61,13 @@ public class VoucherAccountingController {
     @ResponseBody
     public InvokeResult accounting(VoucherDTO dto){
         try {
-            return voucherAccountingService.accounting(dto);
+            if(dto.getVoucherNo().split(",").length==1){
+                return voucherAccountingService.accounting2(dto);
+            }else if (dto.getVoucherNo().split(",").length >1){
+                return voucherAccountingService.accounting(dto);
+            }else{
+                return InvokeResult.failure("请选择凭证信息");
+            }
         } catch (Exception e) {
             logger.error("凭证记账异常", e);
             return InvokeResult.failure("凭证记账失败，请联系管理员！");

@@ -69,6 +69,9 @@ public class SysLogServiceImpl {
             ObjectMapper mapper = new ObjectMapper();
             String params = mapper.writeValueAsString(args);
             /*String params = JSON.toJSONString(args);*/
+            if(params.length() > 5000){
+                params = params.substring(0,2000);
+            }
             sysOperationLog.setParams(params);
             //获取用户Id
             sysOperationLog.setUserId(CurrentUser.getCurrentUser().getId());

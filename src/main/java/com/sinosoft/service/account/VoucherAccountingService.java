@@ -13,6 +13,8 @@ public interface VoucherAccountingService {
 
     InvokeResult accounting(VoucherDTO dto);
 
+    InvokeResult accounting2(VoucherDTO dto);
+
     InvokeResult revokeAccounting(VoucherDTO dto);
 
     VoucherDTO qryYearMonth();
