@@ -266,8 +266,8 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
             String _detailCode = itemMap.get("specialCode");//专项代码
             itemMap.put("detailCode", _detailCode);
             String _detailName = itemMap.get("specialName");//专项名称
-            /*BigDecimal _balanceQc = qcDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qcDataMap.get("balanceQc"));//期初余额*/
-            BigDecimal _balanceQc = qcDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qcDataMap.get("balanceQm"));//期初余额
+            BigDecimal _balanceQc = qcDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qcDataMap.get("balanceQc"));//期初余额
+//            BigDecimal _balanceQc = qcDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qcDataMap.get("balanceQm"));//期初余额
             BigDecimal _balanceQm = qmDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qmDataMap.get("balanceQm"));//期末余额
             BigDecimal _debitBq = new BigDecimal(itemMap.get("debitBq"));//本期借
             BigDecimal _creditBq = new BigDecimal(itemMap.get("creditBq"));//本期贷
@@ -554,8 +554,8 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
             String _detailCode = itemMap.get("specialCode");//专项代码
             itemMap.put("detailCode", _detailCode);
             String _detailName = itemMap.get("specialName");//专项名称
-            /*BigDecimal _balanceQc = qcDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qcDataMap.get("balanceQc"));//期初余额*/
-            BigDecimal _balanceQc = qcDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qcDataMap.get("balanceQm"));//期初余额
+            BigDecimal _balanceQc = qcDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qcDataMap.get("balanceQc"));//期初余额
+//            BigDecimal _balanceQc = qcDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qcDataMap.get("balanceQm"));//期初余额
             BigDecimal _balanceQm = qmDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qmDataMap.get("balanceQm"));//期末余额
             BigDecimal _debitBq = new BigDecimal(itemMap.get("debitBq"));//本期借
             BigDecimal _creditBq = new BigDecimal(itemMap.get("creditBq"));//本期贷

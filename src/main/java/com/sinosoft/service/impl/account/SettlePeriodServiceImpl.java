@@ -28,10 +28,7 @@ import javax.annotation.Resource;
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author jiangyc
@@ -302,6 +299,7 @@ public class SettlePeriodServiceImpl implements SettlePeriodService{
             lastYMD = String.valueOf(Integer.parseInt(lastYMD)-1);
         }
 
+        // 判断上个会计期间是否结转，或为未结转状态。
         AccMonthTrace accMonthTrace = accMonthTraceRespository.findAccMonthTraceByYearMonthDate(centerCode, accBookType, accBookCode, lastYMD);
         if(accMonthTrace != null){//如果取到上期  并且上期为未结转 则return
             if(accMonthTrace.getAccMonthStat().equals("1") || accMonthTrace.getAccMonthStat().equals("2")){
@@ -354,6 +352,8 @@ public class SettlePeriodServiceImpl implements SettlePeriodService{
 
         //将专项余额表数据 备份到 历史专项余额表
         accArticleBalanceRepository.updateHisData(dto.getYearMonthDate(),accBookType, accBookCode, centerCode, branchCode);
+//        List<AccArticleBalance> accArticleBalances = accArticleBalanceRepository.qryAccArticleBalanceByYearMonthDate(centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate());
+//        accArticleBalanceRepository.saveAll(accArticleBalances);
         accArticleBalanceRepository.flush();
         //将余额表年月改为下个会计期间
         accArticleBalanceRepository.updateYearMonth(newYearMonth, dto.getYearMonthDate(), accBookType, accBookCode, centerCode, branchCode);
@@ -361,6 +361,7 @@ public class SettlePeriodServiceImpl implements SettlePeriodService{
 
         List<?> aaHisList = accArticleBalanceRepository.qryAccArticleBalanceByYearMonthDate(centerCode, branchCode, accBookType, accBookCode, newYearMonth);
         if(aaHisList.size() != 0){
+            List<AccArticleBalance> nextAABList = new ArrayList<>();
             for(Object obj : aaHisList){
                 //判断是否跨年 如果不跨年则将数据更新到下一个会计期间 如果跨年则生成下年一月数据
                 if(!"14".equals(dto.getYearMonthDate().substring(4,6)) && !"JS".equals(dto.getYearMonthDate().substring(4,6))){
@@ -379,8 +380,10 @@ public class SettlePeriodServiceImpl implements SettlePeriodService{
 
                     nextAAB.setCreateBy(String.valueOf(CurrentUser.getCurrentUser().getId()));//创建人
                     nextAAB.setCreateTime(CurrentTime.getCurrentTime());//创建时间
-                    accArticleBalanceRepository.save(nextAAB);
-                    accArticleBalanceRepository.flush();
+
+                    nextAABList.add(nextAAB);
+//                    accArticleBalanceRepository.save(nextAAB);
+//                    accArticleBalanceRepository.flush();
 
                 }else{//跨年，生成下年1月数据
                     AccArticleBalance nextAAB = (AccArticleBalance) obj;
@@ -408,21 +411,27 @@ public class SettlePeriodServiceImpl implements SettlePeriodService{
 
                     nextAAB.setCreateBy(String.valueOf(CurrentUser.getCurrentUser().getId()));//创建人
                     nextAAB.setCreateTime(CurrentTime.getCurrentTime());//创建时间
-                    accArticleBalanceRepository.save(nextAAB);
+                    nextAABList.add(nextAAB);
+//                    accArticleBalanceRepository.save(nextAAB);
                 }
-                accArticleBalanceRepository.flush();
+//                accArticleBalanceRepository.flush();
             }
+            accArticleBalanceRepository.saveAll(nextAABList);
+            accArticleBalanceRepository.flush();
         }
 
         //将明细账余额表数据 备份 到历史明细账余额表
         accDetailBalanceRepository.updateHisData(dto.getYearMonthDate(), accBookType, accBookCode, centerCode, branchCode);
         accDetailBalanceRepository.flush();
+//        accDetailBalanceRepository.qryAccDetailBalanceByYearMonthDate(centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate());
+//        accDetailBalanceRepository.save();
         //将余额表年月改为下个会计期间
         accDetailBalanceRepository.updateYearMonth(newYearMonth, dto.getYearMonthDate(), accBookType, accBookCode, centerCode, branchCode);
         accDetailBalanceRepository.flush();
 
         List<?> adHisList = accDetailBalanceRepository.qryAccDetailBalanceByYearMonthDate(centerCode, branchCode, accBookType, accBookCode, newYearMonth);
         if(adHisList.size() != 0){
+            List<AccDetailBalance> nextADBList = new ArrayList<>();
             for(Object obj : adHisList){
                 if(!"14".equals(dto.getYearMonthDate().substring(4,6)) && !"JS".equals(dto.getYearMonthDate().substring(4,6))){
                     //未跨年，直接生成下月数据
@@ -440,7 +449,9 @@ public class SettlePeriodServiceImpl implements SettlePeriodService{
 
                     nextADB.setCreateBy(String.valueOf(CurrentUser.getCurrentUser().getId()));//创建人
                     nextADB.setCreateTime(CurrentTime.getCurrentTime());//创建时间
-                    accDetailBalanceRepository.save(nextADB);
+
+                    nextADBList.add(nextADB);
+//                    accDetailBalanceRepository.save(nextADB);
 
                 }else{
                     AccDetailBalance nextADB = (AccDetailBalance) obj;
@@ -467,17 +478,21 @@ public class SettlePeriodServiceImpl implements SettlePeriodService{
 
                     nextADB.setCreateBy(String.valueOf(CurrentUser.getCurrentUser().getId()));//创建人
                     nextADB.setCreateTime(CurrentTime.getCurrentTime());//创建时间
-                    accDetailBalanceRepository.save(nextADB);
+
+                    nextADBList.add(nextADB);
+//                    accDetailBalanceRepository.save(nextADB);
                 }
-                accDetailBalanceRepository.flush();
+//                accDetailBalanceRepository.flush();
             }
+            accDetailBalanceRepository.saveAll(nextADBList);
             accDetailBalanceRepository.flush();
         }
 
         //根据yearMonthDate将凭证主表数据备份到历史表中，并将主表数据删除
         //第一步，根据年月将凭证主表信息备份到历史表中
-        accMainVoucherHisRespository.copyToHis(dto.getYearMonthDate(),accBookType, accBookCode, centerCode, branchCode);
-
+//        accMainVoucherHisRespository.copyToHis(dto.getYearMonthDate(),accBookType, accBookCode, centerCode, branchCode);
+//        List<AccMainVoucher> accMainVouchers = accMainVoucherRespository.queryAccMainVoucherByBaseChoose(centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate());
+//        accMainVoucherHisRespository.saveAll();
         //第二步，根据年月将凭证主表信息删除
         accMainVoucherRespository.deleteMainByYmd(dto.getYearMonthDate(), accBookType, accBookCode, centerCode, branchCode);//删除
 

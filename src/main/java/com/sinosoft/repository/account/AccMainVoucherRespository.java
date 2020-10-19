@@ -82,4 +82,16 @@ public interface AccMainVoucherRespository extends BaseRepository<AccMainVoucher
 
     @Query(value = "select * from accmainvoucher a where 1=1 and a.center_code = ?1 and a.branch_code = ?2 and a.acc_book_type = ?3 and a.acc_book_code = ?4 and a.year_month_date = ?5 and a.generate_way = '1' and a.voucher_type = '1'",nativeQuery = true)
     List<AccMainVoucher> queryAccMainVoucherByChooseMessage(String centerCode, String branchCode, String accBookType, String accBookCode, String yearMonthDate);
+
+    /**
+     *  根据月份查询凭证主表的信息。
+     * @param centerCode
+     * @param branchCode
+     * @param accBookType
+     * @param accBookCode
+     * @param yearMonthDate
+     * @return
+     */
+    @Query(value = "select * from accmainvoucher a where 1=1 and a.center_code = ?1 and a.branch_code = ?2 and a.acc_book_type = ?3 and a.acc_book_code = ?4 and a.year_month_date = ?5 ",nativeQuery = true)
+    List<AccMainVoucher> queryAccMainVoucherByBaseChoose(String centerCode, String branchCode, String accBookType, String accBookCode, String yearMonthDate);
 }
