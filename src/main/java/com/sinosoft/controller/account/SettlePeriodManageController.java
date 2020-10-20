@@ -1,9 +1,14 @@
 package com.sinosoft.controller.account;
 
+import com.sinosoft.common.CurrentUser;
 import com.sinosoft.common.InvokeResult;
 import com.sinosoft.common.SysLog;
+import com.sinosoft.domain.account.AccMonthTrace;
+import com.sinosoft.domain.account.AccMonthTraceId;
 import com.sinosoft.dto.account.AccMonthTraceDTO;
+import com.sinosoft.repository.account.AccMonthTraceRespository;
 import com.sinosoft.service.account.SettlePeriodService;
+import com.sinosoft.util.CommonStatusCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -20,6 +25,10 @@ import java.util.List;
 public class SettlePeriodManageController {
     @Resource
     private SettlePeriodService settlePeriodService ;
+
+    @Resource
+    private AccMonthTraceRespository accMonthTraceRespository;
+
     private Logger logger = LoggerFactory.getLogger(SettlePeriodManageController.class);
     @RequestMapping("/")
     public String Page(){
@@ -65,6 +74,9 @@ public class SettlePeriodManageController {
         }
     }
 
+
+
+
     /**
      * 结转
      * @param dto
@@ -74,11 +86,42 @@ public class SettlePeriodManageController {
     @RequestMapping(path = "/settle")
     @ResponseBody
     public InvokeResult settle(AccMonthTraceDTO dto){
+        String centerCode = CurrentUser.getCurrentLoginManageBranch();
+        String accBookType = CurrentUser.getCurrentLoginAccountType();
+        String accBookCode = CurrentUser.getCurrentLoginAccount();
         try {
-            return settlePeriodService.settle(dto);
+            AccMonthTrace accMonthTrace =  accMonthTraceRespository.findAccMonthTraceByYearMonthDate(centerCode,accBookType,accBookCode, dto.getYearMonthDate());
+            if(accMonthTrace.getId().getAccBookCode()!=null){
+                String temp = accMonthTrace.getTemp();
+                if(temp == null){
+                    temp = "0";
+                }
+                if(temp.equals(CommonStatusCode.END_FINAL_CODE_STATUS)){
+                    return InvokeResult.failure("当前正在结转，请不要在点击！");
+                }
+            }else{
+                return InvokeResult.failure("查询不到当前的会计期间。");
+            }
+
+            // 修改状态为2  2 是不进行操作
+            accMonthTrace.setTemp(CommonStatusCode.END_FINAL_CODE_STATUS);
+            accMonthTraceRespository.saveAndFlush(accMonthTrace);
+            accMonthTrace = null;
+            InvokeResult settle = settlePeriodService.settle(dto);
+
+//            AccMonthTrace accMonthTrace1 =  accMonthTraceRespository.findAccMonthTraceByYearMonthDate(centerCode,accBookType,accBookCode, dto.getYearMonthDate());
+//            // 在把状态修改为1 变为可进行操作的。
+//            accMonthTrace1.setTemp(CommonStatusCode.START_FINAL_CODE_STATUS);
+//            accMonthTraceRespository.saveAndFlush(accMonthTrace1);
+//            accMonthTraceRespository.flush();
+            return settle;
         } catch (Exception e) {
             logger.error("结转异常", e);
             return InvokeResult.failure("会计期间结转失败，请联系管理员！");
+        }finally {
+            // 无论是否异常，都需要进行在把状态修改为1 变为可进行操作的。
+            accMonthTraceRespository.updateFlag1AboutTemp(CommonStatusCode.START_FINAL_CODE_STATUS,dto.getYearMonthDate(),centerCode);
+            accMonthTraceRespository.flush();
         }
     }
 
@@ -91,11 +134,34 @@ public class SettlePeriodManageController {
     @RequestMapping(path = "/unSettle")
     @ResponseBody
     public InvokeResult unSettle(AccMonthTraceDTO dto){
+        String centerCode = CurrentUser.getCurrentLoginManageBranch();
+        String accBookType = CurrentUser.getCurrentLoginAccountType();
+        String accBookCode = CurrentUser.getCurrentLoginAccount();
         try {
-            return settlePeriodService.unSettle(dto);
+            AccMonthTrace accMonthTrace =  accMonthTraceRespository.findAccMonthTraceByYearMonthDate(centerCode,accBookType,accBookCode, dto.getYearMonthDate());
+            if(accMonthTrace.getId().getAccBookCode()!=null){
+                String temp = accMonthTrace.getTemp();
+                if(temp == null){
+                    temp = "0";
+                }
+                if(temp.equals(CommonStatusCode.END_FINAL_CODE_STATUS)){
+                    return InvokeResult.failure("当前正在结转，请不要在点击！");
+                }
+            }else{
+                return InvokeResult.failure("查询不到当前的会计期间。");
+            }
+            // 修改状态为2  2 是不进行操作
+            accMonthTraceRespository.updateFlag2AboutTemp(CommonStatusCode.END_FINAL_CODE_STATUS,dto.getYearMonthDate(),centerCode);
+            accMonthTraceRespository.flush();
+            InvokeResult invokeResult = settlePeriodService.unSettle(dto);
+            return invokeResult;
         } catch (Exception e) {
             logger.error("反结转异常", e);
             return InvokeResult.failure("会计期间反结转失败，请联系管理员！");
+        }finally {
+            // 无论是否异常，都需要进行在把状态修改为1 变为可进行操作的。
+            accMonthTraceRespository.updateFlag1AboutTemp(CommonStatusCode.START_FINAL_CODE_STATUS,dto.getYearMonthDate(),centerCode);
+            accMonthTraceRespository.flush();
         }
     }
 

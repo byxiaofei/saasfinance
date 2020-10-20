@@ -6,6 +6,7 @@ import com.sinosoft.repository.BaseRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -61,6 +62,22 @@ public interface AccMonthTraceRespository extends BaseRepository<AccMonthTrace, 
     @Query(value = "update AccMonthTrace set acc_month_stat = '2' , create_by = ?2 , create_time = ?3 , temp = '' where acc_book_type = ?4 and acc_book_code = ?5 and year_month_date = ?1 and center_code = ?6", nativeQuery = true)
     void updateDQFlag2(String yearMonthDate, String createBy, String createTime, String accBookType, String accBookCode, String centerCode);
 
+    /**
+     *  把当前会计月度的 temp 修改为 2 变为不可修改的状态。
+     */
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query(value = "update AccMonthTrace set temp = ?1 where  year_month_date = ?2 and center_code = ?3", nativeQuery = true)
+    void updateFlag2AboutTemp(String temp,String yearMonthDate,String centerCode );
+
+    /**
+     *  把当前会计月度的 temp 修改为 1 变为不可修改的状态。
+     */
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query(value = "update AccMonthTrace set temp = ?1 where  year_month_date = ?2 and center_code = ?3", nativeQuery = true)
+    void updateFlag1AboutTemp(String temp,String yearMonthDate,String centerCode );
+
     // 寻找最大的会计期间月份
     @Query(value = "select * from accmonthtrace a where a.center_code = ?1 and a.acc_book_type = ?2 and a.acc_book_code = ?3 order by a.year_month_date desc limit 1", nativeQuery = true)
     AccMonthTrace findNewestAccMonthTrace(String centerCode, String accBookType, String accBookCode);
@@ -70,6 +87,9 @@ public interface AccMonthTraceRespository extends BaseRepository<AccMonthTrace, 
 
     @Query(value = "select * from accmonthtrace a where a.center_code = ?1 and a.acc_book_type = ?2 and a.acc_book_code = ?3 and a.year_month_date = ?4", nativeQuery = true)
     AccMonthTrace findAccMonthTraceByYearMonthDate(String centerCode, String accBookType, String accBookCode, String yearMonthDate);
+
+    @Query(value = "select * from accmonthtrace a where a.center_code = ?1 and a.year_month_date = ?2", nativeQuery = true)
+    AccMonthTrace findAccMonthTraceByYearMonthDate1(String centerCode, String yearMonthDate);
 
     @Query(value = "select * from accmonthtrace a where a.center_code = ?1 and a.acc_book_type = ?2 and a.acc_book_code = ?3 and acc_month_stat in (?4)", nativeQuery = true)
     List<AccMonthTrace> findAccMonthTraceByAccMonthStat(String centerCode, String accBookType, String accBookCode, String[] accMonthStat);
