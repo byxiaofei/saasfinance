@@ -276,7 +276,7 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
                             adb.setBalanceSource(adb.getBalanceSource().add(debitSource).subtract(creditSource));//原币期末余额
                             //期末+借-贷
                             adb.setBalanceDest(adb.getBalanceDest().add(debitDest).subtract(creditDest));//本位币期末余额
-
+                            adb = null ;
 
                             //判断专项字段是否为空，为空则不处理专项余额表
                             String directionOtherTemp = directionOther;
@@ -321,6 +321,7 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
                                     aa.setBalanceSource(aa.getBalanceSource().add(debitSource).subtract(creditSource));//原币期末余额------------------------
                                     //期末+借-贷
                                     aa.setBalanceDest(aa.getBalanceDest().add(debitDest.subtract(creditDest)));//本位币期末余额
+                                    aa = null ;
 
                                 }else{
                                     //专项余额表中该科目下没有该专项 新增
@@ -1128,6 +1129,11 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
             String branchCode = CurrentUser.getCurrentLoginManageBranch();
             String accBookType = CurrentUser.getCurrentLoginAccountType();
             String accBookCode = CurrentUser.getCurrentLoginAccount();
+            //获取该机构当月全部科目余额数据
+            List<AccDetailBalance> accDetailBalancelList = accDetailBalanceRepository.qryAccDetailBalanceByYearMonthDateAndDirectionIdx(centerCode, branchCode,accBookType, accBookCode, dto.getYearMonthDate());
+            //获取该机构当月全部专项余额数据
+            List<AccArticleBalance> accArticleBalanceList = accArticleBalanceRepository.qryAccArticleBalanceByYearMonthDateAndDirectionIdxAndDirectionOther(centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate());
+
 
             String[] voucherNo=dto.getVoucherNo().split(",");
 
@@ -1240,69 +1246,83 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
                         adbid.setItemCode(itemCode);//科目代码
                         adbid.setDirectionIdx(directionIdx);//科目方向段
 
-
+                        String directionOtherTemp = directionOther;
                         if (directionOther!=null&&!"".equals(directionOther)) {
-                            //专项余额表
-                            AccArticleBalance aa = accArticleBalanceRepository.findById(aaid).get();
+                            Optional<AccArticleBalance> firstAccArticleBalance= accArticleBalanceList.stream()
+                                    .filter(a -> directionIdx.equals(a.getId().getDirectionIdx()))
+                                    .filter(a -> directionOtherTemp.equals(a.getId().getDirectionOther()))
+                                    .findFirst();
+                            if(firstAccArticleBalance.isPresent()){
+                                //专项余额表
+                                AccArticleBalance aa = new AccArticleBalance();
+                                aa = firstAccArticleBalance.get();
 
-                            //当前-借
-                            aa.setDebitSource(aa.getDebitSource().subtract(debitSource));//原币本月借方金额
-                            //当前-贷
-                            aa.setCreditSource(aa.getCreditSource().subtract(creditSource));//原币本月贷方金额
+                                //当前-借
+                                aa.setDebitSource(aa.getDebitSource().subtract(debitSource));//原币本月借方金额
+                                //当前-贷
+                                aa.setCreditSource(aa.getCreditSource().subtract(creditSource));//原币本月贷方金额
 
-                            aa.setDebitSourceQuarter(aa.getDebitSourceQuarter().subtract(new BigDecimal("0.00")));//不填   原币本季借方金额----------------
-                            aa.setCreditSourceQuarter(aa.getCreditSourceQuarter().subtract(new BigDecimal("0.00")));//不填  原币本季贷方金额----------------
+                                aa.setDebitSourceQuarter(aa.getDebitSourceQuarter().subtract(new BigDecimal("0.00")));//不填   原币本季借方金额----------------
+                                aa.setCreditSourceQuarter(aa.getCreditSourceQuarter().subtract(new BigDecimal("0.00")));//不填  原币本季贷方金额----------------
 
-                            //当前-借
-                            aa.setDebitSourceYear(aa.getDebitSourceYear().subtract(debitSource));//原币本年借方金额
-                            //当前-贷
-                            aa.setCreditSourceYear(aa.getCreditSourceYear().subtract(creditSource));//原币本年贷方金额
+                                //当前-借
+                                aa.setDebitSourceYear(aa.getDebitSourceYear().subtract(debitSource));//原币本年借方金额
+                                //当前-贷
+                                aa.setCreditSourceYear(aa.getCreditSourceYear().subtract(creditSource));//原币本年贷方金额
 
-                            //当前-借
-                            aa.setDebitDest(aa.getDebitDest().subtract(debitDest));//本位币本月借方金额 (值同原币)
-                            //当前-贷
-                            aa.setCreditDest(aa.getCreditDest().subtract(creditDest));//本位币本月贷方金额 (值同原币)
+                                //当前-借
+                                aa.setDebitDest(aa.getDebitDest().subtract(debitDest));//本位币本月借方金额 (值同原币)
+                                //当前-贷
+                                aa.setCreditDest(aa.getCreditDest().subtract(creditDest));//本位币本月贷方金额 (值同原币)
 
-                            aa.setDebitDestQuarter(aa.getDebitDestQuarter().subtract(new BigDecimal("0.00")));//本位币本季借方金额-----------------------
-                            aa.setCreditDestQuarter(aa.getCreditDestQuarter().subtract(new BigDecimal("0.00")));//本位币本季贷方金额----------------------
+                                aa.setDebitDestQuarter(aa.getDebitDestQuarter().subtract(new BigDecimal("0.00")));//本位币本季借方金额-----------------------
+                                aa.setCreditDestQuarter(aa.getCreditDestQuarter().subtract(new BigDecimal("0.00")));//本位币本季贷方金额----------------------
 
-                            //当前-借
-                            aa.setDebitDestYear(aa.getDebitDestYear().subtract(debitDest));//本位币本年借方金额--------
-                            //当前-贷
-                            aa.setCreditDestYear(aa.getCreditDestYear().subtract(creditDest));//本位币本年贷方金额------
+                                //当前-借
+                                aa.setDebitDestYear(aa.getDebitDestYear().subtract(debitDest));//本位币本年借方金额--------
+                                //当前-贷
+                                aa.setCreditDestYear(aa.getCreditDestYear().subtract(creditDest));//本位币本年贷方金额------
 
-                            //期末-借+贷
-                            aa.setBalanceSource(aa.getBalanceSource().subtract(debitSource).add(creditSource));//原币期末余额------------------------
+                                //期末-借+贷
+                                aa.setBalanceSource(aa.getBalanceSource().subtract(debitSource).add(creditSource));//原币期末余额------------------------
 
-                            //期末-借+贷
-                            aa.setBalanceDest(aa.getBalanceDest().subtract(debitDest).add(creditDest));//本位币期末余额
+                                //期末-借+贷
+                                aa.setBalanceDest(aa.getBalanceDest().subtract(debitDest).add(creditDest));//本位币期末余额
 
-                            //专项余额表保存
-                            accArticleBalanceRepository.save(aa);
-                            accArticleBalanceRepository.flush();
+                                aa = null;
+                            }else{
+                                return InvokeResult.failure("凭证反记账失败，请联系管理员！");
+                            }
                         }
 
-                        //当月明细账余额表
-                        AccDetailBalance adb = accDetailBalanceRepository.findById(adbid).get();
+                        Optional<AccDetailBalance> firstAccDetailBalance= accDetailBalancelList.stream()
+                                .filter(a -> directionIdx.equals(a.getId().getDirectionIdx()))
+                                .findFirst();
 
-                        adb.setDebitSource(adb.getDebitSource().subtract(debitSource));//原币本月借方金额
-                        adb.setCreditSource(adb.getCreditSource().subtract(creditSource));//原币本月贷方金额
-                        adb.setDebitSourceQuarter(adb.getDebitSourceQuarter().subtract(new BigDecimal("0.00")));//不填   原币本季借方金额
-                        adb.setCreditSourceQuarter(adb.getCreditSourceQuarter().subtract(new BigDecimal("0.00")));//不填  原币本季贷方金额
-                        adb.setDebitSourceYear(adb.getDebitSourceYear().subtract(debitSource));//原币本年借方金额
-                        adb.setCreditSourceYear(adb.getCreditSourceYear().subtract(creditSource));//原币本年贷方金额
-                        adb.setDebitDest(adb.getDebitDest().subtract(debitDest));//本位币本月借方金额
-                        adb.setCreditDest(adb.getCreditDest().subtract(creditDest));//本位币本月贷方金额
-                        adb.setDebitDestQuarter(adb.getDebitDestQuarter().subtract(new BigDecimal("0.00")));//本位币本季借方金额
-                        adb.setCreditDestQuarter(adb.getCreditDestQuarter().subtract(new BigDecimal("0.00")));//本位币本季贷方金额
-                        adb.setDebitDestYear(adb.getDebitDestYear().subtract(debitDest));//本位币本年借方金额
-                        adb.setCreditDestYear(adb.getCreditDestYear().subtract(creditDest));//本位币本年贷方金额
-                        adb.setBalanceSource(adb.getBalanceSource().subtract(debitSource).add(creditSource));//原币期末余额
-                        adb.setBalanceDest(adb.getBalanceDest().subtract(debitDest).add(creditDest));//本位币期末余额
 
-                        //当月明细账余额表保存
-                        accDetailBalanceRepository.save(adb);
-                        accDetailBalanceRepository.flush();
+                        if(firstAccDetailBalance.isPresent()){//不等于0说明已经有该科目
+                                //科目余额表
+                                AccDetailBalance adb = new AccDetailBalance();
+                                adb = firstAccDetailBalance.get();
+
+                                adb.setDebitSource(adb.getDebitSource().subtract(debitSource));//原币本月借方金额
+                                adb.setCreditSource(adb.getCreditSource().subtract(creditSource));//原币本月贷方金额
+                                adb.setDebitSourceQuarter(adb.getDebitSourceQuarter().subtract(new BigDecimal("0.00")));//不填   原币本季借方金额
+                                adb.setCreditSourceQuarter(adb.getCreditSourceQuarter().subtract(new BigDecimal("0.00")));//不填  原币本季贷方金额
+                                adb.setDebitSourceYear(adb.getDebitSourceYear().subtract(debitSource));//原币本年借方金额
+                                adb.setCreditSourceYear(adb.getCreditSourceYear().subtract(creditSource));//原币本年贷方金额
+                                adb.setDebitDest(adb.getDebitDest().subtract(debitDest));//本位币本月借方金额
+                                adb.setCreditDest(adb.getCreditDest().subtract(creditDest));//本位币本月贷方金额
+                                adb.setDebitDestQuarter(adb.getDebitDestQuarter().subtract(new BigDecimal("0.00")));//本位币本季借方金额
+                                adb.setCreditDestQuarter(adb.getCreditDestQuarter().subtract(new BigDecimal("0.00")));//本位币本季贷方金额
+                                adb.setDebitDestYear(adb.getDebitDestYear().subtract(debitDest));//本位币本年借方金额
+                                adb.setCreditDestYear(adb.getCreditDestYear().subtract(creditDest));//本位币本年贷方金额
+                                adb.setBalanceSource(adb.getBalanceSource().subtract(debitSource).add(creditSource));//原币期末余额
+                                adb.setBalanceDest(adb.getBalanceDest().subtract(debitDest).add(creditDest));//本位币期末余额
+                                adb = null ;
+                        }else{
+                            return InvokeResult.failure("凭证反记账失败，请联系管理员！");
+                        }
                     }
 
                     am.setVoucherFlag("2");//设置为未记账
@@ -1330,6 +1350,8 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
                     voucherRepository.flush();
                 }
             }
+            accArticleBalanceRepository.saveAll(accArticleBalanceList);
+            accDetailBalanceRepository.saveAll(accDetailBalancelList);
             if (!"".equals(result)) {
                 if (result.split(",").length!=voucherNo.length) {
                     return InvokeResult.success("凭证部分反记账成功，反记账失败凭证："+result+"，原因是：反记账人与记账人不一致！");
