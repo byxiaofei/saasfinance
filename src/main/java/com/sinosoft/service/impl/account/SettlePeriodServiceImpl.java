@@ -490,7 +490,7 @@ public class SettlePeriodServiceImpl implements SettlePeriodService{
 
         //根据yearMonthDate将凭证主表数据备份到历史表中，并将主表数据删除
         //第一步，根据年月将凭证主表信息备份到历史表中
-//        accMainVoucherHisRespository.copyToHis(dto.getYearMonthDate(),accBookType, accBookCode, centerCode, branchCode);
+        accMainVoucherHisRespository.copyToHis(dto.getYearMonthDate(),accBookType, accBookCode, centerCode, branchCode);
 //        List<AccMainVoucher> accMainVouchers = accMainVoucherRespository.queryAccMainVoucherByBaseChoose(centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate());
 //        accMainVoucherHisRespository.saveAll();
         //第二步，根据年月将凭证主表信息删除
