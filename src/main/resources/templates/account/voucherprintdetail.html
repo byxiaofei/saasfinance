@@ -97,8 +97,11 @@
                 if (i!=0 || (i!=0 && j!=0)) {parentDiv.append('<div style="page-break-after:always">');}
                 //追加头部信息
                 var vno = result[i].voucherNo;
+                // 这里说明有1页以上的内容。
                 if (page!=1) {vno = vno+'-'+(j+1)+'/'+page;}
+                // 定义头信息。
                 parentDiv.append(printTableHeader(result[i].voucherDate, result[i].centerCode, vno));
+                // 凭证明细分录条数
                 parentDiv.append('<table id = "print_dg_' + printLength + '" style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"></table>');
                 var flag = false;//false表示无需追加合计项
                 for(var k=0;k<pageAndRows;k++){
@@ -140,7 +143,10 @@
     }
     function printTableFooter(geneByName, approveByName, createByName) {
         var footer = '<table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"><tr><td style="width:10%;text-align: right;" ><label>记账：</label></td><td style="width:13%;"><span>'+geneByName+'</span></td><td style="width:10%;text-align: right;" ><label>复核：</label></td><td style="width:13%;"><span>'+approveByName+'</span></td><td style="width:10%;text-align: right;" ><label>制单：</label></td><td style="width:13%;"><span>'+createByName+'</span></td></tr></table>';
-        return footer;
+        // 这里是为了顶格，能够让每张凭证都保证在一张页面中。如果增加了凭证分录行那么可以选择合理去掉br，
+        // 当前分录行为10，这里的br是4个。凭证头，凭证尾，可根据实际情况调整。
+        var footer1 = '<br></br><br></br><br></br><br></br>';
+        return footer+footer1;
     }
     function setPrintContentValue(result, pageAndRows) {
         var printLength = 0;
@@ -212,10 +218,11 @@
         var printLength = 0;//代表本次打印总共多少打印凭证（每页1张）
         for(var i=0;i<result.length;i++){
             //每次循环一张完整的凭证打印数据
-            var suffix = result[i].suffix;//第 i 张凭证的所有分录信息
+            var suffix = result[i].suffix;//第 i 张凭证的所有分录信息 例如这里是20条分录，
             var currentSuffixNum = 0;
             var suffixLength = suffix.length;
-            var page = 0;//该凭证需要多少张打印凭证的张数,每页张不超过6条分录，如果整整6条，由于存在合计项所以页数需要加1
+            var page = 0;//该凭证需要多少张打印凭证的张数,每页张不超过10条分录，如果整整10条，由于存在合计项所以页数需要加1
+            // 以 10 为基准，计算总共页数。
             if (suffixLength) {page = parseInt(suffixLength/pageAndRows) +1;}
 
             for(var j=0;j<page;j++){
@@ -227,6 +234,7 @@
                 var vno = result[i].voucherNo;
                 if (page!=1) {vno = vno+'-'+(j+1)+'/'+page;}
                 parentDiv.append(printTableHeader(result[i].voucherDate, result[i].centerCode, vno));
+                // 追加分录行
                 parentDiv.append('<table id = "print_dg_' + printLength + '" cellspacing="0" cellpadding="0" style="height: auto; border-collapse: collapse; width:100%;"></table>');
                 var flag = false;//false表示无需追加合计项
 
