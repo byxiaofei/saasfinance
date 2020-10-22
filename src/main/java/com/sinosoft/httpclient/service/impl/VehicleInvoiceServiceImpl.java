@@ -504,25 +504,31 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
 
     public String recursiveCalls(String centerCode,String accBookType,String accBookCode,String yearMonth){
         //  查询会计月底第一条
-        AccMonthTrace newestAccMonthTrace = accMonthTraceRespository.findNewestAccMonthTrace(centerCode, accBookType, accBookCode);
-        AccMonthTrace newestAccMonthTraceASC = accMonthTraceRespository.findNewestAccMonthTraceASC(centerCode, accBookType, accBookCode);
-        String yearMonthDateAboutSql = newestAccMonthTrace.getId().getYearMonthDate();
-        String yearMonthDateAboutSqlAsc = newestAccMonthTraceASC.getId().getYearMonthDate();
-        SimpleDateFormat sdfNew = new SimpleDateFormat("yyyyMM");
         try {
-            Date accountDate = sdfNew.parse(yearMonthDateAboutSql);// 账务年月
-            Date bussinessDate = sdfNew.parse(yearMonth);// 业务年月
-            Date accountDateAsc = sdfNew.parse(yearMonthDateAboutSqlAsc);
-            // 业务年月大于账务年月。则需要进行库表新增。其他则不用管。
-            if(accountDate.getTime() < bussinessDate.getTime()){
+            AccMonthTrace newestAccMonthTrace = accMonthTraceRespository.findNewestAccMonthTrace(centerCode, accBookType, accBookCode);
+            String yearMonthDateAboutSql = newestAccMonthTrace.getId().getYearMonthDate();
+            String substringAboutAccount = yearMonthDateAboutSql.substring(0, 4);
+            String substringAboutBussiness = yearMonth.substring(0, 4);
+            String substringAboutAccountFiveToSeven = yearMonthDateAboutSql.substring(4,6);
+            String substringAboutBussinessFiveToSeven = yearMonth.substring(4,6);
+
+            // 如果 202014 就大於202101 下面判斷就有問題
+            // 如果這兩個年相等，看他們的月份大小。
+            if(substringAboutAccount.equals(substringAboutBussiness)){
+                // 業務沒有賬務大，需要開啟會計期間。
+                if(Integer.valueOf(substringAboutAccountFiveToSeven) < Integer.valueOf(substringAboutBussinessFiveToSeven)){
+                    settlePeriodService.addToAndSave(centerCode, accBookType, accBookCode);
+                    return recursiveCalls(centerCode,accBookType,accBookCode,yearMonth);
+                }else {
+                    return "final";
+                }
+            }else if(Integer.valueOf(substringAboutAccount) < Integer.valueOf(substringAboutBussiness)){
                 settlePeriodService.addToAndSave(centerCode, accBookType, accBookCode);
                 return recursiveCalls(centerCode,accBookType,accBookCode,yearMonth);
-            }else if (accountDateAsc.getTime() > bussinessDate.getTime()){
-                return "fail";
             }else{
                 return "final";
             }
-        } catch (ParseException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return "error";
         }

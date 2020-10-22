@@ -875,8 +875,8 @@ public class SettlePeriodServiceImpl implements SettlePeriodService{
         AccGCheckInfoId agid = new AccGCheckInfoId();
         agid.setCenterCode(centerCode);
         agid.setYearMonthDate(dto.getYearMonthDate());
-        agid.setAccBookType(CurrentUser.getCurrentLoginAccountType());
-        agid.setAccBookCode(CurrentUser.getCurrentLoginAccount());
+        agid.setAccBookType(accBookType);
+        agid.setAccBookCode(accBookCode);
         AccGCheckInfo ag = new AccGCheckInfo();
         ag.setId(agid);
         ag.setFlag("0");//未计提
@@ -893,8 +893,8 @@ public class SettlePeriodServiceImpl implements SettlePeriodService{
         AccWCheckInfoId awid = new AccWCheckInfoId();
         awid.setCenterCode(centerCode);
         awid.setYearMonthDate(dto.getYearMonthDate());
-        awid.setAccBookType(CurrentUser.getCurrentLoginAccountType());
-        awid.setAccBookCode(CurrentUser.getCurrentLoginAccount());
+        awid.setAccBookType(accBookType);
+        awid.setAccBookCode(accBookCode);
         AccWCheckInfo aw = new AccWCheckInfo();
         aw.setId(awid);
         aw.setFlag("0");//未计提
@@ -909,8 +909,8 @@ public class SettlePeriodServiceImpl implements SettlePeriodService{
         //对账信息表追加数据
         AccMonthTraceId newID = new AccMonthTraceId();
         newID.setCenterCode(centerCode);
-        newID.setAccBookType(CurrentUser.getCurrentLoginAccountType());
-        newID.setAccBookCode(CurrentUser.getCurrentLoginAccount());
+        newID.setAccBookType(accBookType);
+        newID.setAccBookCode(accBookCode);
         newID.setYearMonthDate(dto.getYearMonthDate());
         AccCheckInfo accCheckInfo = new AccCheckInfo();
         accCheckInfo.setId(newID);
@@ -929,8 +929,8 @@ public class SettlePeriodServiceImpl implements SettlePeriodService{
 
         //保存凭证最大号
         AccVoucherNoId avnid = new AccVoucherNoId();
-        avnid.setAccBookCode(CurrentUser.getCurrentLoginAccount());
-        avnid.setAccBookType(CurrentUser.getCurrentLoginAccountType());
+        avnid.setAccBookCode(accBookCode);
+        avnid.setAccBookType(accBookType);
         avnid.setCenterCode(centerCode);
         avnid.setYearMonthDate(dto.getYearMonthDate());
 
