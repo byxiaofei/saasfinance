@@ -145,8 +145,9 @@
         var footer = '<table style="height: auto; width:100%; padding: 8px 0px 0px 0px;overflow: hidden;"><tr><td style="width:10%;text-align: right;" ><label>记账：</label></td><td style="width:13%;"><span>'+geneByName+'</span></td><td style="width:10%;text-align: right;" ><label>复核：</label></td><td style="width:13%;"><span>'+approveByName+'</span></td><td style="width:10%;text-align: right;" ><label>制单：</label></td><td style="width:13%;"><span>'+createByName+'</span></td></tr></table>';
         // 这里是为了顶格，能够让每张凭证都保证在一张页面中。如果增加了凭证分录行那么可以选择合理去掉br，
         // 当前分录行为10，这里的br是4个。凭证头，凭证尾，可根据实际情况调整。
-        var footer1 = '<br></br><br></br><br></br><br></br>';
-        return footer+footer1;
+        // var footer1 = '<br></br><br></br><br></br>';
+        // return footer+footer1;
+        return footer;
     }
     function setPrintContentValue(result, pageAndRows) {
         var printLength = 0;
