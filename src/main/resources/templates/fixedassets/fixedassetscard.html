@@ -244,7 +244,7 @@
                     </td>
                     <td style="width:15%;text-align: right;" class="ttd ltd"><label>进项税额<span style="color: red">*</span>:</label></td>
                     <td class="ttd rtd">
-                        <input class="easyui-numberbox" id="inputTax" name="inputTax" data-options="prompt:'系统自动计算',required:true,precision:2,groupSeparator:','" />
+                        <input class="easyui-numberbox" id="inputTax" name="inputTax" data-options="prompt:'进项税额',required:true,precision:2,groupSeparator:','" />
                     </td>
                 </tr>
                 <tr>
@@ -1124,7 +1124,7 @@
         $('#depreFromDate').textbox({readonly:true});//折旧起始日期 只读
         $('#depreToDate').textbox({readonly: true});//已折旧至日期 只读
         $('#assetNetValue').numberbox({readonly: true});
-        $('#inputTax').numberbox({readonly: true});
+        // $('#inputTax').numberbox({readonly: true});
         $('#remainsValue').numberbox({readonly: true});
         $('#sum').numberbox({readonly: true});
         $('#depType').combobox({readonly:true});//折旧方法
@@ -1245,7 +1245,7 @@
         $('#depreFromDate').textbox({readonly:true});//折旧起始日期 只读
         $('#depreToDate').textbox({readonly: true});//已折旧至日期 只读
         $('#assetNetValue').numberbox({readonly: true});
-        $('#inputTax').numberbox({readonly: true});
+        //$('#inputTax').numberbox({readonly: true});
         $('#remainsValue').numberbox({readonly: true});
         $('#sum').numberbox({readonly: true});
         $('#assetCode').textbox({readonly: true});//固定资产编号 只读
@@ -1325,7 +1325,7 @@
         $('#depreToDate').textbox({readonly: true});//已折旧至日期 只读
         $('#payWay').textbox({readonly: true});//付款方式设置为银行存款，并不可更改
         $('#assetNetValue').numberbox({readonly: true});
-        $('#inputTax').numberbox({readonly: true});
+        //$('#inputTax').numberbox({readonly: true});
         $('#remainsValue').numberbox({readonly: true});
         $('#sum').numberbox({readonly: true});
         $('#assetCode').textbox({readonly: true});//固定资产编号 只读
@@ -1577,16 +1577,18 @@
         $('#assetNetValue').numberbox("setValue", formatNumber(decimalSub(decimalSub(assetOriginValue, initDepreMoney), impairment), 2, 0));
         $('#assetNetValue').numberbox({readonly: true});
 
-        //进项税额=【原值/(1+增值税率)】*增值税率
-        $('#inputTax').numberbox("setValue", formatNumber(decimalMulti(decimalDiv(assetOriginValue, decimalAdd(1, addedTax)), addedTax), 2, 0));
-        $('#inputTax').numberbox({readonly: true});
+        // //进项税额=【原值/(1+增值税率)】*增值税率
+        // $('#inputTax').numberbox("setValue", formatNumber(decimalMulti(decimalDiv(assetOriginValue, decimalAdd(1, addedTax)), addedTax), 2, 0));
+        // $('#inputTax').numberbox({readonly: true});true
 
         //预计残值=原值*预计残值率
         $('#remainsValue').numberbox("setValue", formatNumber(decimalMulti(assetOriginValue, remainsRate), 2, 0));
         $('#remainsValue').numberbox({readonly: true});
 
         //金额=原值-进项税额
-        $('#sum').numberbox("setValue", formatNumber(decimalSub(assetOriginValue, decimalMulti(decimalDiv(assetOriginValue, decimalAdd(1, addedTax)), addedTax)), 2, 0));
+        //2020 修改 金额=原值
+      //  $('#sum').numberbox("setValue", formatNumber(decimalSub(assetOriginValue, decimalMulti(decimalDiv(assetOriginValue, decimalAdd(1, addedTax)), addedTax)), 2, 0));
+        $('#sum').numberbox("setValue", formatNumber(assetOriginValue, 2, 0));
         $('#sum').numberbox({readonly: true});
 
     }
