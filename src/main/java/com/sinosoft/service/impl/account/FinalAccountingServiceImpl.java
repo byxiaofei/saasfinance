@@ -161,32 +161,14 @@ public class FinalAccountingServiceImpl implements FinalAccountingService{
 
         String year = dto.getYearMonthDate().substring(0, 4);
 
-        StringBuffer sql = new StringBuffer();
-        sql.append(" select * from accmonthtrace a where 1=1");
-
-        int paramsNo = 1;
-        Map<Integer, Object> params = new HashMap<>();
-
-        sql.append(" and a.center_code = ?" + paramsNo);
-        params.put(paramsNo, centerCode);
-        paramsNo++;
-        sql.append(" and a.acc_book_type = ?" + paramsNo);
-        params.put(paramsNo, accBookType);
-        paramsNo++;
-        sql.append(" and a.acc_book_code = ?" + paramsNo);
-        params.put(paramsNo, accBookCode);
-        paramsNo++;
-        sql.append(" and a.year_month_date = ?" + paramsNo);
-        params.put(paramsNo, dto.getYearMonthDate());
-        paramsNo++;
-
-        List<?> ymdList = accMonthTraceRespository.queryBySql(sql.toString(), params, AccMonthTrace.class);
+        // 1.判断月度表信息是否结转。
+        List<AccMonthTrace> ymdList = judgeAccMonthTraceMessage(dto,centerCode,branchCode,accBookCode,accBookType);
         if(ymdList!=null&&ymdList.size()!=0){
             if("3".equals(((AccMonthTrace)ymdList.get(0)).getAccMonthStat())){
                 return InvokeResult.failure("当前会计期间已结转，不可生成决算凭证");
             }
         }
-        //再判断有无决算凭证
+        // 1.再判断有无决算凭证
         AccMainVoucher finanAccMainVoucher = accMainVoucherRespository.qryFinanAccMainVoucher(centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate());
         if (finanAccMainVoucher!=null) {
             return InvokeResult.failure("当前会计期间已生成决算凭证，不可重复生成");
@@ -205,115 +187,22 @@ public class FinalAccountingServiceImpl implements FinalAccountingService{
         }
 
         //2.判断14月份是否全部记账
-        sql.setLength(0);
-        sql.append("select * from accmainvoucher a where 1=1");
-
-        paramsNo = 1;
-        params = new HashMap<>();
-
-        sql.append(" and a.center_code = ?" + paramsNo);
-        params.put(paramsNo, centerCode);
-        paramsNo++;
-        sql.append(" and a.branch_code = ?" + paramsNo);
-        params.put(paramsNo, branchCode);
-        paramsNo++;
-        sql.append(" and a.acc_book_type = ?" + paramsNo);
-        params.put(paramsNo, accBookType);
-        paramsNo++;
-        sql.append(" and a.acc_book_code = ?" + paramsNo);
-        params.put(paramsNo, accBookCode);
-        paramsNo++;
-        sql.append(" and a.year_month_date = ?" + paramsNo);
-        params.put(paramsNo, dto.getYearMonthDate());
-        paramsNo++;
-
-        sql.append(" and a.voucher_flag != '3'");
-
-        List<?>  accMainVoucherList2= accMainVoucherRespository.queryBySql(sql.toString(), params, AccMainVoucher.class);
+        List<AccMainVoucher> accMainVoucherList2 = judgeAccMainVoucherMessage(dto, centerCode, branchCode, accBookCode, accBookType);
         if (accMainVoucherList2!=null&&accMainVoucherList2.size()>0) {
             return InvokeResult.failure("当前会计期间存在未记账凭证");
         }
-        //3.分别查询出所有14月科目余额不为0、专项科目余额不为0的损益类科目；
+        //3.分别查询出所有14月科目余额不为0、专项科目余额不为0的 损益类科目；
         //  同时查询出损益结转科目设置表数据，再判断这些损益类科目是否均进行了损益结转科目设置
-        StringBuffer subjectBalanceSql = new StringBuffer("SELECT * FROM accdetailbalance a WHERE 1=1");
-
-        paramsNo = 1;
-        params = new HashMap<>();
-
-        subjectBalanceSql.append(" AND a.center_code = ?" + paramsNo);
-        params.put(paramsNo, centerCode);
-        paramsNo++;
-        subjectBalanceSql.append(" AND a.branch_code = ?" + paramsNo);
-        params.put(paramsNo, branchCode);
-        paramsNo++;
-        subjectBalanceSql.append(" AND a.acc_book_type = ?" + paramsNo);
-        params.put(paramsNo, accBookType);
-        paramsNo++;
-        subjectBalanceSql.append(" AND a.acc_book_code = ?" + paramsNo);
-        params.put(paramsNo, accBookCode);
-        paramsNo++;
-        subjectBalanceSql.append(" AND a.year_month_date = ?" + paramsNo);
-        params.put(paramsNo, dto.getYearMonthDate());
-        paramsNo++;
-
-        subjectBalanceSql.append(" AND a.balance_dest !=0.00");
-        subjectBalanceSql.append(" AND a.direction_idx IN(SELECT CONCAT(s.all_subject,s.subject_code,'/') AS subjectCode FROM subjectinfo s WHERE 1=1");
-
-        subjectBalanceSql.append(" AND s.account = ?" + paramsNo);
-        params.put(paramsNo, accBookCode);
-        paramsNo++;
-
-        subjectBalanceSql.append(" AND s.subject_type = '4' AND s.end_flag = '0' AND s.useflag = '1' AND (s.special_id IS NULL OR s.special_id = '') ORDER BY subjectCode)");
-
-
-        StringBuffer specialBalanceSql = new StringBuffer("SELECT * FROM accarticlebalance a WHERE 1=1");
-
-        int paramsNo2 = 1;
-        Map<Integer, Object> params2 = new HashMap<>();
-
-        specialBalanceSql.append(" AND a.center_code = ?" + paramsNo2);
-        params2.put(paramsNo2, centerCode);
-        paramsNo2++;
-        specialBalanceSql.append(" AND a.branch_code = ?" + paramsNo2);
-        params2.put(paramsNo2, branchCode);
-        paramsNo2++;
-        specialBalanceSql.append(" AND a.acc_book_type = ?" + paramsNo2);
-        params2.put(paramsNo2, accBookType);
-        paramsNo2++;
-        specialBalanceSql.append(" AND a.acc_book_code = ?" + paramsNo2);
-        params2.put(paramsNo2, accBookCode);
-        paramsNo2++;
-        specialBalanceSql.append(" AND a.year_month_date = ?" + paramsNo2);
-        params2.put(paramsNo2, dto.getYearMonthDate());
-        paramsNo2++;
-
-        specialBalanceSql.append(" AND a.balance_dest !=0.00");
-        specialBalanceSql.append(" AND a.direction_idx IN(SELECT CONCAT(s.all_subject,s.subject_code,'/') AS subjectCode FROM subjectinfo s WHERE 1=1");
-
-        specialBalanceSql.append(" AND s.account = ?" + paramsNo2);
-        params2.put(paramsNo2, accBookCode);
-        paramsNo2++;
-
-        specialBalanceSql.append(" AND s.subject_type = '4' AND s.end_flag = '0' AND s.useflag = '1' AND s.special_id IS NOT NULL AND s.special_id != '' ORDER BY subjectCode)");
-
-        sql.setLength(0);
-        sql.append("SELECT p.profit_loss_code,p.account,p.rights_interests_code,p.create_by,p.create_time,p.last_modify_by,p.last_modify_time,s.subject_name AS temp FROM profitlosscarrydownsubject p LEFT JOIN subjectinfo s ON s.account = p.account AND CONCAT(s.all_subject,s.subject_code,'/') = p.rights_interests_code WHERE 1=1");
-        int paramsNo3 = 1;
-        Map<Integer, Object> params3 = new HashMap<>();
-        sql.append(" AND p.account = ?" + paramsNo3);
-        params3.put(paramsNo3, accBookCode);
-        paramsNo3++;
 
         //科目余额非0的科目数据集合
-        List<AccDetailBalance> subjectBalanceList = (List<AccDetailBalance>) accDetailBalanceHisRespository.queryBySql(subjectBalanceSql.toString(), params, AccDetailBalance.class);
+        List<AccDetailBalance> subjectBalanceList = queryAccDetailBalanceNonzero(dto,centerCode,branchCode,accBookCode,accBookType);
         //专项科目余额非0的专项科目数据集合
-        List<AccArticleBalance> specialBalanceList = (List<AccArticleBalance>) accArticleBalanceHisRespository.queryBySql(specialBalanceSql.toString(), params2, AccArticleBalance.class);
+        List<AccArticleBalance> specialBalanceList = queryAccArticleBalanceNonzero(dto,centerCode,branchCode,accBookCode,accBookType);
         //损益结转科目设置数据集合
-        List<ProfitLossCarryDownSubject> PLCDSubjectList = (List<ProfitLossCarryDownSubject>) profitLossCarryDownSubjectRepository.queryBySql(sql.toString(), params3, ProfitLossCarryDownSubject.class);
-
+        List<ProfitLossCarryDownSubject> PLCDSubjectList = queryProfitLossCarryDownSubjectMessage(accBookCode);
         if ((subjectBalanceList!=null&&subjectBalanceList.size()>0) || (specialBalanceList!=null&&specialBalanceList.size()>0)) {
 
-            sql.setLength(0);
+            StringBuffer sql = new StringBuffer();
             sql.append("SELECT a.segment_flag AS segmentFlag,a.segment_col AS segmentCol,a.segment_name AS segmentName FROM accsegmentdefine a");
             List<?> accsegmentdefineList = voucherRepository.queryBySqlSC(sql.toString());
             Map<String, String> accsegmentdefineMap = new HashMap<>();
@@ -687,5 +576,157 @@ public class FinalAccountingServiceImpl implements FinalAccountingService{
         return InvokeResult.success();
     }
 
+    /**
+     *  判断月度表信息是否存在
+     * @return
+     */
+    private  List<AccMonthTrace>  judgeAccMonthTraceMessage(AccMonthTraceDTO dto,String centerCode,String branchCode,String accBookCode,String accBookType) {
+        StringBuffer sql = new StringBuffer();
+        int paramsNo = 1;
+        Map<Integer, Object> params = new HashMap<>();
 
+        sql.append(" select * from accmonthtrace a where 1=1");
+        sql.append(" and a.center_code = ?" + paramsNo);
+        params.put(paramsNo, centerCode);
+        paramsNo++;
+        sql.append(" and a.acc_book_type = ?" + paramsNo);
+        params.put(paramsNo, accBookType);
+        paramsNo++;
+        sql.append(" and a.acc_book_code = ?" + paramsNo);
+        params.put(paramsNo, accBookCode);
+        paramsNo++;
+        sql.append(" and a.year_month_date = ?" + paramsNo);
+        params.put(paramsNo, dto.getYearMonthDate());
+        paramsNo++;
+
+        List<?> ymdList = accMonthTraceRespository.queryBySql(sql.toString(), params, AccMonthTrace.class);
+        List<AccMonthTrace> ymdListFinal = (List<AccMonthTrace>) ymdList;
+        return ymdListFinal;
+    }
+
+    /**
+     * 判断是否存在决算凭证信息
+     * @return
+     */
+    private List<AccMainVoucher> judgeAccMainVoucherMessage(AccMonthTraceDTO dto,String centerCode,String branchCode,String accBookCode,String accBookType){
+        StringBuffer sql = new StringBuffer();
+        int paramsNo = 1;
+        Map<Integer, Object> params = new HashMap<>();
+
+        sql.append("select * from accmainvoucher a where 1=1");
+
+        sql.append(" and a.center_code = ?" + paramsNo);
+        params.put(paramsNo, centerCode);
+        paramsNo++;
+        sql.append(" and a.branch_code = ?" + paramsNo);
+        params.put(paramsNo, branchCode);
+        paramsNo++;
+        sql.append(" and a.acc_book_type = ?" + paramsNo);
+        params.put(paramsNo, accBookType);
+        paramsNo++;
+        sql.append(" and a.acc_book_code = ?" + paramsNo);
+        params.put(paramsNo, accBookCode);
+        paramsNo++;
+        sql.append(" and a.year_month_date = ?" + paramsNo);
+        params.put(paramsNo, dto.getYearMonthDate());
+        paramsNo++;
+
+        sql.append(" and a.voucher_flag != '3'");
+        List<?> ymdList = accMonthTraceRespository.queryBySql(sql.toString(), params, AccMonthTrace.class);
+        List<AccMainVoucher> ymdListFinal = (List<AccMainVoucher>) ymdList;
+        return ymdListFinal;
+    }
+
+    /**
+     * 科目余额表非零的信息
+     * @return
+     */
+    private List<AccDetailBalance> queryAccDetailBalanceNonzero(AccMonthTraceDTO dto,String centerCode,String branchCode,String accBookCode,String accBookType){
+
+        int paramsNo = 1;
+        Map<Integer, Object> params = new HashMap<>();
+        StringBuffer subjectBalanceSql = new StringBuffer("SELECT * FROM accdetailbalance a WHERE 1=1");
+        subjectBalanceSql.append(" AND a.center_code = ?" + paramsNo);
+        params.put(paramsNo, centerCode);
+        paramsNo++;
+        subjectBalanceSql.append(" AND a.branch_code = ?" + paramsNo);
+        params.put(paramsNo, branchCode);
+        paramsNo++;
+        subjectBalanceSql.append(" AND a.acc_book_type = ?" + paramsNo);
+        params.put(paramsNo, accBookType);
+        paramsNo++;
+        subjectBalanceSql.append(" AND a.acc_book_code = ?" + paramsNo);
+        params.put(paramsNo, accBookCode);
+        paramsNo++;
+        subjectBalanceSql.append(" AND a.year_month_date = ?" + paramsNo);
+        params.put(paramsNo, dto.getYearMonthDate());
+        paramsNo++;
+
+        subjectBalanceSql.append(" AND a.balance_dest !=0.00");
+        subjectBalanceSql.append(" AND a.direction_idx IN(SELECT CONCAT(s.all_subject,s.subject_code,'/') AS subjectCode FROM subjectinfo s WHERE 1=1");
+
+        subjectBalanceSql.append(" AND s.account = ?" + paramsNo);
+        params.put(paramsNo, accBookCode);
+        paramsNo++;
+
+        subjectBalanceSql.append(" AND s.subject_type = '4' AND s.end_flag = '0' AND s.useflag = '1' AND (s.special_id IS NULL OR s.special_id = '') ORDER BY subjectCode)");
+        List<AccDetailBalance> subjectBalanceList = (List<AccDetailBalance>) accDetailBalanceHisRespository.queryBySql(subjectBalanceSql.toString(), params, AccDetailBalance.class);
+        return  subjectBalanceList;
+    }
+
+    /**
+     * 专项余额表非零的信息
+     * @return
+     */
+    private List<AccArticleBalance> queryAccArticleBalanceNonzero(AccMonthTraceDTO dto,String centerCode,String branchCode,String accBookCode,String accBookType){
+
+        StringBuffer specialBalanceSql = new StringBuffer("SELECT * FROM accarticlebalance a WHERE 1=1");
+
+        int paramsNo2 = 1;
+        Map<Integer, Object> params2 = new HashMap<>();
+
+        specialBalanceSql.append(" AND a.center_code = ?" + paramsNo2);
+        params2.put(paramsNo2, centerCode);
+        paramsNo2++;
+        specialBalanceSql.append(" AND a.branch_code = ?" + paramsNo2);
+        params2.put(paramsNo2, branchCode);
+        paramsNo2++;
+        specialBalanceSql.append(" AND a.acc_book_type = ?" + paramsNo2);
+        params2.put(paramsNo2, accBookType);
+        paramsNo2++;
+        specialBalanceSql.append(" AND a.acc_book_code = ?" + paramsNo2);
+        params2.put(paramsNo2, accBookCode);
+        paramsNo2++;
+        specialBalanceSql.append(" AND a.year_month_date = ?" + paramsNo2);
+        params2.put(paramsNo2, dto.getYearMonthDate());
+        paramsNo2++;
+
+        specialBalanceSql.append(" AND a.balance_dest !=0.00");
+        specialBalanceSql.append(" AND a.direction_idx IN(SELECT CONCAT(s.all_subject,s.subject_code,'/') AS subjectCode FROM subjectinfo s WHERE 1=1");
+
+        specialBalanceSql.append(" AND s.account = ?" + paramsNo2);
+        params2.put(paramsNo2, accBookCode);
+        paramsNo2++;
+
+        specialBalanceSql.append(" AND s.subject_type = '4' AND s.end_flag = '0' AND s.useflag = '1' AND s.special_id IS NOT NULL AND s.special_id != '' ORDER BY subjectCode)");
+        List<AccArticleBalance> specialBalanceList = (List<AccArticleBalance>) accArticleBalanceHisRespository.queryBySql(specialBalanceSql.toString(), params2, AccArticleBalance.class);
+        return specialBalanceList;
+    }
+
+    /**
+     * 损益结转科目设置数据集合
+     * @param accBookCode
+     * @return
+     */
+    private List<ProfitLossCarryDownSubject> queryProfitLossCarryDownSubjectMessage(String accBookCode) {
+        StringBuffer sql = new StringBuffer();
+        sql.append("SELECT p.profit_loss_code,p.account,p.rights_interests_code,p.create_by,p.create_time,p.last_modify_by,p.last_modify_time,s.subject_name AS temp FROM profitlosscarrydownsubject p LEFT JOIN subjectinfo s ON s.account = p.account AND CONCAT(s.all_subject,s.subject_code,'/') = p.rights_interests_code WHERE 1=1");
+        int paramsNo3 = 1;
+        Map<Integer, Object> params3 = new HashMap<>();
+        sql.append(" AND p.account = ?" + paramsNo3);
+        params3.put(paramsNo3, accBookCode);
+        paramsNo3++;
+        List<ProfitLossCarryDownSubject> PLCDSubjectList = (List<ProfitLossCarryDownSubject>) profitLossCarryDownSubjectRepository.queryBySql(sql.toString(), params3, ProfitLossCarryDownSubject.class);
+        return PLCDSubjectList;
+    }
 }
