@@ -98,19 +98,25 @@ public class ProfitLossCarryDownSubjectServiceImpl implements ProfitLossCarryDow
     }
 
     @Override
-    @Transactional
+    @Transactional   //String profitLossCodes, String rightsInterestsCode
     public void saveProfitLossCarryDownSubject(ProfitLossCarryDownSubjectDTO dto){
+        //  判断损益科目是否为空
         if (dto.getProfitLossCode()!=null && !"".equals(dto.getProfitLossCode())) {
             //先查询存不存在，若不存在则按新增处理，否则按修改处理
             ProfitLossCarryDownSubject p = null;
+            //  创建损益科目id，参数1：损益科目代码，参数2：账套编码
             ProfitLossCarryDownSubjectId id = new ProfitLossCarryDownSubjectId(dto.getProfitLossCode()+"/", CurrentUser.getCurrentLoginAccount());
             try {
+                //  根据联损益科目代码，参数2：账套编码
                 p = profitLossCarryDownSubjectRepository.findById(id).get();
             } catch (Exception e) {
                 System.out.println("当前编辑的损益结转科目不存在，按新增处理");
             }
+            //  如果查出数据
             if (p!=null) {//修改
+                //  判断数据库总的本年利润科目和dto传过来的是否一致
                 if (p.getRightsInterestsCode().equals(dto.getRightsInterestsCode())) {
+                    //  如果一致
                     System.out.println("当前编辑的损益结转科目的本年利润科目与原数据相同，不做修改处理");
                 } else {
                     p.setRightsInterestsCode(dto.getRightsInterestsCode());
@@ -124,26 +130,37 @@ public class ProfitLossCarryDownSubjectServiceImpl implements ProfitLossCarryDow
                 p.setCreateBy(CurrentUser.getCurrentUser().getId()+"");
                 p.setCreateTime(CurrentTime.getCurrentTime());
             }
+            //  新增
             profitLossCarryDownSubjectRepository.save(p);
         } else {
+            //  损益代码不存在
             throw new RuntimeException("损益科目代码不存在！");
         }
     }
 
     @Override
     @Transactional
+    //  profitLossCodes所有需要结转的损益科目代码
+    //  rightsInterestsCode转到哪个科目
     public void saveProfitLossCarryDownSubjectAll(String profitLossCodes, String rightsInterestsCode){
+        //  判断未分配利润的代码是否为空
         if (rightsInterestsCode!=null && !"".equals(rightsInterestsCode)) {
-            if (!"4103/01/01/".equals(rightsInterestsCode)) {
+            if (!"3141/15/00/".equals(rightsInterestsCode)) {
                 throw new RuntimeException("本年利润科目代码设置错误！");
             }
         } else {
-            rightsInterestsCode = "4103/01/01/";
+            //  不为空将3141/15/00/赋值给rightsInterestsCode
+            rightsInterestsCode = "3141/15/00/";
         }
+        //  给传过来的损益科目代码拼接逗号
         String[] profitLossCode = profitLossCodes.split(",");
+        //  创建损益科目DTO
         ProfitLossCarryDownSubjectDTO dto = new ProfitLossCarryDownSubjectDTO();
+        //  设置DTO的权益科目代码
         dto.setRightsInterestsCode(rightsInterestsCode);
+        //  判断损益科目是否为空
         if (profitLossCode.length>0) {
+            //  循环遍历
             for (String s : profitLossCode) {
                 dto.setProfitLossCode(s);
                 saveProfitLossCarryDownSubject(dto);

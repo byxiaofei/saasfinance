@@ -139,9 +139,13 @@ public class FinalAccountingServiceImpl implements FinalAccountingService{
     @Override
     @Transactional
     public InvokeResult finalAccounting(AccMonthTraceDTO dto) {
+        //  基础机构  lyzx01
         String centerCode = CurrentUser.getCurrentLoginManageBranch();
+        //  核算机构  lyzx01
         String branchCode = CurrentUser.getCurrentLoginManageBranch();
+        //  账套类型
         String accBookType = CurrentUser.getCurrentLoginAccountType();
+        //  账套编码
         String accBookCode = CurrentUser.getCurrentLoginAccount();
         /*
             1.先判断14月是否结转，再判断有无决算凭证
@@ -154,14 +158,14 @@ public class FinalAccountingServiceImpl implements FinalAccountingService{
                 4.3最后处理凭证基本信息
             5.保存决算自动生成凭证信息
          */
-
+        //  判断传过来的年月是否为空，或者年月不等于14结尾
         if (dto.getYearMonthDate()==null || "".equals(dto.getYearMonthDate()) || !dto.getYearMonthDate().endsWith("14")) {
             return InvokeResult.failure("会计期间有误！");
         }
 
         String year = dto.getYearMonthDate().substring(0, 4);
 
-        // 1.判断月度表信息是否结转。
+        // 1.判断月度表信息是否结转。   dto中有年月，
         List<AccMonthTrace> ymdList = judgeAccMonthTraceMessage(dto,centerCode,branchCode,accBookCode,accBookType);
         if(ymdList!=null&&ymdList.size()!=0){
             if("3".equals(((AccMonthTrace)ymdList.get(0)).getAccMonthStat())){
@@ -203,11 +207,16 @@ public class FinalAccountingServiceImpl implements FinalAccountingService{
         if ((subjectBalanceList!=null&&subjectBalanceList.size()>0) || (specialBalanceList!=null&&specialBalanceList.size()>0)) {
 
             StringBuffer sql = new StringBuffer();
+            //  查出所有的s0段
             sql.append("SELECT a.segment_flag AS segmentFlag,a.segment_col AS segmentCol,a.segment_name AS segmentName FROM accsegmentdefine a");
             List<?> accsegmentdefineList = voucherRepository.queryBySqlSC(sql.toString());
+            //  创建集合
             Map<String, String> accsegmentdefineMap = new HashMap<>();
+            //  判断s0段不为空并且长度大于0
             if (accsegmentdefineList!=null&&accsegmentdefineList.size()>0) {
+                //  循环遍历s0d段
                 for (Object object : accsegmentdefineList) {
+                    //  将Object转出成map类型
                     Map map = (Map) object;
                     //专项段定义对应位置 key：s字段，value：s字段位置对应的一级专项编码
                     accsegmentdefineMap.put((String) map.get("segmentFlag"), (String) map.get("segmentCol"));
@@ -226,6 +235,7 @@ public class FinalAccountingServiceImpl implements FinalAccountingService{
             //先处理损益结转科目设置Map集合，当处理凭证分录时若出现 PLCDSubjectMap 中没有的科目，则终止决算处理
             if (PLCDSubjectList!=null&&PLCDSubjectList.size()>0) {
                 for (ProfitLossCarryDownSubject p : PLCDSubjectList) {
+                    //  判断查出来的权益科目代码不为空，并且不为空字符串
                     if (p.getRightsInterestsCode()!=null&&!"".equals(p.getRightsInterestsCode())) {
                         //将已设置结转至权益科目的损益科目存于 PLCDSubjectMap 集合中
                         PLCDSubjectMap.put(p.getId().getProfitLossCode(), p.getRightsInterestsCode());
@@ -285,7 +295,11 @@ public class FinalAccountingServiceImpl implements FinalAccountingService{
                             String key = entry.getKey();
                             BigDecimal value = entry.getValue();
                             String name = PLCDSubjectMapName.get(entry.getKey());
-                            setJSVoucher(list1, list2, key, name, value, year);
+                            //  查出权益科目的专项代码key为未分配利润的代码
+                            List<AccArticleBalance> accArticleBalances = queryAccArticleBalanceNonzero(key, centerCode, branchCode, accBookCode, accBookType, dto.getYearMonthDate());
+                            for (AccArticleBalance a : accArticleBalances) {
+                                setJSVoucher(list1, list2, key, name, value, year, a, accsegmentdefineMap);
+                            }
                         }
 
                         //最后处理凭证基本信息
@@ -473,7 +487,8 @@ public class FinalAccountingServiceImpl implements FinalAccountingService{
      * @param subjectName 科目名称
      * @param balance 余额
      */
-    private void setJSVoucher(List<VoucherDTO> list1, List<VoucherDTO> list2, String subjectCode, String subjectName, BigDecimal balance, String year){
+    private void setJSVoucher(List<VoucherDTO> list1, List<VoucherDTO> list2, String subjectCode, String subjectName,
+                              BigDecimal balance, String year,AccArticleBalance accArticleBalances,Map<String, String> accsegmentdefineMap){
         //摘要、科目代码、科目名称、借方/贷方金额
         //开始设置凭证科目分录
         VoucherDTO vdto = new VoucherDTO();
@@ -492,6 +507,53 @@ public class FinalAccountingServiceImpl implements FinalAccountingService{
         vdto = new VoucherDTO();
         vdto.setSubjectCode(subjectCode);
         vdto.setSubjectName(subjectName);
+        vdto.setSpecialCodeS(accArticleBalances.getId().getDirectionOther());
+        String[] specialCodeS = accArticleBalances.getId().getDirectionOther().split(",");
+        String specialSuperCodeS = "";
+        for (String specialCode : specialCodeS) {
+            if (specialCode.equals(accArticleBalances.getS01())) {
+                specialSuperCodeS += accsegmentdefineMap.get("s01")+",";
+            } else if (specialCode.equals(accArticleBalances.getS02())) {
+                specialSuperCodeS += accsegmentdefineMap.get("s02")+",";
+            } else if (specialCode.equals(accArticleBalances.getS03())) {
+                specialSuperCodeS += accsegmentdefineMap.get("s03")+",";
+            } else if (specialCode.equals(accArticleBalances.getS04())) {
+                specialSuperCodeS += accsegmentdefineMap.get("s04")+",";
+            } else if (specialCode.equals(accArticleBalances.getS05())) {
+                specialSuperCodeS += accsegmentdefineMap.get("s05")+",";
+            } else if (specialCode.equals(accArticleBalances.getS06())) {
+                specialSuperCodeS += accsegmentdefineMap.get("s06")+",";
+            } else if (specialCode.equals(accArticleBalances.getS07())) {
+                specialSuperCodeS += accsegmentdefineMap.get("s07")+",";
+            } else if (specialCode.equals(accArticleBalances.getS08())) {
+                specialSuperCodeS += accsegmentdefineMap.get("s08")+",";
+            } else if (specialCode.equals(accArticleBalances.getS09())) {
+                specialSuperCodeS += accsegmentdefineMap.get("s09")+",";
+            } else if (specialCode.equals(accArticleBalances.getS10())) {
+                specialSuperCodeS += accsegmentdefineMap.get("s10")+",";
+            } else if (specialCode.equals(accArticleBalances.getS11())) {
+                specialSuperCodeS += accsegmentdefineMap.get("s11")+",";
+            } else if (specialCode.equals(accArticleBalances.getS12())) {
+                specialSuperCodeS += accsegmentdefineMap.get("s12")+",";
+            } else if (specialCode.equals(accArticleBalances.getS13())) {
+                specialSuperCodeS += accsegmentdefineMap.get("s13")+",";
+            } else if (specialCode.equals(accArticleBalances.getS14())) {
+                specialSuperCodeS += accsegmentdefineMap.get("s14")+",";
+            } else if (specialCode.equals(accArticleBalances.getS15())) {
+                specialSuperCodeS += accsegmentdefineMap.get("s15")+",";
+            } else if (specialCode.equals(accArticleBalances.getS16())) {
+                specialSuperCodeS += accsegmentdefineMap.get("s16")+",";
+            } else if (specialCode.equals(accArticleBalances.getS17())) {
+                specialSuperCodeS += accsegmentdefineMap.get("s17")+",";
+            } else if (specialCode.equals(accArticleBalances.getS18())) {
+                specialSuperCodeS += accsegmentdefineMap.get("s18")+",";
+            } else if (specialCode.equals(accArticleBalances.getS19())) {
+                specialSuperCodeS += accsegmentdefineMap.get("s19")+",";
+            } else if (specialCode.equals(accArticleBalances.getS20())) {
+                specialSuperCodeS += accsegmentdefineMap.get("s20")+",";
+            }
+        }
+        vdto.setSpecialSuperCodeS(specialSuperCodeS.substring(0, specialSuperCodeS.length()-1));
         list2.add(vdto);
     }
 
@@ -728,5 +790,44 @@ public class FinalAccountingServiceImpl implements FinalAccountingService{
         paramsNo3++;
         List<ProfitLossCarryDownSubject> PLCDSubjectList = (List<ProfitLossCarryDownSubject>) profitLossCarryDownSubjectRepository.queryBySql(sql.toString(), params3, ProfitLossCarryDownSubject.class);
         return PLCDSubjectList;
+    }
+
+    /**
+     * 未分配利润信息
+     * @return
+     */
+    private List<AccArticleBalance> queryAccArticleBalanceNonzero(String key,String centerCode,String branchCode,String accBookCode,String accBookType,String yearMonthDate){
+
+        StringBuffer specialBalanceSql = new StringBuffer("SELECT * FROM accarticlebalance WHERE 1=1");
+
+        int paramsNo4 = 1;
+        Map<Integer, Object> params4 = new HashMap<>();
+
+        specialBalanceSql.append(" AND center_code = ?" + paramsNo4);
+        params4.put(paramsNo4,centerCode);
+        paramsNo4++;
+
+        specialBalanceSql.append(" AND branch_code = ?" + paramsNo4);
+        params4.put(paramsNo4,branchCode);
+        paramsNo4++;
+
+        specialBalanceSql.append(" AND acc_book_code = ?" + paramsNo4);
+        params4.put(paramsNo4,accBookCode);
+        paramsNo4++;
+
+        specialBalanceSql.append(" AND year_month_date = ?" + paramsNo4);
+        params4.put(paramsNo4,yearMonthDate);
+        paramsNo4++;
+
+        specialBalanceSql.append(" AND acc_book_type = ?" + paramsNo4);
+        params4.put(paramsNo4,accBookType);
+        paramsNo4++;
+
+        specialBalanceSql.append(" AND direction_idx = ?" + paramsNo4);
+        params4.put(paramsNo4,key);
+        paramsNo4++;
+
+        List<AccArticleBalance> specialBalanceList = (List<AccArticleBalance>) accArticleBalanceHisRespository.queryBySql(specialBalanceSql.toString(), params4, AccArticleBalance.class);
+        return specialBalanceList;
     }
 }
