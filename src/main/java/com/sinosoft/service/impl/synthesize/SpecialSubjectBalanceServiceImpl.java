@@ -824,8 +824,8 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
     //获取会计期间的专项余额信息
     private Map<String, Map<String, String>> getPeriodSubjectSpecialData(List centerCode, List branchCode, String accBookType, String accBookCode, String itemCode, List<String> specialCondition, String yearMonth) {
         String _yearMonth = yearMonth;
-        /*boolean settleFlag = getSettleState(centerCode, accBookType, accBookCode, _yearMonth);//判断期间是否结转
-        if(!settleFlag) _yearMonth = getClosestSettledYearMonth(centerCode, accBookType, accBookCode, _yearMonth);//获取最接近的结转期间*/
+        boolean settleFlag = getSettleState(centerCode, accBookType, accBookCode, _yearMonth);//判断期间是否结转
+        if(!settleFlag) _yearMonth = getClosestSettledYearMonth(centerCode, accBookType, accBookCode, _yearMonth);//获取最接近的结转期间
         Map<String, Map<String, String>> resultMap = new HashMap<>();
         StringBuffer sql = new StringBuffer("select accountBookCode,yearMonth,itemCode,specialCode,CAST(SUM(balanceQc) AS CHAR) AS balanceQc,CAST(SUM(debitBq) AS CHAR) as debitBq,CAST(SUM(creditBq) AS CHAR)  as creditBq,CAST(SUM(balanceQm) AS CHAR) as balanceQm,CAST(SUM(debitBn) AS CHAR) as debitBn,CAST(SUM(creditBn) AS CHAR) as creditBn from ( ");
         sql.append("select a.acc_book_code as accountBookCode,a.year_month_date as yearMonth,a.direction_idx as itemCode,substring_index(substring_index(a.direction_other,',',b.id+ 1),',' ,- 1) as specialCode,cast(a.balance_begin_dest as char) as balanceQc,cast(a.debit_dest as char) as debitBq,cast(a.credit_dest as char) as creditBq,cast(a.balance_dest as char) as balanceQm,cast(debit_dest_year as char) as debitBn,cast(credit_dest_year as char) as creditBn from (" +
