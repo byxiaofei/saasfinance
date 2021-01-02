@@ -7,6 +7,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Random;
 
+import javax.imageio.ImageIO;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -117,10 +118,10 @@ public final class CaptchaUtil
 
         // 转成JPEG格式
         ServletOutputStream out = response.getOutputStream();
-        JPEGImageEncoder encoder = JPEGCodec.createJPEGEncoder(out);
+        /*JPEGImageEncoder encoder = JPEGCodec.createJPEGEncoder(out);
         encoder.encode(bi);
-        out.flush();
-
+        out.flush();*/
+        ImageIO.write(bi,"jpg",out);
 
     }
 }
