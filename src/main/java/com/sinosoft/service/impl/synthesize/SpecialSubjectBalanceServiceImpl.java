@@ -216,36 +216,38 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
         //获取期末余额和本年累计
         Map<String, Map<String, String>> qmMap = getPeriodSubjectSpecialData(centerCode, branchCode, accBookType, accBookCode, itemCode, specialCondition, endYearMonth);
 
-        //未结转期间已记账/未记、已记账账凭证处理
         //1.计入期末余额
-        Map<String, Map<String, String>> noChargeItemBq = getNoChargeItemBq(chargeFlag, centerCode, branchCode, accBookType, accBookCode, itemCode, specialCondition, startYearMonth, endYearMonth);
-        for(String s : noChargeItemBq.keySet()){
-            BigDecimal noChargeDebitBq = new BigDecimal(noChargeItemBq.get(s).get("debitBq"));//本期-未记账-借
-            BigDecimal noChargeCreditBq = new BigDecimal(noChargeItemBq.get(s).get("creditBq"));//本期-未记账-贷
-            Map<String, String> qmDataMap = qmMap.get(s);
-            if(qmDataMap == null){
-                qmDataMap = new HashMap<>();
-                qmDataMap.put("balanceQm", noChargeDebitBq.subtract(noChargeCreditBq).toString());
-                qmDataMap.put("debitBn", "0.00");
-                qmDataMap.put("creditBn", "0.00");
-                qmMap.put(s, qmDataMap);
-            }else{
-                BigDecimal curBalanceQm = new BigDecimal(qmDataMap.get("balanceQm"));//期末-不含未记账
-                qmDataMap.put("balanceQm", curBalanceQm.add(noChargeDebitBq).subtract(noChargeCreditBq).toString());
+        if(chargeFlag){
+            //未结转期间已记账/未记、账凭证处理
+            Map<String, Map<String, String>> noChargeItemBq = getNoChargeItemBq(centerCode, branchCode, accBookType, accBookCode, itemCode, specialCondition, endYearMonth);
+            for(String s : noChargeItemBq.keySet()){
+                BigDecimal noChargeDebitBq = new BigDecimal(noChargeItemBq.get(s).get("debitBq"));//本期-未记账-借
+                BigDecimal noChargeCreditBq = new BigDecimal(noChargeItemBq.get(s).get("creditBq"));//本期-未记账-贷
+                Map<String, String> qmDataMap = qmMap.get(s);
+                if(qmDataMap == null){
+                    qmDataMap = new HashMap<>();
+                    qmDataMap.put("balanceQm", noChargeDebitBq.subtract(noChargeCreditBq).toString());
+                    qmDataMap.put("debitBn", "0.00");
+                    qmDataMap.put("creditBn", "0.00");
+                    qmMap.put(s, qmDataMap);
+                }else{
+                    BigDecimal curBalanceQm = new BigDecimal(qmDataMap.get("balanceQm"));//期末-不含未记账
+                    qmDataMap.put("balanceQm", curBalanceQm.add(noChargeDebitBq).subtract(noChargeCreditBq).toString());
+                    qmMap.put(s, qmDataMap);
+                }
+            }
+            //计入本年累计发生
+            Map<String, Map<String, String>> noChargeItemBn = getNoChargeItemBn( centerCode, branchCode, accBookType, accBookCode, itemCode, specialCondition, startYearMonth, endYearMonth);
+            for(String s : noChargeItemBn.keySet()){
+                BigDecimal noChargeDebitBn = new BigDecimal(noChargeItemBn.get(s).get("debitBn"));//本年-未记账-借
+                BigDecimal noChargeCreditBn = new BigDecimal(noChargeItemBn.get(s).get("creditBn"));//本年-未记账-贷
+                Map<String, String> qmDataMap = qmMap.get(s);
+                BigDecimal curDebitBn = qmDataMap.get("debitBn") == null ? new BigDecimal(0.00) : new BigDecimal(qmDataMap.get("debitBn"));//本年借方-不含未记账
+                BigDecimal curCreditBn = qmDataMap.get("creditBn") == null ? new BigDecimal(0.00) : new BigDecimal(qmDataMap.get("creditBn"));//本年贷方-不含未记账
+                qmDataMap.put("debitBn", curDebitBn.add(noChargeDebitBn).toString());
+                qmDataMap.put("creditBn", curCreditBn.add(noChargeCreditBn).toString());
                 qmMap.put(s, qmDataMap);
             }
-        }
-        //计入本年累计发生
-        Map<String, Map<String, String>> noChargeItemBn = getNoChargeItemBn(chargeFlag, centerCode, branchCode, accBookType, accBookCode, itemCode, specialCondition, startYearMonth, endYearMonth);
-        for(String s : noChargeItemBn.keySet()){
-            BigDecimal noChargeDebitBn = new BigDecimal(noChargeItemBn.get(s).get("debitBn"));//本年-未记账-借
-            BigDecimal noChargeCreditBn = new BigDecimal(noChargeItemBn.get(s).get("creditBn"));//本年-未记账-贷
-            Map<String, String> qmDataMap = qmMap.get(s);
-            BigDecimal curDebitBn = qmDataMap.get("debitBn") == null ? new BigDecimal(0.00) : new BigDecimal(qmDataMap.get("debitBn"));//本年借方-不含未记账
-            BigDecimal curCreditBn = qmDataMap.get("creditBn") == null ? new BigDecimal(0.00) : new BigDecimal(qmDataMap.get("creditBn"));//本年贷方-不含未记账
-            qmDataMap.put("debitBn", curDebitBn.add(noChargeDebitBn).toString());
-            qmDataMap.put("creditBn", curCreditBn.add(noChargeCreditBn).toString());
-            qmMap.put(s, qmDataMap);
         }
 
         //封装返回集合
@@ -394,21 +396,15 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
             }
         }
     }
-
-    //获取未结转期间（已记账、未记账）/已记账（未结转期间）--本年发生额
-    private Map<String, Map<String, String>> getNoChargeItemBn(boolean flag, List centerCode, List branchCode, String accBookType, String accBookCode, String itemCode, List<String> specialCondition, String startYearMonth, String endYearMonth) {
+    //获取未结转期间（已记账、未记账）--本年发生额
+    private Map<String, Map<String, String>> getNoChargeItemBn( List centerCode, List branchCode, String accBookType, String accBookCode, String itemCode, List<String> specialCondition, String startYearMonth, String endYearMonth) {
         StringBuffer sql = new StringBuffer("select t2.direction_idx as itemCode,t2.specialCode,cast(sum(t2.debit_dest) as char) as debitBn,cast(sum(t2.credit_dest) as char) as creditBn from (" +
                 "select * from accmainvoucher am where 1=1 and am.center_code in (?1) and am.branch_code in (?2) and am.acc_book_type = ?3 and am.acc_book_code = ?4 and am.year_month_date >= ?5 and am.year_month_date <= ?6 ) t1 left join (" +
                 "select a.voucher_no,a.direction_idx,substring_index(substring_index(a.direction_other,',',b.id + 1),',' ,- 1) as specialCode,a.debit_dest,a.credit_dest from (" +
                 "select * from accsubvoucher where 1=1 and center_code in (?1) and branch_code in (?2) and acc_book_type = ?3 and acc_book_code = ?4 and year_month_date >= ?5 and year_month_date <= ?6 ) a " +
                 "join splitstringsort b ON b.id < (length(a.direction_other) - length(REPLACE (a.direction_other, ',', '')) + 1) " +
                 ") t2 on t1.voucher_no = t2.voucher_no where ");
-        if (flag) {//未结转期间已记账、未记账凭证
-            sql.append(" t1.voucher_flag in ('1','2','3') ");
-        } else {//未结转期间已记账凭证
-            sql.append(" t1.voucher_flag in ('3') ");
-        }
-
+        sql.append(" t1.voucher_flag in ('1','2') ");
         Map<Integer, Object> params = new HashMap<>();
         params.put(1, centerCode);
         params.put(2, branchCode);
@@ -448,27 +444,24 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
     }
 
     //获取未结转期间（已记账、未记账）/已记账（未结转期间）--本期发生额
-    private Map<String, Map<String, String>> getNoChargeItemBq(boolean flag, List centerCode, List branchCode, String accBookType, String accBookCode, String itemCode, List<String> specialCondition, String startYearMonth, String endYearMonth) {
+    private Map<String, Map<String, String>> getNoChargeItemBq(List centerCode, List branchCode, String accBookType, String accBookCode, String itemCode, List<String> specialCondition, String yearMonth) {
         StringBuffer sql = new StringBuffer("select t2.direction_idx as itemCode,t2.specialCode,cast(sum(t2.debit_dest) as char) as debitBq,cast(sum(t2.credit_dest) as char) as creditBq from (" +
-                "select * from accmainvoucher am where 1=1 and am.center_code in (?1) and am.branch_code in (?2) and am.acc_book_type = ?3 and  am.acc_book_code = ?4 and am.year_month_date >= ?5 and am.year_month_date <= ?6 ) t1 left join (" +
+                "select * from accmainvoucher am where 1=1 and am.center_code in (?1) and am.branch_code in (?2) and am.acc_book_type = ?3 and  am.acc_book_code = ?4 and am.year_month_date = ?5 ) t1 left join (" +
                 "select a.voucher_no,a.direction_idx,substring_index(substring_index(a.direction_other,',',b.id+ 1),',' ,- 1) as specialCode,a.debit_dest,a.credit_dest from (" +
-                "select * from accsubvoucher where 1=1 and center_code in (?1) and branch_code in (?2) and acc_book_type = ?3 and acc_book_code = ?4 and year_month_date >= ?5 and year_month_date <= ?6 ) a " +
+                "select * from accsubvoucher where 1=1 and center_code in (?1) and branch_code in (?2) and acc_book_type = ?3 and acc_book_code = ?4 and year_month_date = ?5  ) a " +
                 "join splitstringsort b ON b.id < (length(a.direction_other) - length(REPLACE (a.direction_other, ',', '')) + 1) " +
                 ") t2 on t1.voucher_no = t2.voucher_no where ");
-        if (flag) {//未结转期间已记账、未记账凭证
-            sql.append(" t1.voucher_flag in ('1','2','3') ");
-        } else {//未结转期间已记账凭证
-            sql.append(" t1.voucher_flag in ('3') ");
-        }
+
+        sql.append(" t1.voucher_flag in ('1','2') ");
+
 
         Map<Integer, Object> params = new HashMap<>();
         params.put(1, centerCode);
         params.put(2, branchCode);
         params.put(3, accBookType);
         params.put(4, accBookCode);
-        params.put(5, startYearMonth);
-        params.put(6, endYearMonth);
-        int paramsNo = 7;
+        params.put(5, yearMonth);
+        int paramsNo = 6;
 
         if(itemCode != null && !"".equals(itemCode)) {
             sql.append(" and t2.direction_idx like ?" + paramsNo);
