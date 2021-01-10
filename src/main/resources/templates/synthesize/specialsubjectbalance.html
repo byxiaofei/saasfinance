@@ -678,12 +678,15 @@
         });
     }
 
+    //  用来传部门和往里对象
+    var Special_TYPE;
     function specialTree(value) {
         $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
         var url = '/specialsubjectdetailaccount/specialTree?value='+encodeURI(value);
         $('#specialTree').tree({
             url:url,
             onSelect: function (node) {
+                Special_TYPE = node;
                 if (node.checked) {
                     $('#specialTree').tree('uncheck', node.target);
                 } else {
@@ -757,8 +760,10 @@
         }
     }
 
-    function saveSpecial(){
+   //   专项查询参数（原版）
+  /* function saveSpecial(){
         var nodes = $('#specialTree').tree('getChecked');//获取所有选中专项信息
+        console.log(nodes);
         if (nodes.length!=0) {
             specialCodeAll = "";
             specialNameAll = "";
@@ -777,6 +782,55 @@
             $('#specialGrid').dialog('close');
         } else {
 
+        }
+    }*/
+
+    //  第二版本
+    function saveSpecial(){
+        specialCodeAll = "";
+        specialNameAll = "";
+        console.log(Special_TYPE);
+        //  console.log(Special_NAME);
+        //  console.log(Special_ID);
+        if(Special_TYPE.code == 'BM'  || Special_TYPE.code == 'WLDX'){
+            console.log(Special_TYPE.children.length);
+            for (var i=0;i<Special_TYPE.children.length;i++){
+                specialCodeAll += Special_TYPE.children[i].code+',';
+                specialNameAll += Special_TYPE.children[i].name+',';
+                specialIdAll += Special_TYPE.children[i].id+',';
+            }
+            console.log(specialCodeAll);
+            console.log(specialNameAll);
+            console.log(specialIdAll);
+
+            specialCodeAll = specialCodeAll.substring(0,specialCodeAll.length-1);
+            specialNameAll = specialNameAll.substring(0,specialNameAll.length-1);
+            specialIdAll = specialIdAll.substring(0,specialIdAll.length-1);
+
+
+            $('#specialCode').val(specialCodeAll);
+            $('#specialId').val(specialIdAll);
+            $('#specialName').textbox('setValue',specialNameAll);
+            $('#specialGrid').dialog('close');
+        }else{
+            specialCodeAll = "";
+            specialNameAll = "";
+            var nodes = $('#specialTree').tree('getChecked');//获取所有选中专项信息
+            if (nodes.length!=0) {
+                for (var i=0;i<nodes.length;i++) {
+                    specialCodeAll += nodes[i].code+',';
+                    specialNameAll += nodes[i].name+',';
+                    specialIdAll += nodes[i].id+',';
+                }
+                specialCodeAll = specialCodeAll.substring(0,specialCodeAll.length-1);
+                specialNameAll = specialNameAll.substring(0,specialNameAll.length-1);
+                specialIdAll = specialIdAll.substring(0,specialIdAll.length-1);
+
+                $('#specialCode').val(specialCodeAll);
+                $('#specialId').val(specialIdAll);
+                $('#specialName').textbox('setValue',specialNameAll);
+                $('#specialGrid').dialog('close');
+            }
         }
     }
 
