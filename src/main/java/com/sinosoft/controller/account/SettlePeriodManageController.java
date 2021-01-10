@@ -108,7 +108,6 @@ public class SettlePeriodManageController {
             accMonthTraceRespository.saveAndFlush(accMonthTrace);
             accMonthTrace = null;
             InvokeResult settle = settlePeriodService.settle(dto);
-
             return settle;
         } catch (Exception e) {
             logger.error("结转异常", e);
@@ -146,6 +145,8 @@ public class SettlePeriodManageController {
                 return InvokeResult.failure("查询不到当前的会计期间。");
             }
             // 修改状态为2  2 是不进行操作
+            accMonthTraceRespository.updateFlag2AboutTemp(CommonStatusCode.END_FINAL_CODE_STATUS,dto.getYearMonthDate(),centerCode);
+            accMonthTraceRespository.flush();
             InvokeResult invokeResult = settlePeriodService.unSettle(dto);
             return invokeResult;
         } catch (Exception e) {
