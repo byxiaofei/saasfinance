@@ -760,7 +760,7 @@ public class SettlePeriodServiceImpl implements SettlePeriodService{
 
         //如果反的是14月，需要反记账并删除决算凭证
         if ("14".equals(dto.getYearMonthDate().substring(4,6))) {
-            AccMainVoucher finanAccMainVoucher = accMainVoucherRespository.qryFinanAccMainVoucher(centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate());
+           /* AccMainVoucher finanAccMainVoucher = accMainVoucherRespository.qryFinanAccMainVoucher(centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate());
             if (finanAccMainVoucher!=null) {
                 //反记账
                 VoucherDTO voucherDTO = new VoucherDTO();
@@ -787,7 +787,8 @@ public class SettlePeriodServiceImpl implements SettlePeriodService{
                 voucherRepository.flush();
                 voucherManageService.voucherAnewSortBecauseOccupyOrDel(centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate(), finanAccMainVoucher.getId().getVoucherNo(), "del");
                 voucherRepository.flush();
-            }
+            }*/
+            return InvokeResult.failure("十四月不可以反结转");
         }
 
         return InvokeResult.success();
