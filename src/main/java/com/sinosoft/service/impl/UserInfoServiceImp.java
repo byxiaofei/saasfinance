@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sinosoft.common.CurrentTime;
 import com.sinosoft.common.CurrentUser;
 import com.sinosoft.common.CusSpecification;
+import com.sinosoft.common.SysPringLog;
 import com.sinosoft.domain.UserBranchAccount;
 import com.sinosoft.dto.UserinfoDTO;
 import com.sinosoft.repository.*;
@@ -40,8 +41,8 @@ public class UserInfoServiceImp implements UserInfoService{
 	private AccountInfoRepository accountInfoRepository;
 
 	@Override
+	@SysPringLog(value = "用户查询按条件")
 	public Page<UserInfo> qryUserInfo(int page, int rows, UserInfo userInfo) {
-		//return userInfoRepository.findAll(new PageRequest((page - 1), rows));
 		Page<UserInfo> UserInfoPage = userInfoRepository.findAll(new CusSpecification<UserInfo>().and(
 				CusSpecification.Cnd.like("userName", userInfo.getUserName()),
 				CusSpecification.Cnd.like("userCode", userInfo.getUserCode()),
@@ -59,6 +60,7 @@ public class UserInfoServiceImp implements UserInfoService{
 	}
 
 	@Transactional
+	@Override
 	public String saveUserInfo(UserInfo userInfo) {
 
 		if(userInfoRepository.findByUserCode(userInfo.getUserCode()).size() > 0){

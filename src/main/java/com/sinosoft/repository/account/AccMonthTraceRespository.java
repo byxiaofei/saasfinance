@@ -1,5 +1,7 @@
 package com.sinosoft.repository.account;
 
+import com.sinosoft.common.SysLog;
+import com.sinosoft.common.SysPringLog;
 import com.sinosoft.domain.account.AccMonthTrace;
 import com.sinosoft.domain.account.AccMonthTraceId;
 import com.sinosoft.repository.BaseRepository;
@@ -85,6 +87,7 @@ public interface AccMonthTraceRespository extends BaseRepository<AccMonthTrace, 
     @Query(value = "select * from accmonthtrace a where a.center_code = ?1 and a.acc_book_type = ?2 and a.acc_book_code = ?3 order by a.year_month_date asc limit 1", nativeQuery = true)
     AccMonthTrace findNewestAccMonthTraceASC(String centerCode, String accBookType, String accBookCode);
 
+    @SysPringLog(value = "结转查询")
     @Query(value = "select * from accmonthtrace a where a.center_code = ?1 and a.acc_book_type = ?2 and a.acc_book_code = ?3 and a.year_month_date = ?4", nativeQuery = true)
     AccMonthTrace findAccMonthTraceByYearMonthDate(String centerCode, String accBookType, String accBookCode, String yearMonthDate);
 
