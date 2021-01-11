@@ -763,12 +763,7 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
                 "select * from accsubvoucher where 1=1 and center_code in (?1) and branch_code in (?2)  and acc_book_type = ?3  and acc_book_code = ?4 and year_month_date >= ?5 and year_month_date <= ?6 ) a " +
                 "join splitstringsort b ON b.id < (length(a.direction_other) - length(REPLACE (a.direction_other, ',', '')) + 1) " +
                 ") t2 on t1.voucher_no = t2.voucher_no where ");
-        if (flag) {
-            sql.append(" t1.voucher_flag in ('1', '2', '3') ");
-        } else {
-            sql.append(" t1.voucher_flag in ('3') ");
-        }
-
+        sql.append(" t1.voucher_flag in ('1', '2') ");
         Map<Integer, Object> params = new HashMap<>();
         params.put(1, centerCode);
         params.put(2, branchCode);
