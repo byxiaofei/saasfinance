@@ -3,6 +3,7 @@ package com.sinosoft.service.impl.synthesize;
 import com.sinosoft.common.CurrentUser;
 import com.sinosoft.common.SysPringLog;
 import com.sinosoft.dto.VoucherDTO;
+import com.sinosoft.repository.SpecialInfoRepository;
 import com.sinosoft.repository.VoucherRepository;
 import com.sinosoft.service.synthesize.DetailAccountService;
 import com.sinosoft.service.synthesize.SpecialSubjectBalanceService;
@@ -27,6 +28,8 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
     private String MODELPath ;
     @Resource
     private DetailAccountService detailAccountService;
+    @Resource
+    private SpecialInfoRepository specialInfoRepository;
 
     /*
         导出操作，为避免重复查询，临时存储校验查询结果，此结果即为导出数据，否则不可用
@@ -71,10 +74,28 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
         List<String> specialCondition = new ArrayList<>();
         if (dto.getSpecialName()!=null&&!"".equals(dto.getSpecialName())) {
             specialCode = dto.getSpecialCode();
-            if (specialCode!=null && !"".equals(specialCode)) {
+            if (specialCode.equals("BM") || specialCode.equals("WLDX") || specialCode.equals("BM,WLDX") || specialCode.equals("WLDX,BM")){
+                List<String> SpecialList = Arrays.asList(specialCode.split(","));
+                for (String s : SpecialList) {
+                    //  使用模糊查询所有末级
+                    List<String> strings = specialInfoRepository.finbySpecialCondLike(s);
+                    //  遍历末级
+                    for (String t : strings){
+                        //  拼接
+                        specialCode = specialCode.concat(t).concat(",");
+                    }
+                    //  去掉末尾的逗号
+                    specialCode = specialCode.substring(0,specialCode.length()-1);
+                    //  设置到dto中
+                    dto.setSpecialCode(specialCode.toString());
+                    specialCondition = Arrays.asList(specialCode.split(","));//获取专项筛选条件
+                }
+            }
+            else if(specialCode!=null && !"".equals(specialCode)) {
                 specialCondition = Arrays.asList(specialCode.split(","));//获取专项筛选条件
             }
         }
+
         //是否包含未记账凭证：0-否；1-是
         String voucherGene = dto.getVoucherGene();
         if("1".equals(voucherGene)) chargeFlag = true;

@@ -131,5 +131,12 @@ public interface SpecialInfoRepository extends BaseRepository<SpecialInfo,Long>{
     @Query(value = "select id as text, special_code as value from specialinfo where super_special is null and account = ?1 order by account ,id;",nativeQuery = true)
     List<Map<String,Object>> querySpecialInfoOneLevel(String account);
 
+    /**
+     *
+     * 功能描述：通过部门和往来对象进行模糊查询
+     *
+     */
+    @Query(value = "select special_code from specialinfo where special_code like ?1% AND endflag = '0'",nativeQuery = true)
+    List<String> finbySpecialCondLike(String s);
 }
 

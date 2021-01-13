@@ -679,14 +679,14 @@
     }
 
     //  用来传部门和往里对象
-    var Special_TYPE;
+    var Special_TYPE = [];
     function specialTree(value) {
         $('#waitMenu').dialog('open').dialog('setTitle','提示：');//打开等待窗口
         var url = '/specialsubjectdetailaccount/specialTree?value='+encodeURI(value);
         $('#specialTree').tree({
             url:url,
             onSelect: function (node) {
-                Special_TYPE = node;
+                Special_TYPE.push(node.code);
                 if (node.checked) {
                     $('#specialTree').tree('uncheck', node.target);
                 } else {
@@ -786,7 +786,7 @@
     }*/
 
     //  第二版本
-    function saveSpecial(){
+   /* function saveSpecial(){
         specialCodeAll = "";
         specialNameAll = "";
         console.log(Special_TYPE);
@@ -799,9 +799,9 @@
                 specialNameAll += Special_TYPE.children[i].name+',';
                 specialIdAll += Special_TYPE.children[i].id+',';
             }
-            console.log(specialCodeAll);
+            /!*console.log(specialCodeAll);
             console.log(specialNameAll);
-            console.log(specialIdAll);
+            console.log(specialIdAll);*!/
 
             specialCodeAll = specialCodeAll.substring(0,specialCodeAll.length-1);
             specialNameAll = specialNameAll.substring(0,specialNameAll.length-1);
@@ -831,6 +831,51 @@
                 $('#specialName').textbox('setValue',specialNameAll);
                 $('#specialGrid').dialog('close');
             }
+        }
+    }*/
+
+    //  第三版
+    function saveSpecial(){
+        if(Special_TYPE == 'BM' || Special_TYPE == 'WLDX' || Special_TYPE == 'BM,WLDX'){
+            console.log(Special_TYPE);
+            if (Special_TYPE.length != 0){
+                specialCodeAll = "";
+                specialNameAll = "";
+                for (var i=0;i<Special_TYPE.length;i++) {
+                    specialCodeAll += Special_TYPE[i]+',';
+                    specialNameAll += Special_TYPE[i]+',';
+                }
+                specialCodeAll = specialCodeAll.substring(0,specialCodeAll.length-1);
+                specialNameAll = specialNameAll.substring(0,specialNameAll.length-1);
+                console.log(specialCodeAll);
+                console.log(specialNameAll);
+
+                $('#specialCode').val(specialCodeAll);
+                $('#specialName').textbox('setValue',specialNameAll);
+                $('#specialGrid').dialog('close');
+            }
+            Special_TYPE = [];
+        }else{
+            var nodes = $('#specialTree').tree('getChecked');//获取所有选中专项信息
+            console.log(nodes);
+            if (nodes.length!=0) {
+                specialCodeAll = "";
+                specialNameAll = "";
+                for (var i=0;i<nodes.length;i++) {
+                    specialCodeAll += nodes[i].code+',';
+                    specialNameAll += nodes[i].name+',';
+                    specialIdAll += nodes[i].id+',';
+                }
+                specialCodeAll = specialCodeAll.substring(0,specialCodeAll.length-1);
+                specialNameAll = specialNameAll.substring(0,specialNameAll.length-1);
+                specialIdAll = specialIdAll.substring(0,specialIdAll.length-1);
+
+                $('#specialCode').val(specialCodeAll);
+                $('#specialId').val(specialIdAll);
+                $('#specialName').textbox('setValue',specialNameAll);
+                $('#specialGrid').dialog('close');
+            }
+            Special_TYPE = [];
         }
     }
 
