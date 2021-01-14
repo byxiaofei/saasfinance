@@ -1,9 +1,6 @@
 package com.sinosoft.service.impl.account;
 
-import com.sinosoft.common.CurrentTime;
-import com.sinosoft.common.CurrentUser;
-import com.sinosoft.common.CusSpecification;
-import com.sinosoft.common.InvokeResult;
+import com.sinosoft.common.*;
 import com.sinosoft.domain.account.*;
 import com.sinosoft.domain.fixedassets.AccGCheckInfo;
 import com.sinosoft.domain.fixedassets.AccGCheckInfoId;
@@ -674,20 +671,6 @@ public class SettlePeriodServiceImpl implements SettlePeriodService{
             }
         }
 
-        //判断当年决算月是否已经决算，已经决算则给出提示信息
-        /*if(!dto.getYearMonthDate().contains("JS")){
-            StringBuffer jsSql = new StringBuffer();
-            String jsStr = dto.getYearMonthDate().substring(0,4)+"JS";
-            jsSql.append("select * from accmonthtrace a where 1=1 and a.year_month_date = '"+ jsStr +"'" +
-                    "and acc_book_type = '"+ accBookType +"' and acc_book_code = '"+ accBookCode +"' ");
-            List<?> list = accMonthTraceRespository.queryBySql(jsSql.toString(), AccMonthTrace.class);
-            if(list.size() != 0){//当年会计期间已经决算
-                if(((AccMonthTrace)list.get(0)).getAccMonthStat().equals("5")){
-                    return InvokeResult.failure("当年决算月已经进行了决算操作，请先反决算后再进行操作！");
-                }
-            }
-        }*/
-
         //如果是反结转13月，则需要判断14月是否生成决算凭证，如果已生成，则不允许反结转13月
         if ("13".equals(dto.getYearMonthDate().substring(4,6))) {
             String finanYM = dto.getYearMonthDate().substring(0,4) + "14";
@@ -743,7 +726,7 @@ public class SettlePeriodServiceImpl implements SettlePeriodService{
         accMonthTraceRespository.updateFlag(dto.getYearMonthDate(), String.valueOf(CurrentUser.getCurrentUser().getId()),CurrentTime.getCurrentTime(), accBookType, accBookCode, centerCode);
 
         //当前会计月度状态修改
-        if ("14".equals(dto.getYearMonthDate().substring(4,6))) {
+        if (Constant.MONTH_14.equals(dto.getYearMonthDate().substring(4,6))) {
             //决算月度
             accMonthTraceRespository.updateDQFlag2(dto.getYearMonthDate(), String.valueOf(CurrentUser.getCurrentUser().getId()),CurrentTime.getCurrentTime(), accBookType, accBookCode, centerCode);
         } else {
@@ -759,16 +742,15 @@ public class SettlePeriodServiceImpl implements SettlePeriodService{
         accWCheckInfoRepository.updateIsCheck(dto.getYearMonthDate(), accBookType, accBookCode, centerCode);
 
         //如果反的是14月，需要反记账并删除决算凭证
-        if ("14".equals(dto.getYearMonthDate().substring(4,6))) {
-           /* AccMainVoucher finanAccMainVoucher = accMainVoucherRespository.qryFinanAccMainVoucher(centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate());
+        if (Constant.MONTH_14.equals(dto.getYearMonthDate().substring(4,6))) {
+            AccMainVoucher finanAccMainVoucher = accMainVoucherRespository.qryFinanAccMainVoucher(centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate());
             if (finanAccMainVoucher!=null) {
                 //反记账
                 VoucherDTO voucherDTO = new VoucherDTO();
                 voucherDTO.setVoucherNo(finanAccMainVoucher.getId().getVoucherNo());
-                voucherDTO.setNeedCheckGeneBy("N");
+                voucherDTO.setYearMonthDate(dto.getYearMonthDate());
+                voucherDTO.setNeedCheckGeneBy(Constant.NO);
                 voucherAccountingService.revokeAccounting(voucherDTO);
-                accMainVoucherHisRespository.flush();
-
                 //删除凭证
                 List<AccSubVoucher> subList = accSubVoucherRespository.findAll(new CusSpecification<>().and(
                         CusSpecification.Cnd.eq("id.centerCode", centerCode),
@@ -787,8 +769,7 @@ public class SettlePeriodServiceImpl implements SettlePeriodService{
                 voucherRepository.flush();
                 voucherManageService.voucherAnewSortBecauseOccupyOrDel(centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate(), finanAccMainVoucher.getId().getVoucherNo(), "del");
                 voucherRepository.flush();
-            }*/
-            return InvokeResult.failure("十四月不可以反结转");
+            }
         }
 
         return InvokeResult.success();

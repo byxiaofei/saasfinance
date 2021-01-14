@@ -1,5 +1,6 @@
 package com.sinosoft.service.impl.account;
 
+import com.sinosoft.common.Constant;
 import com.sinosoft.common.CurrentUser;
 import com.sinosoft.common.InvokeResult;
 import com.sinosoft.domain.account.*;
@@ -153,13 +154,14 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
             String branchCode = CurrentUser.getCurrentLoginManageBranch();
             String accBookType = CurrentUser.getCurrentLoginAccountType();
             String accBookCode = CurrentUser.getCurrentLoginAccount();
-            //获取该机构当月全部科目余额数据
-            List<AccDetailBalance> accDetailBalancelList = accDetailBalanceRepository.qryAccDetailBalanceByYearMonthDateAndDirectionIdx(centerCode, branchCode,accBookType, accBookCode, dto.getYearMonthDate());
-            //获取该机构当月全部专项余额数据
-            List<AccArticleBalance> accArticleBalanceList = accArticleBalanceRepository.qryAccArticleBalanceByYearMonthDateAndDirectionIdxAndDirectionOther(centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate());
-
-
             String[] voucherNo=dto.getVoucherNo().split(",");
+            //获取该机构当月全部科目余额数据
+            List<AccDetailBalance> accDetailBalancelList = accDetailBalanceRepository.qryAccDetailBalanceByYearMonthDateAndDirectionIdx(voucherNo,centerCode, branchCode,accBookType, accBookCode, dto.getYearMonthDate());
+            //获取该机构当月全部专项余额数据
+            List<AccArticleBalance> accArticleBalanceList = accArticleBalanceRepository.qryAccArticleBalanceByYearMonthDateAndDirectionIdxAndDirectionOther(voucherNo,centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate());
+
+
+
             //先判断本月会计期间是否结转
             AccMonthTrace accMonthTrace = accMonthTraceRespository.findAccMonthTraceByYearMonthDate(centerCode, accBookType, accBookCode, dto.getYearMonthDate());
 
@@ -635,7 +637,7 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
     }
 
     /**
-     * 记账
+     * 记账 (单条凭证走这个方法，数据量大的走上面的记账方法)
      * @param dto
      * @return
      */
@@ -1129,48 +1131,22 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
             String branchCode = CurrentUser.getCurrentLoginManageBranch();
             String accBookType = CurrentUser.getCurrentLoginAccountType();
             String accBookCode = CurrentUser.getCurrentLoginAccount();
-            //获取该机构当月全部科目余额数据
-            List<AccDetailBalance> accDetailBalancelList = accDetailBalanceRepository.qryAccDetailBalanceByYearMonthDateAndDirectionIdx(centerCode, branchCode,accBookType, accBookCode, dto.getYearMonthDate());
-            //获取该机构当月全部专项余额数据
-            List<AccArticleBalance> accArticleBalanceList = accArticleBalanceRepository.qryAccArticleBalanceByYearMonthDateAndDirectionIdxAndDirectionOther(centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate());
-
-
             String[] voucherNo=dto.getVoucherNo().split(",");
+            //获取该机构当月全部科目余额数据
+            List<AccDetailBalance> accDetailBalancelList = accDetailBalanceRepository.qryAccDetailBalanceByYearMonthDateAndDirectionIdx(voucherNo,centerCode, branchCode,accBookType, accBookCode, dto.getYearMonthDate());
+            //获取该机构当月全部专项余额数据
+            List<AccArticleBalance> accArticleBalanceList = accArticleBalanceRepository.qryAccArticleBalanceByYearMonthDateAndDirectionIdxAndDirectionOther(voucherNo,centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate());
 
             boolean flagZW = true;
             boolean flagGD = true;
             boolean flagWX = true;
 
-            if (voucherNo.length!=0) {
-                String yearMonthDate = dto.getYearMonthDate();
-                AccMonthTrace accMonthTrace = accMonthTraceRespository.findAccMonthTraceByYearMonthDate(centerCode, accBookType, accBookCode, yearMonthDate);
-                if (accMonthTrace != null) {
-                    if ("3".equals(accMonthTrace.getAccMonthStat())) {
-                        return InvokeResult.failure("反记账失败，当前会计期间已结转");
-                    }
-                    if ("12".equals(yearMonthDate.substring(4))) {
-                        AccMainVoucher finanAccMainVoucher = accMainVoucherRespository.qryFinanAccMainVoucher(centerCode, branchCode, accBookType, accBookCode, yearMonthDate);
-                        if (finanAccMainVoucher!=null) {
-                            String no = finanAccMainVoucher.getId().getVoucherNo();
-                            boolean flag = true;
-                            for (String str : voucherNo) {
-                                if (no.equals(str)) {
-                                    flag = false;
-                                    break;
-                                }
-                            }
-                            if (flag) {
-                                return InvokeResult.failure("请回退决算凭证后再操作！");
-                            }
-                        } else if (accMonthTrace.getTemp()!=null&&"Y".equals(accMonthTrace.getTemp())) {
-                            //如果是Y，则表示已进行决算操作但无需要决算生成凭证的数据，反记账时，需要修改此标志
-                            accMonthTrace.setTemp("");
-                            accMonthTraceRespository.save(accMonthTrace);
-                        }
-                    }
+            //期间状态校验 决算不校验期间状态
+            if ( dto.getNeedCheckGeneBy() ==null || Constant.YES.equals(dto.getNeedCheckGeneBy())) {
+                if( periodStateCheck(dto, centerCode, accBookType, accBookCode, voucherNo)){
+                    return InvokeResult.failure("反记账失败，当前会计期间已结转");
                 }
             }
-
             String result = "";
 
             for(int i=0;i<voucherNo.length;i++){
@@ -1185,7 +1161,8 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
                 AccMainVoucher am =voucherRepository.findById(amid).get();
 
                 boolean isRevokeAccounting = true;
-                if (!(dto.getNeedCheckGeneBy()!=null&&!"N".equals(dto.getNeedCheckGeneBy()))) {
+                //校验是否需要判断 记账人和反记账人一致；决算凭证不需要判断，其余类型凭证需要判断
+                if ( dto.getNeedCheckGeneBy()==null || Constant.YES.equals(dto.getNeedCheckGeneBy())) {
                     if(!am.getGeneBy().equals(String.valueOf(CurrentUser.getCurrentUser().getId()))){
                         isRevokeAccounting = false;
                         if (!"".equals(result)){
@@ -1325,7 +1302,7 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
                         }
                     }
 
-                    am.setVoucherFlag("2");//设置为未记账
+                    am.setVoucherFlag(Constant.VOUCHER_FLAG_AFTER_REVIEW);//设置为未记账
                     am.setGeneBy(String.valueOf(CurrentUser.getCurrentUser().getId()));
                     am.setGeneDate(null);//记账日期
                     voucherRepository.save(am);
@@ -1361,6 +1338,28 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
             }
             return InvokeResult.success("凭证反记账成功！");
         }
+    }
+
+    /**
+     * 期间状态校验 已结转状态不允许反记账
+     * @param dto
+     * @param centerCode
+     * @param accBookType
+     * @param accBookCode
+     * @param voucherNo
+     * @return
+     */
+    private boolean periodStateCheck(VoucherDTO dto, String centerCode, String accBookType, String accBookCode, String[] voucherNo) {
+        if (voucherNo.length!=0) {
+            String yearMonthDate = dto.getYearMonthDate();
+            AccMonthTrace accMonthTrace = accMonthTraceRespository.findAccMonthTraceByYearMonthDate(centerCode, accBookType, accBookCode, yearMonthDate);
+            if (accMonthTrace != null) {
+                if (Constant.ACC_MONTH_STAT_AFTER_CARRIED_FORWARD.equals(accMonthTrace.getAccMonthStat())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Override
