@@ -48,15 +48,7 @@ public interface AccDetailBalanceRepository extends  BaseRepository<AccDetailBal
     @Query(value = "select * from accdetailbalance a where a.center_code = ?1 and a.branch_code = ?2 and a.acc_book_type = ?3 and a.acc_book_code = ?4 and a.year_month_date = ?5 and item_code = ?6 and a.direction_idx = ?7", nativeQuery = true)
     List<AccDetailBalance> qryAccDetailBalanceByYearMonthDateAndDirectionIdx(String centerCode, String branchCode, String accBookType, String accBookCode, String yearMonthDate, String itemCode, String directionIdx);
 
-    //@Query(value = "select * from accdetailbalance a where a.center_code = ?1 and a.branch_code = ?2 and a.acc_book_type = ?3 and a.acc_book_code = ?4 and a.year_month_date = ?5 ", nativeQuery = true)
-    @Query(value = "SELECT c.*\n" +
-            "FROM accmainvoucher a\n" +
-            "  LEFT JOIN accsubvoucher b\n" +
-            "    ON a.voucher_no = b.voucher_no \n" +
-            "  LEFT JOIN accdetailbalance c  \n" +
-            "  ON b.direction_idx = c.direction_idx \n" +
-            "WHERE  \n" +
-            "   a.voucher_no in (?1) and  c.center_code = ?2 and c.branch_code = ?3 and c.acc_book_type = ?4 and c.acc_book_code = ?5 and c.year_month_date = ?6 ", nativeQuery = true)
-    List<AccDetailBalance> qryAccDetailBalanceByYearMonthDateAndDirectionIdx(String[] voucherNo , String centerCode, String branchCode, String accBookType, String accBookCode, String yearMonthDate);
+    @Query(value = "select * from accdetailbalance a where a.center_code = ?1 and a.branch_code = ?2 and a.acc_book_type = ?3 and a.acc_book_code = ?4 and a.year_month_date = ?5 ", nativeQuery = true)
+    List<AccDetailBalance> qryAccDetailBalanceByYearMonthDateAndDirectionIdx(String centerCode, String branchCode, String accBookType, String accBookCode, String yearMonthDate);
 
 }

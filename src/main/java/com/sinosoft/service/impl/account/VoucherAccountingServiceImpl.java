@@ -156,9 +156,9 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
             String accBookCode = CurrentUser.getCurrentLoginAccount();
             String[] voucherNo=dto.getVoucherNo().split(",");
             //获取该机构当月全部科目余额数据
-            List<AccDetailBalance> accDetailBalancelList = accDetailBalanceRepository.qryAccDetailBalanceByYearMonthDateAndDirectionIdx(voucherNo,centerCode, branchCode,accBookType, accBookCode, dto.getYearMonthDate());
+            List<AccDetailBalance> accDetailBalancelList = accDetailBalanceRepository.qryAccDetailBalanceByYearMonthDateAndDirectionIdx(centerCode, branchCode,accBookType, accBookCode, dto.getYearMonthDate());
             //获取该机构当月全部专项余额数据
-            List<AccArticleBalance> accArticleBalanceList = accArticleBalanceRepository.qryAccArticleBalanceByYearMonthDateAndDirectionIdxAndDirectionOther(voucherNo,centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate());
+            List<AccArticleBalance> accArticleBalanceList = accArticleBalanceRepository.qryAccArticleBalanceByYearMonthDateAndDirectionIdxAndDirectionOther(centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate());
 
 
 
@@ -1133,9 +1133,9 @@ public class VoucherAccountingServiceImpl implements VoucherAccountingService {
             String accBookCode = CurrentUser.getCurrentLoginAccount();
             String[] voucherNo=dto.getVoucherNo().split(",");
             //获取该机构当月全部科目余额数据
-            List<AccDetailBalance> accDetailBalancelList = accDetailBalanceRepository.qryAccDetailBalanceByYearMonthDateAndDirectionIdx(voucherNo,centerCode, branchCode,accBookType, accBookCode, dto.getYearMonthDate());
+            List<AccDetailBalance> accDetailBalancelList = accDetailBalanceRepository.qryAccDetailBalanceByYearMonthDateAndDirectionIdx(centerCode, branchCode,accBookType, accBookCode, dto.getYearMonthDate());
             //获取该机构当月全部专项余额数据
-            List<AccArticleBalance> accArticleBalanceList = accArticleBalanceRepository.qryAccArticleBalanceByYearMonthDateAndDirectionIdxAndDirectionOther(voucherNo,centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate());
+            List<AccArticleBalance> accArticleBalanceList = accArticleBalanceRepository.qryAccArticleBalanceByYearMonthDateAndDirectionIdxAndDirectionOther(centerCode, branchCode, accBookType, accBookCode, dto.getYearMonthDate());
 
             boolean flagZW = true;
             boolean flagGD = true;

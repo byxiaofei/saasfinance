@@ -62,6 +62,17 @@ public class Constant {
     public static final String VOUCHER_FLAG_AFTER_POSTING = "3";
 
     /**
+     * 凭证状态 未决算
+     */
+    public static final String VOUCHER_FLAG_UNBALANCED = "4";
+
+    /**
+     * 凭证状态 已决算
+     */
+    public static final String VOUCHER_FLAG_AFTER_FINAL_ACCOUNTS = "5";
+
+
+    /**
      * 凭证类型 决算凭证
      */
     public static final String VOUCHER_TYPE_FINAL = "1";
