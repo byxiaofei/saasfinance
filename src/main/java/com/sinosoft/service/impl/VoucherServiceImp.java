@@ -1,9 +1,6 @@
 package com.sinosoft.service.impl;
 
-import com.sinosoft.common.CurrentTime;
-import com.sinosoft.common.CurrentUser;
-import com.sinosoft.common.CusSpecification;
-import com.sinosoft.common.InvokeResult;
+import com.sinosoft.common.*;
 import com.sinosoft.domain.AccTagManage;
 import com.sinosoft.domain.SpecialInfo;
 import com.sinosoft.domain.SubjectInfo;
@@ -14,6 +11,7 @@ import com.sinosoft.repository.*;
 import com.sinosoft.repository.account.*;
 import com.sinosoft.service.VoucherService;
 import com.sinosoft.service.account.VoucherManageService;
+import com.sinosoft.util.RedisUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -679,12 +677,16 @@ public class VoucherServiceImp implements VoucherService {
 	@Override
 	public List<?> qrySpecialTreeUseFlagBySuperSpecial(String originalValue, String inputValue) {
 		long time = System.currentTimeMillis();
+		List resultList=new ArrayList();
 		String accBookCode = CurrentUser.getCurrentLoginAccount();
+		String redisKey =RedisConstant.SYSTEM_SPECIAL_INFO_KEY_PREFIX.concat(accBookCode+"_"+originalValue+"_"+inputValue) ;
 		if (inputValue!=null&&!"".equals(inputValue) && originalValue.equals(inputValue)) {
 			inputValue = "";
 		} else if (inputValue!=null&&!"".equals(inputValue) && inputValue.startsWith(originalValue)){
 			inputValue = inputValue.substring(originalValue.length());
 		}
+		//使用redis缓存
+		if( RedisUtil.exists(redisKey) ){return  (List) RedisUtil.get(redisKey);}
 		//先查询出需要的
 		Set<String> needIds = new HashSet<>();
 		if (inputValue!=null&&!"".equals(inputValue)) {
@@ -715,7 +717,7 @@ public class VoucherServiceImp implements VoucherService {
 		params.put(2, originalValue);
 
 		List<?> list =voucherRepository.queryBySqlSC(sql.toString(), params);
-		List resultList=new ArrayList();
+
 		for (Object obj : list) {
 			Map map = new HashMap();
 			map.putAll((Map) obj);
@@ -753,6 +755,7 @@ public class VoucherServiceImp implements VoucherService {
 			}
 		}
 		System.out.println("根据一级专项查询专项树用时："+(System.currentTimeMillis()-time)+"ms");
+		if( !RedisUtil.exists(redisKey ) ){RedisUtil.set(redisKey, resultList,Constant.TIME_OUT);}
 		return resultList;
 	}
 

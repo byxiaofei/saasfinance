@@ -84,4 +84,10 @@ public class Constant {
      * 录入方式（1-自动 2-手工）//TODO
      */
 
+
+    /**
+     * redis 过期时间
+     */
+
+    public static final long TIME_OUT = 60*60*24*7;
 }
