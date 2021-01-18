@@ -172,14 +172,16 @@ public class VoucherServiceImp implements VoucherService {
 	}
 
 	//递归
+	@RedisCache(prefixKey = RedisConstant.VOUCHER_INPUT_SUBJECT_INFO_KEY_PREFIX )
 	@Override
 	public List<?> qrySubjectCodeForCheck(String value) {
 		List resultListAll=new ArrayList();
+		String accBookCode = CurrentUser.getCurrentLoginAccount();
 		if (value!=null&&!"".equals(value)) {
 			resultListAll = qrySubjectCodeForCheckByValue(value, "N");
 		} else {
 			long start = System.currentTimeMillis();
-			String accBookCode = CurrentUser.getCurrentLoginAccount();
+
 			// 找到的是四大类
 			String subjectTypeSql = "select c.code_code as id,c.code_name as text from codemanage c where c.code_type = 'subjectType' order by id";
 			List<?> subjectTypeList = voucherRepository.queryBySqlSC(subjectTypeSql);
@@ -674,19 +676,17 @@ public class VoucherServiceImp implements VoucherService {
 		return resultList;
 	}
 
+	@RedisCache(prefixKey = RedisConstant.VOUCHER_INPUT_SPECIAL_INFO_KEY_PREFIX ,time = 10*60)
 	@Override
 	public List<?> qrySpecialTreeUseFlagBySuperSpecial(String originalValue, String inputValue) {
 		long time = System.currentTimeMillis();
 		List resultList=new ArrayList();
 		String accBookCode = CurrentUser.getCurrentLoginAccount();
-		String redisKey =RedisConstant.SYSTEM_SPECIAL_INFO_KEY_PREFIX.concat(accBookCode+"_"+originalValue+"_"+inputValue) ;
 		if (inputValue!=null&&!"".equals(inputValue) && originalValue.equals(inputValue)) {
 			inputValue = "";
 		} else if (inputValue!=null&&!"".equals(inputValue) && inputValue.startsWith(originalValue)){
 			inputValue = inputValue.substring(originalValue.length());
 		}
-		//使用redis缓存
-		if( RedisUtil.exists(redisKey) ){return  (List) RedisUtil.get(redisKey);}
 		//先查询出需要的
 		Set<String> needIds = new HashSet<>();
 		if (inputValue!=null&&!"".equals(inputValue)) {
@@ -755,7 +755,6 @@ public class VoucherServiceImp implements VoucherService {
 			}
 		}
 		System.out.println("根据一级专项查询专项树用时："+(System.currentTimeMillis()-time)+"ms");
-		if( !RedisUtil.exists(redisKey ) ){RedisUtil.set(redisKey, resultList,Constant.TIME_OUT);}
 		return resultList;
 	}
 

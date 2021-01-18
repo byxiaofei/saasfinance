@@ -16,7 +16,13 @@ public class RedisConstant {
      * 系统设置-专项信息(key前缀)
      * 凭证录入 专项根据一级查询
      */
-    public static final String SYSTEM_SPECIAL_INFO_KEY_PREFIX = "ifs:system:specialInfoKey:";
+    public static final String VOUCHER_INPUT_SPECIAL_INFO_KEY_PREFIX = "ifs:system:specialInfoKey:";
+
+    /**
+     * 系统设置-科目信息(key前缀)
+     * 凭证录入 科目查询
+     */
+    public static final String VOUCHER_INPUT_SUBJECT_INFO_KEY_PREFIX = "ifs:system:subjectInfoKey:";
 
 
 }
