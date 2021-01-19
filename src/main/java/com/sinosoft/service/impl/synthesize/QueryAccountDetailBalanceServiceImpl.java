@@ -1,12 +1,17 @@
 package com.sinosoft.service.impl.synthesize;
 
+import com.sinosoft.common.Constant;
 import com.sinosoft.common.CurrentUser;
+import com.sinosoft.common.RedisCache;
+import com.sinosoft.common.RedisConstant;
 import com.sinosoft.dto.VoucherDTO;
 import com.sinosoft.repository.AccArticleBalanceRepository;
 import com.sinosoft.repository.AccDetailBalanceRepository;
+import com.sinosoft.repository.VoucherRepository;
 import com.sinosoft.service.synthesize.DetailAccountService;
 import com.sinosoft.service.synthesize.QueryAccountDetailBalanceService;
 import com.sinosoft.util.ExcelUtil;
+import com.sinosoft.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -27,6 +32,8 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
     private DetailAccountService detailAccountService;
     @Value("${MODELPath}")
     private String MODELPath ;
+    @Resource
+    private VoucherRepository voucherRepository;
 
     /*
         导出操作，为避免重复查询，临时存储校验查询结果，此结果即为导出数据，否则不可用
@@ -41,6 +48,7 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
     @Override
     public List<?> queryAccountDetailBalance(VoucherDTO dto, String cumulativeAmount) {
         long start = System.currentTimeMillis();
+
         //账套代码
         List centerCode = detailAccountService.getSubBranch();
         List branchCode = centerCode;
@@ -50,6 +58,8 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
         //期间范围
         String startYearMonth = dto.getYearMonth();
         String endYearMonth = startYearMonth;
+        //是否结转
+        Boolean settleState = getSettleState(centerCode, accBookType, accBookCode, endYearMonth);
 
         //科目范围
         String itemStart = dto.getItemCode1();
@@ -61,15 +71,52 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
         String voucherGene = dto.getVoucherGene();
 
         //1.科目余额查询，将结果放在map集合中
-        Map<String, Map<String, String>> itemBalanceMap = getItemBalance2(centerCode, branchCode, accBookType, accBookCode, startYearMonth,itemStart, itemEnd);
-        //2.凭证处理
-        dealNoChargeVoucher2(voucherGene, centerCode, branchCode, accBookType, accBookCode, startYearMonth, endYearMonth, itemStart, itemEnd, itemBalanceMap);
+        Map<String, Map<String, String>> itemBalanceMap = getItemBalance2(centerCode, branchCode, accBookType, accBookCode, startYearMonth,itemStart, itemEnd,settleState);
+        //2.未结转时 对凭证处理
+        if(!settleState){
+            dealNoChargeVoucher2(voucherGene, centerCode, branchCode, accBookType, accBookCode, startYearMonth, endYearMonth, itemStart, itemEnd, itemBalanceMap);
+        }
         //3.科目(层级)汇总
         Map<String, Map<String, String>> itemSumaryMap = itemSummary2(accBookCode, itemStart, itemEnd, itemBalanceMap);
         //4.数据封装，返给前端
         List resultList = getDataResult2(accBookCode, itemStart, itemEnd, itemLevelStart, itemLevelEnd, itemSumaryMap, cumulativeAmount);
         System.out.println("科目余额查询用时："+(System.currentTimeMillis()-start)+"ms");
         return resultList;
+    }
+
+    /**
+     * 判断会计期间是否结转
+     * @param centerCode  核算机构
+     * @param accBookType 账套类型
+     * @param accBookCode 账套编码
+     * @param yearMonth   年月
+     * @return 已结转 返回true
+     */
+    private Boolean getSettleState(List centerCode, String accBookType, String accBookCode, String yearMonth) {
+        StringBuffer sql = new StringBuffer("select acc_month_stat as yearMonthState from accmonthtrace where 1 = 1 ");
+        sql.append(" and center_code in (?1)");
+        sql.append(" and acc_book_type = ?2");
+        sql.append(" and acc_book_code = ?3");
+        sql.append(" and year_month_date = ?4");
+
+        Map<Integer, Object> params = new HashMap<>();
+        params.put(1, centerCode);
+        params.put(2, accBookType);
+        params.put(3, accBookCode);
+        params.put(4, yearMonth);
+
+        List list = voucherRepository.queryBySqlSC(sql.toString(), params);
+        if(list != null && !list.isEmpty()){
+            for(Object temp : list){
+                Map<String, String> map = (Map<String, String>) temp;
+                String yearMonthState = map.get("yearMonthState");
+                //1-当前,2-未结转,3-已结转,4-未决算,5-已决算
+                if("1".equals(yearMonthState) || "2".equals(yearMonthState)) return false;
+            }
+            return true;
+        }else{
+            throw new RuntimeException("无效的会计期间：" + yearMonth + "。");
+        }
     }
 
     @Override
@@ -112,38 +159,64 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
     /**
      * 末级科目余额查询
      */
-    public Map<String, Map<String, String>> getItemBalance2(List centerCode, List branchCode, String accBookType, String accBookCode, String startYearMonth, String itemStart, String itemEnd){
+    public Map<String, Map<String, String>> getItemBalance2(List centerCode, List branchCode, String accBookType, String accBookCode, String startYearMonth, String itemStart, String itemEnd,boolean settleState){
         Map<String, Map<String, String>> resultMap = new HashMap();
-        StringBuffer sql = new StringBuffer("select t.center_code as centerCode,t.direction_idx as itemCode,cast(t.balance_begin_dest as char) as balanceQc,cast(0.00 as char) as debitBq,cast(0.00 as char) as creditBq,cast(t.balance_dest as char) as balanceQm,cast(debit_dest_year as char) as debitBn,cast(credit_dest_year as char) as creditBn from ");
-        sql.append("(select concat(all_subject, subject_code, '/') as itemCode from subjectinfo where end_flag = '0' and useflag = '1' and account = ?1 and ((concat(all_subject, subject_code) >= ?2 and concat(all_subject, subject_code) <= ?3 ) or concat(all_subject, subject_code) like ?4 )) s");
-        sql.append(" left join (");
-        sql.append("select * from accdetailbalance where 1 = 1");
-        sql.append(" and center_code in (?5)");
-        sql.append(" and branch_code in (?6)");
-        sql.append(" and acc_book_type = ?7");
-        sql.append(" and acc_book_code = ?1");
-        sql.append(" and year_month_date = ?8");
-        sql.append(" union all ");
-        sql.append("select * from accdetailbalancehis where 1 = 1");
-        sql.append(" and center_code in (?5)");
-        sql.append(" and branch_code in (?6)");
-        sql.append(" and acc_book_type = ?7");
-        sql.append(" and acc_book_code = ?1");
-        sql.append(" and year_month_date = ?8");
-        sql.append(" ) t on t.direction_idx = s.itemCode where 1 = 1 and (t.direction_idx is not null or t.direction_idx !='')");
-        sql.append(" order by itemCode");
+        String _yearMonth = startYearMonth;
+        if(!settleState){ _yearMonth = getClosestSettledYearMonth(centerCode, accBookType, accBookCode, _yearMonth);}
+        StringBuffer sql = new StringBuffer("SELECT\n" +
+                "  t.center_code   AS centerCode,\n" +
+                "  t.direction_idx AS itemCode,\n" +
+                "  CAST(t.balance_begin_dest AS CHAR) AS balanceQc,\n" +
+                "  CAST(t.debit_dest AS CHAR) AS debitBq,\n" +
+                "  CAST(t.credit_dest AS CHAR) AS creditBq,\n" +
+                "  CAST(t.balance_dest AS CHAR) AS balanceQm,\n" +
+                "  CAST(debit_dest_year AS CHAR) AS debitBn,\n" +
+                "  CAST(credit_dest_year AS CHAR) AS creditBn\n" +
+                "      FROM accdetailbalancehis t\n" +
+                "      WHERE 1 = 1\n" +
+                "          AND center_code IN(?1)\n" +
+                "          AND branch_code IN(?2)\n" +
+                "          AND acc_book_type = ?3\n" +
+                "          AND acc_book_code = ?4\n" +
+                "          AND year_month_date = ?5\n" +
+                "          AND ((direction_idx >= ?6\n" +
+                "                AND direction_idx <= ?7)\n" +
+                "                OR direction_idx LIKE ?7 ) \n" +
+                "ORDER BY t.direction_idx");
+
+        StringBuffer sql2 = new StringBuffer("SELECT\n" +
+                "  t.center_code   AS centerCode,\n" +
+                "  t.direction_idx AS itemCode,\n" +
+                "  CAST(t.balance_dest AS CHAR) AS balanceQc,\n" +
+                "  CAST(0.00 AS CHAR) AS debitBq,\n" +
+                "  CAST(0.00 AS CHAR) AS creditBq,\n" +
+                "  CAST(t.balance_dest AS CHAR) AS balanceQm,\n" +
+                "  CAST(debit_dest_year AS CHAR) AS debitBn,\n" +
+                "  CAST(credit_dest_year AS CHAR) AS creditBn\n" +
+                "      FROM accdetailbalancehis t\n" +
+                "      WHERE 1 = 1\n" +
+                "          AND center_code IN(?1)\n" +
+                "          AND branch_code IN(?2)\n" +
+                "          AND acc_book_type = ?3\n" +
+                "          AND acc_book_code = ?4\n" +
+                "          AND year_month_date = ?5\n" +
+                "          AND ((direction_idx >= ?6\n" +
+                "                AND direction_idx <= ?7)\n" +
+                "                OR direction_idx LIKE ?7 ) \n" +
+                "ORDER BY t.direction_idx");
+
 
         Map<Integer, Object> params = new HashMap<>();
-        params.put(1, accBookCode);
-        params.put(2, itemStart);
-        params.put(3, itemEnd);
-        params.put(4, itemEnd+"%");
-        params.put(5, centerCode);
-        params.put(6, branchCode);
-        params.put(7, accBookType);
-        params.put(8, startYearMonth);
+        params.put(1, centerCode);
+        params.put(2, branchCode);
+        params.put(3, accBookType);
+        params.put(4, accBookCode);
+        params.put(5, _yearMonth);
+        params.put(6, itemStart);
+        params.put(7, itemEnd);
+        params.put(7, itemEnd+"%");
 
-        List list = accDetailBalanceRepository.queryBySqlSC(sql.toString(), params);
+        List list = accDetailBalanceRepository.queryBySqlSC(settleState ? sql.toString() : sql2.toString(), params);
         if(list != null && !list.isEmpty()){
             for(int i = 0; i < list.size(); i++){
                 Map<String, String> map = (Map<String, String>) list.get(i);
@@ -154,29 +227,82 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
     }
 
     /**
+     * 获取最接近的已结转期间
+     *
+     * @param centerCode  核算机构
+     * @param accBookType 账套类型
+     * @param accBookCode 账套编码
+     * @param yearMonth   年月
+     * @return 获取该期间后最接近的，已结转期间或者已决算期间
+     */
+    private String getClosestSettledYearMonth(List centerCode, String accBookType, String accBookCode, String yearMonth) {
+        int  count = 999999;
+        for (Object obj : centerCode){
+            StringBuffer sql = new StringBuffer("select year_month_date as yearMonth from accmonthtrace where 1 = 1 ");
+            sql.append(" and center_code = ?1");
+            sql.append(" and acc_book_type = ?2");
+            sql.append(" and acc_book_code = ?3");
+            sql.append(" and year_month_date < ?4");
+            sql.append(" and acc_month_stat in ('3', '5') ");
+            sql.append(" order by year_month_date desc");
+
+            Map<Integer, Object> params = new HashMap<>();
+            params.put(1, (String)obj);
+            params.put(2, accBookType);
+            params.put(3, accBookCode);
+            params.put(4, yearMonth);
+
+            List list = voucherRepository.queryBySqlSC(sql.toString(), params);
+            if(list != null && !list.isEmpty()) {
+
+                Map<String, String> map = (Map<String, String>) list.get(0);
+
+                if (count > Integer.parseInt(map.get("yearMonth"))) {
+                    count = Integer.parseInt(map.get("yearMonth"));
+                }
+            }
+
+        }
+
+        return  count<Integer.parseInt(yearMonth) ? count+"" : yearMonth;
+    }
+
+    /**
      * 凭证处理，结果放在itemBalanceMap中
      */
     public void dealNoChargeVoucher2(String voucherGene, List centerCode, List branchCode, String accBookType, String accBookCode, String startYearMonth, String endYearMonth, String itemStart, String itemEnd, Map<String, Map<String, String>> itemBalanceMap){
         StringBuffer sql = new StringBuffer();
-        StringBuffer sql2 = new StringBuffer();
-        sql.append("select centerCode,itemCode,cast(sum(debitAmount) as char) as debitAmount,cast(sum(creditAmmount) as char) as creditAmmount from ( ");
-
-        sql2.append("select t1.center_code as centerCode,t1.acc_book_code as accountBookCode,t1.year_month_date as yearMonth,t2.direction_idx as itemCode,t2.debit_dest as debitAmount,t2.credit_dest as creditAmmount from accmainvoucher t1 left join accsubvoucher t2 on t1.center_code = t2.center_code and t1.branch_code = t2.branch_code and t1.acc_book_type = t2.acc_book_type and t1.acc_book_code = t2.acc_book_code and t1.year_month_date = t2.year_month_date and t1.voucher_no = t2.voucher_no where 1=1 ");
+        sql.append("SELECT\n" +
+                "                t1.center_code     AS centerCode,\n" +
+                "                t2.direction_idx   AS itemCode,\n" +
+                "                CAST(SUM(t2.debit_dest) AS CHAR)      AS debitAmount,\n" +
+                "                CAST(SUM(t2.credit_dest) AS CHAR)     AS creditAmmount\n" +
+                "                FROM accmainvoucher t1\n" +
+                "                LEFT JOIN accsubvoucher t2\n" +
+                "                ON t1.center_code = t2.center_code\n" +
+                "                AND t1.branch_code = t2.branch_code\n" +
+                "                AND t1.acc_book_type = t2.acc_book_type\n" +
+                "                AND t1.acc_book_code = t2.acc_book_code\n" +
+                "                AND t1.year_month_date = t2.year_month_date\n" +
+                "                AND t1.voucher_no = t2.voucher_no\n" +
+                "                WHERE 1 = 1");
         if (voucherGene!=null&&"1".equals(voucherGene)) {
-            sql2.append(" and t1.voucher_flag in ('1', '2', '3')");
-        } else {
-            sql2.append(" and t1.voucher_flag = '3'");
+            sql.append(" and t1.voucher_flag in ('1', '2','3')");
+        }else{
+            sql.append(" and t1.voucher_flag = '3' ");
         }
-        sql2.append(" and t1.center_code in (?1)");
-        sql2.append(" and t1.branch_code in (?2)");
-        sql2.append(" and t1.acc_book_type = ?3");
-        sql2.append(" and t1.acc_book_code = ?4");
-        sql2.append(" and t1.year_month_date >= ?5");
-        sql2.append(" and t1.year_month_date <= ?6");
-        sql2.append(" and ((");
-        sql2.append(" t2.direction_idx >= concat( ?7 , '/')");
-        sql2.append(" and t2.direction_idx <= concat( ?8 , '/')");
-        sql2.append(" ) or t2.direction_idx like concat( ?9 , '/%'))");
+
+        sql.append(" AND t1.center_code IN(?1)\n" +
+                "          AND t1.branch_code IN(?2)\n" +
+                "          AND t1.acc_book_type = ?3\n" +
+                "          AND t1.acc_book_code = ?4\n" +
+                "          AND t1.year_month_date >= ?5\n" +
+                "          AND t1.year_month_date <= ?6\n" +
+                "          AND ( (t2.direction_idx >= ?7 \n" +
+                "             AND t2.direction_idx <= ?8)\n" +
+                "          OR t2.direction_idx LIKE CONCAT(?8, '%'))" +
+                "GROUP BY t1.center_code,t2.direction_idx\n" +
+                "ORDER BY t2.direction_idx");
 
         Map<Integer, Object> params = new HashMap<>();
         params.put(1, centerCode);
@@ -187,19 +313,6 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
         params.put(6, endYearMonth);
         params.put(7, itemStart);
         params.put(8, itemEnd);
-        params.put(9, itemEnd);
-
-        String sql3 = sql2.toString();
-        sql3 = sql3.replaceAll("accmainvoucher", "accmainvoucherhis");
-        sql3 = sql3.replaceAll("accsubvoucher", "accsubvoucherhis");
-
-        sql.append(sql2);
-        sql.append(" union all ");
-        sql.append(sql3);
-
-        sql.append(" ) t where 1 = 1 ");
-        sql.append(" group by centerCode,itemCode ");
-        sql.append(" order by itemCode ");
 
         List list = accDetailBalanceRepository.queryBySqlSC(sql.toString(), params);
         if(list != null && !list.isEmpty()){
@@ -229,10 +342,9 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
                     //加入凭证数据
                     BigDecimal debitBq = new BigDecimal(dataMap.get("debitBq")).add(debitNoCharge);
                     BigDecimal creditBq = new BigDecimal(dataMap.get("creditBq")).add(creditNoCharge);
-                    BigDecimal balanceQm = new BigDecimal(dataMap.get("balanceQc")).add(debitNoCharge.subtract(creditNoCharge));
-                    // 当前月的本年累计发生额已经进行了对之前所有月的本期发生额的加和+年初余额的最终数据结果的保存。所以不需要再进行增加一遍本期发生额。
-                    BigDecimal debitBn = new BigDecimal(dataMap.get("debitBn"));
-                    BigDecimal creditBn = new BigDecimal(dataMap.get("creditBn"));
+                    BigDecimal balanceQm = new BigDecimal(dataMap.get("balanceQm")).add(debitNoCharge.subtract(creditNoCharge));
+                    BigDecimal debitBn = new BigDecimal(dataMap.get("debitBn")).add(debitBq);
+                    BigDecimal creditBn = new BigDecimal(dataMap.get("creditBn")).add(creditBq);
                     dataMap.put("debitBq", debitBq.toString());
                     dataMap.put("creditBq", creditBq.toString());
                     dataMap.put("balanceQm", balanceQm.toString());
@@ -251,24 +363,10 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
         Map<String, Map<String, String>> resultMap = new HashMap();
         //获取科目汇总规则
         Map<String, List> relationMap = getSummaryRelation(accBookCode, itemStart, itemEnd);
-        //汇总计算
-        for(int j = 6; j > 0; j--){//从末级科目到一级汇总
-            StringBuffer sql = new StringBuffer("select concat(all_subject, subject_code, '/') as itemCode, end_flag as endFlag from subjectinfo where useflag = '1' ");
-            sql.append(" and account = ?1");
-            sql.append(" and ((concat(all_subject, subject_code) >= ?2");
-            sql.append(" and concat(all_subject, subject_code) <= ?3 )");
-            sql.append(" or concat(all_subject, subject_code) like ?4 )");
-            sql.append(" and level = ?5");
-            sql.append(" order by itemCode");
 
-            Map<Integer, Object> params = new HashMap<>();
-            params.put(1, accBookCode);
-            params.put(2, itemStart);
-            params.put(3, itemEnd);
-            params.put(4, itemEnd+"%");
-            params.put(5, j);
-
-            List itemList = accDetailBalanceRepository.queryBySqlSC(sql.toString(), params);
+        for(int j = 3; j > 0; j--){
+            //从末级科目到一级汇总
+            List itemList = getAllLevelSubjectList(accBookCode, itemStart, itemEnd, j);
             if(itemList != null && !itemList.isEmpty()){
                 for(int k = 0; k < itemList.size(); k++){
                     Map<String, String> itemMap = (Map<String, String>) itemList.get(k);
@@ -312,7 +410,7 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
                                     balanceQm = balanceQm.add(new BigDecimal(childMap.get("balanceQm")));
                                     debitBn = debitBn.add(new BigDecimal(childMap.get("debitBn")));
                                     creditBn = creditBn.add(new BigDecimal(childMap.get("creditBn")));
-                                    if(childMap.get("centerCode") != null) centerCode = childMap.get("centerCode");
+                                    if(childMap.get("centerCode") != null) {centerCode = childMap.get("centerCode");}
                                 }
                             }
                             Map<String, String> sumMap = new HashMap<>();
@@ -333,9 +431,41 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
     }
 
     /**
+     * 从末级科目到一级汇总
+     * @param accBookCode 账套编码
+     * @param itemStart 起始科目
+     * @param itemEnd 终止科目
+     * @param j  循环变量
+     * @return
+     */
+    private List getAllLevelSubjectList(String accBookCode, String itemStart, String itemEnd, int j) {
+        String redisKey = RedisConstant.ACCOUNT_BALANCE_INQUIRY_ALL_LEVEL_SUBJECT_INFO_KEY_PREFIX.concat(accBookCode+"_"+itemStart+"_"+itemEnd+"_"+j) ;
+        if( RedisUtil.exists(redisKey) ){return  (List) RedisUtil.get(redisKey);}
+        StringBuffer sql = new StringBuffer("select concat(all_subject, subject_code, '/') as itemCode, end_flag as endFlag from subjectinfo where useflag = '1' ");
+        sql.append(" and account = ?1");
+        sql.append(" and ((concat(all_subject, subject_code) >= ?2");
+        sql.append(" and concat(all_subject, subject_code) <= ?3 )");
+        sql.append(" or concat(all_subject, subject_code) like ?4 )");
+        sql.append(" and level = ?5");
+        sql.append(" order by itemCode");
+
+        Map<Integer, Object> params = new HashMap<>();
+        params.put(1, accBookCode);
+        params.put(2, itemStart);
+        params.put(3, itemEnd);
+        params.put(4, itemEnd+"%");
+        params.put(5, j);
+        List list = accDetailBalanceRepository.queryBySqlSC(sql.toString(), params);
+        if( !RedisUtil.exists(redisKey ) ){RedisUtil.set(redisKey, list, Constant.TIME_OUT);}
+        return list;
+    }
+
+    /**
      *获取科目汇总关系：<科目，子科目集合>
      */
     public Map<String, List> getSummaryRelation(String accBookCode, String itemStart, String itemEnd){
+        String redisKey = RedisConstant.ACCOUNT_BALANCE_INQUIRY_SUMMARY_RELATIONSHIP_SUBJECT_INFO_KEY_PREFIX.concat(accBookCode+"_"+itemStart+"_"+itemEnd) ;
+        if( RedisUtil.exists(redisKey) ){return  (Map) RedisUtil.get(redisKey);}
         StringBuffer sql = new StringBuffer("select cast(id as char) as id, concat(all_subject, subject_code, '/') as itemCode from subjectinfo where end_flag = '1' and useflag = '1' ");
         sql.append(" and account = ?1");
         sql.append(" and ((concat(all_subject, subject_code) >= ?2");
@@ -372,6 +502,7 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
                 }
             }
         }
+        if( !RedisUtil.exists(redisKey ) ){RedisUtil.set(redisKey, itemMap, Constant.TIME_OUT);}
         return itemMap;
     }
 
