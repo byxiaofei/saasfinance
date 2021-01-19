@@ -25,4 +25,17 @@ public class RedisConstant {
     public static final String VOUCHER_INPUT_SUBJECT_INFO_KEY_PREFIX = "ifs:system:subjectInfoKey:";
 
 
+    /**
+     * 科目余额查询-科目信息(key前缀)
+     *  获取全级科目查询
+     */
+    public static final String ACCOUNT_BALANCE_INQUIRY_ALL_LEVEL_SUBJECT_INFO_KEY_PREFIX = "ifs:system:subjectInfoKey:";
+
+
+    /**
+     * 科目余额查询-科目信息(key前缀)
+     * 获取汇总科目关系查询
+     */
+    public static final String ACCOUNT_BALANCE_INQUIRY_SUMMARY_RELATIONSHIP_SUBJECT_INFO_KEY_PREFIX = "ifs:system:subjectInfoKey:";
+
 }
