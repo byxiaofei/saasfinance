@@ -1,6 +1,8 @@
 package com.sinosoft.service.impl.synthesize;
 
 import com.sinosoft.common.CurrentUser;
+import com.sinosoft.common.RedisCache;
+import com.sinosoft.common.RedisConstant;
 import com.sinosoft.dto.VoucherDTO;
 import com.sinosoft.repository.BranchInfoRepository;
 import com.sinosoft.repository.VoucherRepository;

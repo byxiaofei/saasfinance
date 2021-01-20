@@ -1,13 +1,17 @@
 package com.sinosoft.service.impl.synthesize;
 
+import com.sinosoft.common.Constant;
 import com.sinosoft.common.CurrentUser;
+import com.sinosoft.common.RedisConstant;
 import com.sinosoft.common.SysPringLog;
+import com.sinosoft.domain.SpecialInfo;
 import com.sinosoft.dto.VoucherDTO;
 import com.sinosoft.repository.SpecialInfoRepository;
 import com.sinosoft.repository.VoucherRepository;
 import com.sinosoft.service.synthesize.DetailAccountService;
 import com.sinosoft.service.synthesize.SpecialSubjectBalanceService;
 import com.sinosoft.util.ExcelUtil;
+import com.sinosoft.util.RedisUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -70,32 +74,11 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
         String endYearMonth = dto.getYearMonthDate();
 
         //专项代码
-        String specialCode = "";
+        String specialCode = dto.getSpecialCode();
         List<String> specialCondition = new ArrayList<>();
-        if (dto.getSpecialName()!=null&&!"".equals(dto.getSpecialName())) {
-            specialCode = dto.getSpecialCode();
-            if (specialCode.equals("BM") || specialCode.equals("WLDX") || specialCode.equals("BM,WLDX") || specialCode.equals("WLDX,BM")){
-                List<String> SpecialList = Arrays.asList(specialCode.split(","));
-                for (String s : SpecialList) {
-                    //  使用模糊查询所有末级
-                    List<String> strings = specialInfoRepository.finbySpecialCondLike(s);
-                    //  遍历末级
-                    for (String t : strings){
-                        //  拼接
-                        specialCode = specialCode.concat(t).concat(",");
-                    }
-                    //  去掉末尾的逗号
-                    specialCode = specialCode.substring(0,specialCode.length()-1);
-                    //  设置到dto中
-                    dto.setSpecialCode(specialCode.toString());
-                    specialCondition = Arrays.asList(specialCode.split(","));//获取专项筛选条件
-                }
-            }
-            else if(specialCode!=null && !"".equals(specialCode)) {
-                specialCondition = Arrays.asList(specialCode.split(","));//获取专项筛选条件
-            }
+        if(specialCode!=null && !"".equals(specialCode)) {
+            specialCondition = Arrays.asList(specialCode.split(","));//获取专项筛选条件
         }
-
         //是否包含未记账凭证：0-否；1-是
         String voucherGene = dto.getVoucherGene();
         if("1".equals(voucherGene)) chargeFlag = true;
@@ -232,17 +215,32 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
     //获取科目专项余额数据
     @SysPringLog(value = "根据科目汇总")
     private void getSubjectSpecialBalance(String itemCode, List centerCode, List branchCode, String accBookType, String accBookCode, List<String> specialCondition, String startYearMonth, String endYearMonth, String cumulativeAmount, boolean chargeFlag, List result,String specialNameP) {
+        Boolean endYearMonthSettleState = getSettleState(centerCode, accBookType, accBookCode, endYearMonth);
+        Boolean startYearMonthSettleState = getSettleState(centerCode, accBookType, accBookCode, startYearMonth);
         //获取需要展示的科目专项及发生额
-        List itemList = getSubjectSpecialList(centerCode, branchCode, accBookType, accBookCode, itemCode, specialCondition, startYearMonth, endYearMonth, chargeFlag,specialNameP);
+        List itemList = getSubjectSpecialList(centerCode, branchCode, accBookType, accBookCode, itemCode, specialCondition, startYearMonth, endYearMonth,startYearMonthSettleState,endYearMonthSettleState);
         if(itemList == null || itemList.isEmpty()) return;
         Map<String, Map<String, String>> qcMap = new HashMap<>();
         //获取期末余额和本年累计
         Map<String, Map<String, String>> qmMap = getPeriodSubjectSpecialData(centerCode, branchCode, accBookType, accBookCode, itemCode, specialCondition, endYearMonth);
         //获取期初金额
-        qcMap = getQcMap(itemCode, centerCode, branchCode, accBookType, accBookCode, specialCondition, startYearMonth, endYearMonth, qcMap, qmMap);
+        qcMap = getQcMap(itemCode, centerCode, branchCode, accBookType, accBookCode, specialCondition, startYearMonth, endYearMonth, qcMap, qmMap,endYearMonthSettleState);
 
         //未结转期间已记账/未记账凭证处理
-        if(!getSettleState(centerCode, accBookType, accBookCode, endYearMonth)){
+        noCarryoverProcessing(itemCode, centerCode, branchCode, accBookType, accBookCode, specialCondition, endYearMonth, chargeFlag, endYearMonthSettleState, qmMap);
+        //封装返回集合
+        encapsulatedReturnCollection(cumulativeAmount, result, itemList, qcMap, qmMap);
+
+        //添加专项名称
+        addSpecialName(accBookCode, result);
+    }
+
+    /**
+     * 未结转期间已记账/未记账凭证处理
+     *注：目前系统只支持存在一个未结转期的余额查询
+     */
+    private void noCarryoverProcessing(String itemCode, List centerCode, List branchCode, String accBookType, String accBookCode, List<String> specialCondition, String endYearMonth, boolean chargeFlag, Boolean endYearMonthSettleState, Map<String, Map<String, String>> qmMap) {
+        if( !endYearMonthSettleState ){
             Map<String, Map<String, String>> noChargeItemBq = getNoChargeItemBq(chargeFlag,centerCode, branchCode, accBookType, accBookCode, itemCode, specialCondition, endYearMonth);
             for(String s : noChargeItemBq.keySet()){
                 BigDecimal noChargeDebitBq = new BigDecimal(noChargeItemBq.get(s).get("debitBq"));//本期-未记账-借
@@ -251,30 +249,37 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
                 if(qmDataMap == null){
                     qmDataMap = new HashMap<>();
                     qmDataMap.put("balanceQm", noChargeDebitBq.subtract(noChargeCreditBq).toString());
-                    qmDataMap.put("debitBn", "0.00");
-                    qmDataMap.put("creditBn", "0.00");
+                    qmDataMap.put("debitBn", noChargeDebitBq.toString());
+                    qmDataMap.put("creditBn",noChargeCreditBq.toString());
+                    qmDataMap.put("debitBq", noChargeDebitBq.toString());
+                    qmDataMap.put("creditBq", noChargeCreditBq.toString());
                     qmMap.put(s, qmDataMap);
                 }else{
                     BigDecimal curBalanceQm = new BigDecimal(qmDataMap.get("balanceQm"));//期末-不含未记账
+                    BigDecimal debitBq = new BigDecimal(qmDataMap.get("debitBq")).add(noChargeDebitBq);
+                    BigDecimal creditBq = new BigDecimal(qmDataMap.get("creditBq")).add(noChargeCreditBq);
                     qmDataMap.put("balanceQm", curBalanceQm.add(noChargeDebitBq).subtract(noChargeCreditBq).toString());
+                    qmDataMap.put("debitBq", debitBq.toString());
+                    qmDataMap.put("creditBq", creditBq.toString());
+                    BigDecimal curDebitBn = qmDataMap.get("debitBn") == null ? new BigDecimal(0.00) : new BigDecimal(qmDataMap.get("debitBn"));//本年借方-不含未记账
+                    BigDecimal curCreditBn = qmDataMap.get("creditBn") == null ? new BigDecimal(0.00) : new BigDecimal(qmDataMap.get("creditBn"));//本年贷方-不含未记账
+                    qmDataMap.put("debitBn", curDebitBn.add(noChargeDebitBq).toString());
+                    qmDataMap.put("creditBn", curCreditBn.add(noChargeCreditBq).toString());
                     qmMap.put(s, qmDataMap);
                 }
             }
-            //计入本年累计发生
-            Map<String, Map<String, String>> noChargeItemBn = getNoChargeItemBn(chargeFlag, centerCode, branchCode, accBookType, accBookCode, itemCode, specialCondition, startYearMonth, endYearMonth);
-            for(String s : noChargeItemBn.keySet()){
-                BigDecimal noChargeDebitBn = new BigDecimal(noChargeItemBn.get(s).get("debitBn"));//本年-未记账-借
-                BigDecimal noChargeCreditBn = new BigDecimal(noChargeItemBn.get(s).get("creditBn"));//本年-未记账-贷
-                Map<String, String> qmDataMap = qmMap.get(s);
-                BigDecimal curDebitBn = qmDataMap.get("debitBn") == null ? new BigDecimal(0.00) : new BigDecimal(qmDataMap.get("debitBn"));//本年借方-不含未记账
-                BigDecimal curCreditBn = qmDataMap.get("creditBn") == null ? new BigDecimal(0.00) : new BigDecimal(qmDataMap.get("creditBn"));//本年贷方-不含未记账
-                qmDataMap.put("debitBn", curDebitBn.add(noChargeDebitBn).toString());
-                qmDataMap.put("creditBn", curCreditBn.add(noChargeCreditBn).toString());
-                qmMap.put(s, qmDataMap);
-            }
         }
-        //封装返回集合
-        //科目合计
+    }
+
+    /**
+     * 封装返回集合 按科目汇总
+     * @param cumulativeAmount
+     * @param result
+     * @param itemList
+     * @param qcMap
+     * @param qmMap
+     */
+    private void encapsulatedReturnCollection(String cumulativeAmount, List result, List itemList, Map<String, Map<String, String>> qcMap, Map<String, Map<String, String>> qmMap) {
         String sumCode = "subjectCode";
         String sumName = "科目合计";
         String curSumCode = "";
@@ -421,25 +426,39 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
     }
 
     /**
+     * 添加专项名称
+     * @param accBookCode 账套
+     * @param result 返回值
+     */
+    private void addSpecialName(String accBookCode, List result) {
+        String redisKey = RedisConstant.ACCOUNT_BALANCE_QUERY_ALL_SPECIAL_TREE_INQUIRY_SUMMARY_RELATIONSHIP_SUBJECT_INFO_KEY_PREFIX.concat(accBookCode) ;
+        List<Map<String,String>> specialInfos = new ArrayList<>();
+        if( RedisUtil.exists(redisKey) ){specialInfos = (List) RedisUtil.get(redisKey);}
+        else{
+            specialInfos = specialInfoRepository.findSpecialInfoByAccount(accBookCode);
+            RedisUtil.set(redisKey, specialInfos, Constant.TIME_OUT);
+        }
+        for(Object  obj  : result){
+            for(Map specialMap : specialInfos){
+                Map map = (Map)obj;
+                if(map.get("detailCode")!=null && map.get("detailCode").equals(specialMap.get("special_code"))){
+                    map.put("detailName",specialMap.get("special_name"));
+                    break;
+                };
+            }
+        }
+    }
+
+    /**
      * 获取期初金额 按科目汇总
-     * @param itemCode
-     * @param centerCode
-     * @param branchCode
-     * @param accBookType
-     * @param accBookCode
-     * @param specialCondition
-     * @param startYearMonth
-     * @param endYearMonth
-     * @param qcMap
-     * @param qmMap
      * @return
      */
-    private Map<String, Map<String, String>> getQcMap(String itemCode, List centerCode, List branchCode, String accBookType, String accBookCode, List<String> specialCondition, String startYearMonth, String endYearMonth, Map<String, Map<String, String>> qcMap, Map<String, Map<String, String>> qmMap) {
+    private Map<String, Map<String, String>> getQcMap(String itemCode, List centerCode, List branchCode, String accBookType, String accBookCode, List<String> specialCondition, String startYearMonth, String endYearMonth, Map<String, Map<String, String>> qcMap, Map<String, Map<String, String>> qmMap,Boolean endYearMonthSettleState) {
         //期初和期末同期
         if(startYearMonth.equals(endYearMonth)){
             //获取期初专项余额信息
             for(String s : qmMap.keySet()){
-                if(getSettleState(centerCode, accBookType, accBookCode, startYearMonth)){
+                if(endYearMonthSettleState){
                     Map<String, String> map = new HashMap<>();
                     map.put("balanceQc",qmMap.get(s).get("balanceQc"));
                     qcMap.put(s,map) ;
@@ -452,7 +471,7 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
         }else{
             Map<String, Map<String, String>> qcMapTemp = getPeriodSubjectSpecialData(centerCode, branchCode, accBookType, accBookCode, itemCode, specialCondition, startYearMonth);
             //已结转
-            if(getSettleState(centerCode, accBookType, accBookCode, startYearMonth)){
+            if(endYearMonthSettleState){
                 qcMap = qcMapTemp;
             }else {
                 for(String s : qcMapTemp.keySet()){
@@ -947,10 +966,6 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
         Map<String, Map<String, String>> resultMap = new HashMap<>();
         StringBuffer sql = new StringBuffer("select accountBookCode,yearMonth,itemCode,specialCode,CAST(SUM(balanceQc) AS CHAR) AS balanceQc,CAST(SUM(debitBq) AS CHAR) as debitBq,CAST(SUM(creditBq) AS CHAR)  as creditBq,CAST(SUM(balanceQm) AS CHAR) as balanceQm,CAST(SUM(debitBn) AS CHAR) as debitBn,CAST(SUM(creditBn) AS CHAR) as creditBn from ( ");
         sql.append("select a.acc_book_code as accountBookCode,a.year_month_date as yearMonth,a.direction_idx as itemCode,substring_index(substring_index(a.direction_other,',',b.id+ 1),',' ,- 1) as specialCode,cast(a.balance_begin_dest as char) as balanceQc,cast(a.debit_dest as char) as debitBq,cast(a.credit_dest as char) as creditBq,cast(a.balance_dest as char) as balanceQm,cast(debit_dest_year as char) as debitBn,cast(credit_dest_year as char) as creditBn from (" +
-                "select * from accarticlebalance ac where 1=1 and ac.center_code in (?1) and ac.branch_code  in (?2) and ac.acc_book_type = ?3 and ac.acc_book_code = ?4 and ac.year_month_date = ?5 ) a " +
-                "join splitstringsort b ON b.id< (length(a.direction_other) - length(REPLACE (a.direction_other, ',', '')) + 1) " +
-                " union all " +
-                "select a.acc_book_code as accountBookCode,a.year_month_date as yearMonth,a.direction_idx as itemCode,substring_index(substring_index(a.direction_other,',',b.id+ 1),',' ,- 1) as specialCode,cast(a.balance_begin_dest as char) as balanceQc,cast(a.debit_dest as char) as debitBq,cast(a.credit_dest as char) as creditBq,cast(a.balance_dest as char) as balanceQm,cast(debit_dest_year as char) as debitBn,cast(credit_dest_year as char) as creditBn from (" +
                 "select * from accarticlebalancehis ach where 1=1 and ach.center_code in (?1) and ach.branch_code in (?2)and ach.acc_book_type = ?3 and ach.acc_book_code = ?4 and ach.year_month_date = ?5 ) a " +
                 "join splitstringsort b ON b.id< (length(a.direction_other) - length(REPLACE (a.direction_other, ',', '')) + 1) ");
         sql.append(") t where 1 = 1 ");
@@ -1081,55 +1096,76 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
     }
 
     //获取需要展示的科目及专项集合
-    private List getSubjectSpecialList(List centerCode, List branchCode, String accBookType, String accBookCode, String itemCode, List<String> specialCondition, String startYearMonth, String endYearMonth, boolean chargeFlag,String specialNameP) {
-        StringBuffer itemSql = new StringBuffer("select concat(t.itemCode,'_',t.specialCode) as itemSpecial,t.itemCode,t1.itemName,t.specialCode,t2.specialName,cast(sum(t.debitBq) as char) as debitBq,cast(sum(t.creditBq) as char) as creditBq from (");
-        itemSql.append("select a.acc_book_code as accountBookCode,a.year_month_date as yearMonth,a.direction_idx as itemCode,substring_index(substring_index(a.direction_other,',',b.id+ 1),',' ,- 1) as specialCode,debit_dest as debitBq,credit_dest as creditBq from (" +
-                "select ac.acc_book_code,ac.year_month_date,ac.direction_idx,ac.direction_other,ac.debit_dest,ac.credit_dest from accarticlebalance ac where 1=1 and ac.center_code  in (?1) and ac.branch_code in (?2) and ac.acc_book_type = ?3 and ac.acc_book_code = ?4 and ac.year_month_date >= ?5 and ac.year_month_date <= ?6 ) a " +
-                "join splitstringsort b ON b.id< (length(a.direction_other) - length(REPLACE (a.direction_other, ',', '')) + 1) " +
-                " union all " +
-                "select a.acc_book_code as accountBookCode,a.year_month_date as yearMonth,a.direction_idx as itemCode,substring_index(substring_index(a.direction_other,',',b.id+ 1),',' ,- 1) as specialCode,debit_dest as debitBq,credit_dest as creditBq from (" +
-                "select ach.acc_book_code,ach.year_month_date,ach.direction_idx,ach.direction_other,ach.debit_dest,ach.credit_dest from accarticlebalancehis ach where 1=1 and ach.center_code in (?1) and ach.branch_code in (?2) and ach.acc_book_type = ?3 and ach.acc_book_code = ?4 and ach.year_month_date >= ?5 and ach.year_month_date <= ?6 ) a " +
-                "join splitstringsort b ON b.id< (length(a.direction_other) - length(REPLACE (a.direction_other, ',', '')) + 1) ");
-        if(chargeFlag) itemSql.append(" union all " +
-                "select t1.acc_book_code as accountBookCode,t1.year_month_date as yearMonth,t2.direction_idx as itemCode,t2.specialCode,t2.debit_dest as debitBq,t2.credit_dest as creditBq from (" +
-                "select * from accmainvoucher am where 1=1 AND am.center_code in (?1) AND am.branch_code in (?2) AND am.acc_book_type = ?3 AND am.acc_book_code = ?4 AND am.year_month_date >= ?5 AND am.year_month_date <= ?6 ) t1 left join (" +
-                "select a.voucher_no,a.direction_idx,substring_index(substring_index(a.direction_other,',',b.id+ 1),',' ,- 1) as specialCode,a.debit_dest,a.credit_dest from (" +
-                "select * from accsubvoucher ac where 1=1 AND ac.center_code in (?1) AND ac.branch_code in (?2) AND ac.acc_book_type = ?3 AND ac.acc_book_code = ?4 AND ac.year_month_date >= ?5 AND ac.year_month_date <= ?6 ) a " +
-                "join splitstringsort b ON b.id< (length(a.direction_other) - length(REPLACE (a.direction_other, ',', '')) + 1) " +
-                ") t2 on t1.voucher_no = t2.voucher_no where t1.voucher_flag in ('1', '2') ");
-        itemSql.append(" ) t ");
-        itemSql.append(" left join (select s.account,concat(s.all_subject, s.subject_code, '/') as itemCode,s.subject_name as itemName from subjectinfo s where s.account = ?4 and s.end_flag = '0' and s.useflag) t1 on t1.itemCode = t.itemCode and t1.account = t.accountBookCode ");
-        if(specialNameP.toString().equals("1")){
-            itemSql.append(" left join (select sp.account,sp.special_code as specialCode,sp.special_namep as specialName from specialinfo sp where sp.account = ?4 AND sp.endflag = '0' and sp.useflag) t2 on t2.specialCode = t.specialCode and t2.account = t.accountBookCode ");
-        }else {
-            itemSql.append(" left join (select sp.account,sp.special_code as specialCode,sp.special_name as specialName from specialinfo sp where sp.account = ?4 AND sp.endflag = '0' and sp.useflag) t2 on t2.specialCode = t.specialCode and t2.account = t.accountBookCode ");
-        }
-        itemSql.append(" where 1 = 1 ");
+    private List getSubjectSpecialList(List centerCode, List branchCode, String accBookType, String accBookCode, String itemCode, List<String> specialCondition, String startYearMonth, String endYearMonth,Boolean startYearMonthSettleState,Boolean endYearMonthSettleState) {
 
         Map<Integer, Object> params = new HashMap<>();
+        StringBuffer itemSql = new StringBuffer(" SELECT CONCAT(t.itemCode, '_', t.specialCode) AS itemSpecial, t.itemCode\n" +
+                "\t, t.itemName, t.specialCode, CAST(SUM(t.debit_dest) AS CHAR) AS debitBq, CAST(SUM(t.credit_dest) AS CHAR) AS creditBq\n" +
+                "FROM (\n" +
+                "\tSELECT acc.acc_book_code, acc.year_month_date, acc.direction_idx AS itemCode, acc.direction_idx_name AS itemName\n" +
+                "\t\t, SUBSTRING_INDEX(SUBSTRING_INDEX(acc.direction_other, ',', split.id + 1), ',', -1) AS specialCode\n" +
+                "\t\t, acc.direction_other, acc.debit_dest, acc.credit_dest\n" +
+                "\tFROM accarticlebalancehis acc\n" +
+                "\t\tLEFT JOIN splitstringsort split ON split.id < LENGTH(acc.direction_other) - LENGTH(REPLACE(acc.direction_other, ',', '')) + 1\n" +
+                "\tWHERE 1 = 1\n" +
+                "\t\tAND acc.center_code IN (?1)\n" +
+                "\t\tAND acc.branch_code IN (?2)\n" +
+                "\t\tAND acc.acc_book_type = ?3 \n" +
+                "\t\tAND acc.acc_book_code = ?4 \n" +
+                "\t\tAND acc.year_month_date >= ?5\n" +
+                "\t\tAND acc.year_month_date <= ?6 \n" );
+        //如果开始期间以结转 且 结束期间未结转
+        if( startYearMonthSettleState && !endYearMonthSettleState ){
+            itemSql.append(" UNION ALL " +
+                    "SELECT acc.acc_book_code, acc.year_month_date, acc.direction_idx AS itemCode, acc.direction_idx_name AS itemName \n" +
+                    "                , SUBSTRING_INDEX(SUBSTRING_INDEX(acc.direction_other, ',', split.id + 1), ',', -1) AS specialCode \n" +
+                    "                , acc.direction_other, acc.debit_dest, acc.credit_dest \n" +
+                    "                FROM accarticlebalance acc \n" +
+                    "                LEFT JOIN splitstringsort split ON split.id < LENGTH(acc.direction_other) - LENGTH(REPLACE(acc.direction_other, ',', '')) + 1 \n" +
+                    "                WHERE 1 = 1 \n" +
+                    "                AND acc.center_code IN (?1) \n" +
+                    "                AND acc.branch_code IN (?2) \n" +
+                    "                AND acc.acc_book_type = ?3 \n" +
+                    "                AND acc.acc_book_code = ?4 \n" +
+                    "                AND acc.year_month_date >= ?5 \n" +
+                    "                AND acc.year_month_date <= ?6 ");
+        }
+        itemSql.append(") t ");
         params.put(1, centerCode);
         params.put(2, branchCode);
         params.put(3, accBookType);
         params.put(4, accBookCode);
         params.put(5, startYearMonth);
         params.put(6, endYearMonth);
-        int paramsNo = 7;
-
+        int index = 7;
         if(itemCode != null && !"".equals(itemCode)) {
-            itemSql.append(" and t.itemCode like ?" + paramsNo);
-            params.put(paramsNo, itemCode+"%");
-            paramsNo++;
+            itemSql.append(" and t.itemCode like ?"+index );
+            params.put(index, itemCode+"%");
+            index++;
         }
         if(specialCondition != null && specialCondition.size()>0) {
-            itemSql.append(" and t.specialCode in ( ?" + paramsNo + " )");
-            params.put(paramsNo, specialCondition);
-            paramsNo++;
+            String specialCode = String.join(",", specialCondition);
+            if (specialCode.equals("BM") || specialCode.equals("WLDX") ){
+                itemSql.append(" where  t.specialCode like ?"+index);
+                params.put(index, specialCode+"%");
+            }else if(!specialCode.equals("BM,WLDX") && !specialCode.equals("WLDX,BM")){
+                //选择具体专项查询
+                itemSql.append(" where  t.specialCode in (?"+index+") ");
+                params.put(index, specialCondition);
+            }
         }
+        itemSql.append(" GROUP BY t.itemCode, t.specialCode\n" +
+                "  ORDER BY t.itemCode, t.specialCode");
 
-        itemSql.append(" group by t.itemCode, t1.itemName, t.specialCode, t2.specialName ");
-        itemSql.append(" order by t.itemCode, t.specialCode");
-
-        return voucherRepository.queryBySqlSC(itemSql.toString(), params);
+        String finalSql = itemSql.toString();
+        //判断最后期间是否结转
+        if(!endYearMonthSettleState){
+            //判断起始期间是否结转
+            if(!startYearMonthSettleState){
+                finalSql =finalSql.replaceAll("accarticlebalancehis","accarticlebalance");
+            }
+        }
+        return voucherRepository.queryBySqlSC(finalSql, params);
     }
 
     //获取需要展示的专项及科目集合

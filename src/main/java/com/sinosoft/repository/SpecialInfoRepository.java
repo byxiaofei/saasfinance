@@ -16,6 +16,9 @@ public interface SpecialInfoRepository extends BaseRepository<SpecialInfo,Long>{
     @Query(value = "select * from specialinfo s where s.account = ?1 and binary s.special_code = ?2", nativeQuery = true)
     SpecialInfo findSpecialInfoBySpecialCode(String account, String specialCode);
 
+    @Query(value = "select * from specialinfo s where s.account = ?1 ", nativeQuery = true)
+    List<Map<String,String>> findSpecialInfoByAccount(String account);
+
     @Query(value = "select s.id,s.special_code,s.special_name,s.special_namep,s.super_special,s.endflag ,s.account,s.useflag,s.temp,s.createoper,s.createtime,s.updateoper,s.updatetime  from specialinfo s where s.id = ?1 ", nativeQuery = true)
     SpecialInfo findSpecialInfoById(int id);
 

@@ -38,4 +38,17 @@ public class RedisConstant {
      */
     public static final String ACCOUNT_BALANCE_INQUIRY_SUMMARY_RELATIONSHIP_SUBJECT_INFO_KEY_PREFIX = "ifs:system:subjectInfoKey:";
 
+
+    /**
+     * 专项科目余额查询-专项信息(key前缀)
+     * 根据专项名称模糊查询专项树
+     */
+    public static final String ACCOUNT_BALANCE_QUERY_SPECIAL_TREE_INQUIRY_SUMMARY_RELATIONSHIP_SUBJECT_INFO_KEY_PREFIX = "ifs:system:querySpecialTreeKey:";
+
+    /**
+     * 专项科目管理-专项信息(key前缀)
+     * 根据专项名称模糊查询专项信息
+     */
+    public static final String ACCOUNT_BALANCE_QUERY_ALL_SPECIAL_TREE_INQUIRY_SUMMARY_RELATIONSHIP_SUBJECT_INFO_KEY_PREFIX = "ifs:system:queryAllSpecialTreeKey:";
+
 }
