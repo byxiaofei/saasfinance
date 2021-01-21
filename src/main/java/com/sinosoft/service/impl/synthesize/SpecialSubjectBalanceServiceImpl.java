@@ -224,7 +224,7 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
         //获取期末余额和本年累计
         Map<String, Map<String, String>> qmMap = getPeriodSubjectSpecialData(centerCode, branchCode, accBookType, accBookCode, itemCode, specialCondition, endYearMonth);
         //获取期初金额
-        qcMap = getQcMap(itemCode, centerCode, branchCode, accBookType, accBookCode, specialCondition, startYearMonth, endYearMonth, qcMap, qmMap,endYearMonthSettleState);
+        qcMap = getQcMap(itemCode, centerCode, branchCode, accBookType, accBookCode, specialCondition, startYearMonth, endYearMonth, qcMap, qmMap,startYearMonthSettleState);
 
         //未结转期间已记账/未记账凭证处理
         noCarryoverProcessing(itemCode, centerCode, branchCode, accBookType, accBookCode, specialCondition, endYearMonth, chargeFlag, endYearMonthSettleState, qmMap);
@@ -453,12 +453,12 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
      * 获取期初金额 按科目汇总
      * @return
      */
-    private Map<String, Map<String, String>> getQcMap(String itemCode, List centerCode, List branchCode, String accBookType, String accBookCode, List<String> specialCondition, String startYearMonth, String endYearMonth, Map<String, Map<String, String>> qcMap, Map<String, Map<String, String>> qmMap,Boolean endYearMonthSettleState) {
+    private Map<String, Map<String, String>> getQcMap(String itemCode, List centerCode, List branchCode, String accBookType, String accBookCode, List<String> specialCondition, String startYearMonth, String endYearMonth, Map<String, Map<String, String>> qcMap, Map<String, Map<String, String>> qmMap,Boolean startYearMonthSettleState) {
         //期初和期末同期
         if(startYearMonth.equals(endYearMonth)){
             //获取期初专项余额信息
             for(String s : qmMap.keySet()){
-                if(endYearMonthSettleState){
+                if(startYearMonthSettleState){
                     Map<String, String> map = new HashMap<>();
                     map.put("balanceQc",qmMap.get(s).get("balanceQc"));
                     qcMap.put(s,map) ;
@@ -471,7 +471,7 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
         }else{
             Map<String, Map<String, String>> qcMapTemp = getPeriodSubjectSpecialData(centerCode, branchCode, accBookType, accBookCode, itemCode, specialCondition, startYearMonth);
             //已结转
-            if(endYearMonthSettleState){
+            if(startYearMonthSettleState){
                 qcMap = qcMapTemp;
             }else {
                 for(String s : qcMapTemp.keySet()){
@@ -1130,7 +1130,7 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
                     "                AND acc.year_month_date >= ?5 \n" +
                     "                AND acc.year_month_date <= ?6 ");
         }
-        itemSql.append(") t ");
+        itemSql.append(") t where 1=1  ");
         params.put(1, centerCode);
         params.put(2, branchCode);
         params.put(3, accBookType);
@@ -1146,7 +1146,7 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
         if(specialCondition != null && specialCondition.size()>0) {
             String specialCode = String.join(",", specialCondition);
             if (specialCode.equals("BM") || specialCode.equals("WLDX") ){
-                itemSql.append(" where  t.specialCode like ?"+index);
+                itemSql.append(" and  t.specialCode like ?"+index);
                 params.put(index, specialCode+"%");
             }else if(!specialCode.equals("BM,WLDX") && !specialCode.equals("WLDX,BM")){
                 //选择具体专项查询
