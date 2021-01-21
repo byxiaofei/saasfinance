@@ -1150,7 +1150,7 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
                 params.put(index, specialCode+"%");
             }else if(!specialCode.equals("BM,WLDX") && !specialCode.equals("WLDX,BM")){
                 //选择具体专项查询
-                itemSql.append(" where  t.specialCode in (?"+index+") ");
+                itemSql.append(" and t.specialCode in (?"+index+") ");
                 params.put(index, specialCondition);
             }
         }

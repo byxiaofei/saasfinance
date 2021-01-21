@@ -775,6 +775,7 @@ public class VoucherServiceImp implements VoucherService {
 				params.put(2, id);
 
 				List<?> list =voucherRepository.queryBySqlSC(sql.toString(), params);
+				if (list != null && list.size() > 100) {list = list.subList(0, 100);}
 				if(list!=null&&list.size()>0&&!list.isEmpty()){
 					for (Object obj : list) {
 						Map map = new HashMap();
@@ -818,6 +819,7 @@ public class VoucherServiceImp implements VoucherService {
 			params.put(2, id);
 
 			List<?> list =voucherRepository.queryBySqlSC(sql.toString(), params);
+			if (list != null && list.size() > 100) {list = list.subList(0, 100);}
 			if(list!=null&&list.size()>0&&!list.isEmpty()){
 				for (Object obj : list) {
 					Map map = new HashMap();
@@ -861,6 +863,7 @@ public class VoucherServiceImp implements VoucherService {
 				params.put(2, id);
 
 				List<?> list =voucherRepository.queryBySqlSC(sql.toString(), params);
+				if (list != null && list.size() > 100) {list = list.subList(0, 100);}
 				if(list!=null&&list.size()>0&&!list.isEmpty()){
 					for (Object obj : list) {
 						Map map = new HashMap();
@@ -903,6 +906,7 @@ public class VoucherServiceImp implements VoucherService {
 			params.put(2, id);
 
 			List<?> list =voucherRepository.queryBySqlSC(sql.toString(), params);
+			if (list != null && list.size() > 100) {list = list.subList(0, 100);}
 			if(list!=null&&list.size()>0&&!list.isEmpty()){
 				for (Object obj : list) {
 					Map map = new HashMap();
