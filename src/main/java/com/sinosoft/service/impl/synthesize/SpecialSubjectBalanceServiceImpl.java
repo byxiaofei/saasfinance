@@ -983,11 +983,19 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
             params.put(paramsNo, itemCode+"%");
             paramsNo++;
         }
+
         if(specialCondition != null && specialCondition.size()>0) {
-            sql.append(" and t.specialCode in ( ?" + paramsNo + " )");
-            params.put(paramsNo, specialCondition);
-            paramsNo++;
+            String specialCode = String.join(",", specialCondition);
+            if (specialCode.equals("BM") || specialCode.equals("WLDX") ){
+                sql.append(" and  t.specialCode like ?"+paramsNo);
+                params.put(paramsNo, specialCode+"%");
+            }else if(!specialCode.equals("BM,WLDX") && !specialCode.equals("WLDX,BM")){
+                //选择具体专项查询
+                sql.append(" and t.specialCode in (?"+paramsNo+") ");
+                params.put(paramsNo, specialCondition);
+            }
         }
+
 
         sql.append(" GROUP BY t.itemCode,t.specialCode order by t.itemCode, t.specialCode");
 
