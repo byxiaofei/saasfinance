@@ -760,81 +760,7 @@
         }
     }
 
-   //   专项查询参数（原版）
-  /* function saveSpecial(){
-        var nodes = $('#specialTree').tree('getChecked');//获取所有选中专项信息
-        console.log(nodes);
-        if (nodes.length!=0) {
-            specialCodeAll = "";
-            specialNameAll = "";
-            for (var i=0;i<nodes.length;i++) {
-                specialCodeAll += nodes[i].code+',';
-                specialNameAll += nodes[i].name+',';
-                specialIdAll += nodes[i].id+',';
-            }
-            specialCodeAll = specialCodeAll.substring(0,specialCodeAll.length-1);
-            specialNameAll = specialNameAll.substring(0,specialNameAll.length-1);
-            specialIdAll = specialIdAll.substring(0,specialIdAll.length-1);
-
-            $('#specialCode').val(specialCodeAll);
-            $('#specialId').val(specialIdAll);
-            $('#specialName').textbox('setValue',specialNameAll);
-            $('#specialGrid').dialog('close');
-        } else {
-
-        }
-    }*/
-
-    //  第二版本
-   /* function saveSpecial(){
-        specialCodeAll = "";
-        specialNameAll = "";
-        console.log(Special_TYPE);
-        //  console.log(Special_NAME);
-        //  console.log(Special_ID);
-        if(Special_TYPE.code == 'BM'  || Special_TYPE.code == 'WLDX'){
-            console.log(Special_TYPE.children.length);
-            for (var i=0;i<Special_TYPE.children.length;i++){
-                specialCodeAll += Special_TYPE.children[i].code+',';
-                specialNameAll += Special_TYPE.children[i].name+',';
-                specialIdAll += Special_TYPE.children[i].id+',';
-            }
-            /!*console.log(specialCodeAll);
-            console.log(specialNameAll);
-            console.log(specialIdAll);*!/
-
-            specialCodeAll = specialCodeAll.substring(0,specialCodeAll.length-1);
-            specialNameAll = specialNameAll.substring(0,specialNameAll.length-1);
-            specialIdAll = specialIdAll.substring(0,specialIdAll.length-1);
-
-
-            $('#specialCode').val(specialCodeAll);
-            $('#specialId').val(specialIdAll);
-            $('#specialName').textbox('setValue',specialNameAll);
-            $('#specialGrid').dialog('close');
-        }else{
-            specialCodeAll = "";
-            specialNameAll = "";
-            var nodes = $('#specialTree').tree('getChecked');//获取所有选中专项信息
-            if (nodes.length!=0) {
-                for (var i=0;i<nodes.length;i++) {
-                    specialCodeAll += nodes[i].code+',';
-                    specialNameAll += nodes[i].name+',';
-                    specialIdAll += nodes[i].id+',';
-                }
-                specialCodeAll = specialCodeAll.substring(0,specialCodeAll.length-1);
-                specialNameAll = specialNameAll.substring(0,specialNameAll.length-1);
-                specialIdAll = specialIdAll.substring(0,specialIdAll.length-1);
-
-                $('#specialCode').val(specialCodeAll);
-                $('#specialId').val(specialIdAll);
-                $('#specialName').textbox('setValue',specialNameAll);
-                $('#specialGrid').dialog('close');
-            }
-        }
-    }*/
-
-    //  第三版
+   //   专项查询参数
     function saveSpecial(){
         if(Special_TYPE == 'BM' || Special_TYPE == 'WLDX' || Special_TYPE == 'BM,WLDX'){
             console.log(Special_TYPE);
@@ -910,6 +836,9 @@
             $.messager.alert('提示','科目代码和明细对象不能同时为空！','warning');
             return false;
         }*/
+        if(!specialName || specialName.replace(/^\s+|\s+$/g,"") =="" ){
+            $('#specialCode').val('');
+        }
         var specialCode = $('#specialCode').val();
         if (specialName &&(specialCode!=specialCodeAll || specialName!=specialNameAll)) {
             $.messager.alert('提示','请双击选择明细对象','warning');
@@ -1012,6 +941,7 @@
 
     function reset() {
         $('#searchForm').form('clear');
+        $('#specialCode').val('');
         //设置默认值
         var data = $('#yearMonth').combobox('getData');
         if (data.length>0) {
@@ -1049,6 +979,9 @@
             $.messager.alert('提示','科目代码和明细对象不能同时为空！','warning');
             return false;
         }*/
+        if(!specialName || specialName.replace(/^\s+|\s+$/g,"") =="" ){
+            $('#specialCode').val('');
+        }
         var specialCode = $('#specialCode').val();
         if (specialName &&(specialCode!=specialCodeAll || specialName!=specialNameAll)) {
             $.messager.alert('提示','请双击选择明细对象','warning');
@@ -1086,6 +1019,9 @@
             $.messager.alert('提示','科目代码和明细对象不能同时为空！','warning');
             return false;
         }*/
+        if(!specialName || specialName.replace(/^\s+|\s+$/g,"") =="" ){
+            $('#specialCode').val('');
+        }
         var specialCode = $('#specialCode').val();
         if (specialName &&(specialCode!=specialCodeAll || specialName!=specialNameAll)) {
             $.messager.alert('提示','请双击选择明细对象','warning');
