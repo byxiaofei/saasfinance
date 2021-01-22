@@ -281,7 +281,8 @@
             fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
             singleSelect: true, //设置为 true，则只允许选中一行。 默认false
             pagePosition: 'bottom', //定义分页栏的位置。可用的值有：'top'、'bottom'、'both'。 默认 bottom
-            pageList: [10,50,100,200,500,1000], //当设置了 pagination 属性时，初始化页面尺寸的选择列表。
+            pageList: [50,100,200,500,1000], //当设置了 pagination 属性时，初始化页面尺寸的选择列表。
+            pageSize:50,
             nowrap: true,
             onDblClickRow: function (rowIndex, rowData) {
                 $(this).datagrid('unselectRow', rowIndex);
