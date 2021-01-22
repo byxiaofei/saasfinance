@@ -158,7 +158,7 @@ public class QueryDetailAccountServiceImpl implements QueryDetailAccountService 
         sql.append(sql2);
         sql.append(" ORDER BY voucherDate,voucherNo");
 
-        List<?> listByInitialBalanceSql = voucherRepository.queryBySqlSC(initialBalanceSql.toString(), params);
+        List<?> listByInitialBalance = voucherRepository.queryBySqlSC(initialBalanceSql.toString(), params);
         List<?> listBySql = voucherRepository.queryBySqlSC(sql.toString(), params2);
 
         //期初余额
@@ -174,14 +174,14 @@ public class QueryDetailAccountServiceImpl implements QueryDetailAccountService 
         //方向
         String balanceFX = getDirectionNameBySubjectCodeAndAccount(directionIdx, accBookCode);
 
-        if (listByInitialBalanceSql!=null&&listByInitialBalanceSql.size()>0) {
-            Map<String,Object> map = (Map<String,Object>) listByInitialBalanceSql.get(0);
-            initialBalance = new BigDecimal((String) map.get("initialBalance"));
-            balance = initialBalance;
+        for( Object obj :  listByInitialBalance){
+            Map<String,Object> map = (Map<String,Object>)obj;
+            initialBalance = initialBalance.add(new BigDecimal((String) map.get("initialBalance")));
+            balance = balance.add(new BigDecimal((String) map.get("initialBalance")));
             if (!"01".equals(beginDate.substring(4))) {
                 //开始时间对应的会计期间如果是一月，则无需初始化本年累计数据
-                debitYearTotal = new BigDecimal((String) map.get("debitYearTotal"));
-                creditYearTotal = new BigDecimal((String) map.get("creditYearTotal"));
+                debitYearTotal = debitYearTotal.add(new BigDecimal((String) map.get("debitYearTotal")));
+                creditYearTotal = creditYearTotal.add(new BigDecimal((String) map.get("creditYearTotal")));
             }
         }
 
@@ -285,7 +285,7 @@ public class QueryDetailAccountServiceImpl implements QueryDetailAccountService 
         map.put("amount","");
         map.put("debitDest","");
         map.put("creditDest","");
-        setMapBalanceAndFX(map, balance, balanceFX);
+        setMapBalanceAndFX(map, initialBalance, balanceFX);
         map.put("flag","");
         list.add(0,map);
 
