@@ -1,9 +1,6 @@
 package com.sinosoft.service.impl.synthesize;
 
-import com.sinosoft.common.Constant;
-import com.sinosoft.common.CurrentUser;
-import com.sinosoft.common.RedisConstant;
-import com.sinosoft.common.SysPringLog;
+import com.sinosoft.common.*;
 import com.sinosoft.domain.SpecialInfo;
 import com.sinosoft.dto.VoucherDTO;
 import com.sinosoft.repository.SpecialInfoRepository;
@@ -73,6 +70,12 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
         String startYearMonth = dto.getYearMonth();
         String endYearMonth = dto.getYearMonthDate();
 
+        String redisKey = RedisConstant.SPECIAL_ACCOUNT_BALANCE_QUERY_BY_CONDITION_KEY_PREFIX.concat(accBookCode+"_"+dto.getSubjectCode()
+                +"_"+dto.getYearMonth()+"_"+dto.getYearMonthDate()+"_"+dto.getVoucherGene()+"_"+dto.getSpecialCode()
+                +"_"+dto.getMoneyStart()+"_"+dto.getMoneyEnd()+"_"+cumulativeAmount+"_"+dto.getAccounRules()
+                +"_"+dto.getSourceDirection()+"_"+dto.getSpecialNameP());
+        if( RedisUtil.exists(redisKey) ){ return   (List) RedisUtil.get(redisKey);}
+
         //专项代码
         String specialCode = dto.getSpecialCode();
         List<String> specialCondition = new ArrayList<>();
@@ -115,6 +118,7 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
         result = balanceLimit(cumulativeAmount, dto, result);
 
         System.out.println("专项科目余额表查询用时："+(System.currentTimeMillis()-time)+" ms");
+        RedisUtil.set(redisKey, result, 60*3);
         return result;
     }
 

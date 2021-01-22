@@ -69,6 +69,10 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
         String itemLevelEnd = dto.getLevelEnd();
         //是否包含未记账凭证:0-否;1-是
         String voucherGene = dto.getVoucherGene();
+        String redisKey = RedisConstant.ACCOUNT_BALANCE_QUERY_BY_CONDITION_KEY_PREFIX.concat(accBookCode+"_"+dto.getYearMonth()+"_"+dto.getYearMonthDate()
+                +"_"+dto.getItemCode1()+"_"+dto.getItemCode2()+"_"+dto.getLevel()+"_"+dto.getLevelEnd()
+                +"_"+dto.getVoucherGene()+"_"+cumulativeAmount+dto.getSpecialNameP());
+        if( RedisUtil.exists(redisKey) ){ return   (List) RedisUtil.get(redisKey);}
 
         //1.科目余额查询，将结果放在map集合中
         Map<String, Map<String, String>> itemBalanceMap = getItemBalance2(centerCode, branchCode, accBookType, accBookCode, startYearMonth,itemStart, itemEnd,settleState);
@@ -81,6 +85,7 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
         //4.数据封装，返给前端
         List resultList = getDataResult2(accBookCode, itemStart, itemEnd, itemLevelStart, itemLevelEnd, itemSumaryMap, cumulativeAmount);
         System.out.println("科目余额查询用时："+(System.currentTimeMillis()-start)+"ms");
+        RedisUtil.set(redisKey, resultList, 60*3);
         return resultList;
     }
 

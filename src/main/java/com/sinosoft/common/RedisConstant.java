@@ -51,4 +51,15 @@ public class RedisConstant {
      */
     public static final String ACCOUNT_BALANCE_QUERY_ALL_SPECIAL_TREE_INQUIRY_SUMMARY_RELATIONSHIP_SUBJECT_INFO_KEY_PREFIX = "ifs:system:queryAllSpecialTreeKey:";
 
+    /**
+     * 专项科目余额查询-(key前缀)
+     */
+    public static final String SPECIAL_ACCOUNT_BALANCE_QUERY_BY_CONDITION_KEY_PREFIX = "ifs:system:querySpecialAccountBalanceByCondition:";
+
+
+    /**
+     * 科目余额查询-(key前缀)
+     */
+    public static final String ACCOUNT_BALANCE_QUERY_BY_CONDITION_KEY_PREFIX = "ifs:system:queryAccountBalanceByCondition:";
+
 }
