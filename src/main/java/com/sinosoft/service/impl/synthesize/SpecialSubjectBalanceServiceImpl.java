@@ -74,7 +74,7 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
                 +"_"+dto.getYearMonth()+"_"+dto.getYearMonthDate()+"_"+dto.getVoucherGene()+"_"+dto.getSpecialCode()
                 +"_"+dto.getMoneyStart()+"_"+dto.getMoneyEnd()+"_"+cumulativeAmount+"_"+dto.getAccounRules()
                 +"_"+dto.getSourceDirection()+"_"+dto.getSpecialNameP());
-        if( RedisUtil.exists(redisKey) ){ return   (List) RedisUtil.get(redisKey);}
+        //if( RedisUtil.exists(redisKey) ){ return   (List) RedisUtil.get(redisKey);}
 
         //专项代码
         String specialCode = dto.getSpecialCode();
@@ -308,8 +308,8 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
             BigDecimal _balanceQc = qcDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qcDataMap.get("balanceQc"));//期初余额
 //            BigDecimal _balanceQc = qcDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qcDataMap.get("balanceQm"));//期初余额
             BigDecimal _balanceQm = qmDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qmDataMap.get("balanceQm"));//期末余额
-            BigDecimal _debitBq = new BigDecimal(itemMap.get("debitBq"));//本期借
-            BigDecimal _creditBq = new BigDecimal(itemMap.get("creditBq"));//本期贷
+            BigDecimal _debitBq = new BigDecimal(qmDataMap.get("debitBq"));//本期借
+            BigDecimal _creditBq = new BigDecimal(qmDataMap.get("creditBq"));//本期贷
             BigDecimal _debitBn = qmDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qmDataMap.get("debitBn"));//本年累计借
             BigDecimal _creditBn = qmDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qmDataMap.get("creditBn"));//本年累计贷
             Map<String, String> map = new HashMap<>();

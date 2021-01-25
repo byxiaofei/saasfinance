@@ -228,6 +228,19 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
                 resultMap.put(map.get("itemCode"), map);
             }
         }
+
+        if(list != null && !list.isEmpty()){
+            //判断最接近结转期间与参数传入的期间比较，判断是否跨年
+            boolean crossYear = !_yearMonth.substring(0,4).equals(startYearMonth.substring(0,4));//false-不跨年，true-跨年
+            for(int i = 0; i < list.size(); i++){
+                Map<String, String> map = (Map<String, String>) list.get(i);
+                if(crossYear){
+                    map.put("debitBn", "0.00");
+                    map.put("creditBn", "0.00");
+                }
+                resultMap.put(map.get("itemCode"), map);
+            }
+        }
         return resultMap;
     }
 
