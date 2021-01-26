@@ -74,7 +74,7 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
                 +"_"+dto.getYearMonth()+"_"+dto.getYearMonthDate()+"_"+dto.getVoucherGene()+"_"+dto.getSpecialCode()
                 +"_"+dto.getMoneyStart()+"_"+dto.getMoneyEnd()+"_"+cumulativeAmount+"_"+dto.getAccounRules()
                 +"_"+dto.getSourceDirection()+"_"+dto.getSpecialNameP());
-        //if( RedisUtil.exists(redisKey) ){ return   (List) RedisUtil.get(redisKey);}
+        if( RedisUtil.exists(redisKey) ){ return   (List) RedisUtil.get(redisKey);}
 
         //专项代码
         String specialCode = dto.getSpecialCode();

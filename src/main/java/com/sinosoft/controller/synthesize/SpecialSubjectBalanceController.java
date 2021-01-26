@@ -1,17 +1,12 @@
 package com.sinosoft.controller.synthesize;
 
-import com.sinosoft.common.*;
-import com.sinosoft.dto.SysLoginLogDTO;
+import com.sinosoft.common.InvokeResult;
 import com.sinosoft.dto.VoucherDTO;
 import com.sinosoft.service.VoucherService;
 import com.sinosoft.service.synthesize.SpecialSubjectBalanceService;
 import com.sinosoft.service.synthesize.SpecialSubjectDetailAccountService;
-import com.sinosoft.util.RedisUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -47,19 +42,14 @@ public class SpecialSubjectBalanceController {
      */
     @RequestMapping("/list")
     @ResponseBody
-    public DataGrid querySpecialSubjectBalanceList(@RequestParam int page, @RequestParam int rows,VoucherDTO voucherDTO, String cumulativeAmount){
+    public List<?> querySpecialSubjectBalanceList(VoucherDTO voucherDTO, String cumulativeAmount){
         List<?> list = null;
         try {
             list = specialSubjectBalanceService.querySpecialSubjectBalanceList(voucherDTO, cumulativeAmount);
-            long total = list.size();
-            if(total<(page-1)*rows){ page = 1; }
-            list = list.subList((page-1)*rows,Math.min(page*rows,(int)total));
-            Page<?> pageList = new PageImpl<>(list, new PageRequest(page-1, rows, null), total);
-            return new DataGrid(pageList);
         } catch (Exception e) {
             logger.error("专项科目余额表查询异常",e);
         }
-        return null;
+        return list;
     }
     /**
      * 跳转到专项科目余额表查看明细页面
