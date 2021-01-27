@@ -88,5 +88,5 @@ public class Constant {
     /**
      * redis 数据缓存过期时间
      */
-    public static final long TIME_OUT = 60*60*6;
+    public static final long TIME_OUT = 60*10;
 }

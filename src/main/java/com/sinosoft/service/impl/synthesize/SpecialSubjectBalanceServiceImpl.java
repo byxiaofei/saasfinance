@@ -440,7 +440,7 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
         if( RedisUtil.exists(redisKey) ){specialInfos = (List) RedisUtil.get(redisKey);}
         else{
             specialInfos = specialInfoRepository.findSpecialInfoByAccount(accBookCode);
-            RedisUtil.set(redisKey, specialInfos, Constant.TIME_OUT);
+            RedisUtil.set(redisKey, specialInfos, 60*5);
         }
         for(Object  obj  : result){
             for(Map specialMap : specialInfos){
