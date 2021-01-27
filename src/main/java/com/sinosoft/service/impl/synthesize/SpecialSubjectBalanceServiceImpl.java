@@ -222,7 +222,7 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
         Boolean endYearMonthSettleState = getSettleState(centerCode, accBookType, accBookCode, endYearMonth);
         Boolean startYearMonthSettleState = getSettleState(centerCode, accBookType, accBookCode, startYearMonth);
         //获取需要展示的科目专项及发生额
-        List itemList = getSubjectSpecialList(centerCode, branchCode, accBookType, accBookCode, itemCode, specialCondition, startYearMonth, endYearMonth,startYearMonthSettleState,endYearMonthSettleState);
+        List itemList = getSubjectSpecialList(centerCode, branchCode, accBookType, accBookCode, itemCode, specialCondition, startYearMonth, endYearMonth,startYearMonthSettleState,endYearMonthSettleState,chargeFlag);
         if(itemList == null || itemList.isEmpty()) return;
         Map<String, Map<String, String>> qcMap = new HashMap<>();
         //获取期末余额和本年累计
@@ -308,8 +308,8 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
             BigDecimal _balanceQc = qcDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qcDataMap.get("balanceQc"));//期初余额
 //            BigDecimal _balanceQc = qcDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qcDataMap.get("balanceQm"));//期初余额
             BigDecimal _balanceQm = qmDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qmDataMap.get("balanceQm"));//期末余额
-            BigDecimal _debitBq = new BigDecimal(qmDataMap.get("debitBq"));//本期借
-            BigDecimal _creditBq = new BigDecimal(qmDataMap.get("creditBq"));//本期贷
+            BigDecimal _debitBq = qmDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qmDataMap.get("debitBq"));//本期借
+            BigDecimal _creditBq = qmDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qmDataMap.get("creditBq")) ;//本期贷
             BigDecimal _debitBn = qmDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qmDataMap.get("debitBn"));//本年累计借
             BigDecimal _creditBn = qmDataMap == null ? new BigDecimal(0.00) : new BigDecimal(qmDataMap.get("creditBn"));//本年累计贷
             Map<String, String> map = new HashMap<>();
@@ -1108,7 +1108,7 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
     }
 
     //获取需要展示的科目及专项集合
-    private List getSubjectSpecialList(List centerCode, List branchCode, String accBookType, String accBookCode, String itemCode, List<String> specialCondition, String startYearMonth, String endYearMonth,Boolean startYearMonthSettleState,Boolean endYearMonthSettleState) {
+    private List getSubjectSpecialList(List centerCode, List branchCode, String accBookType, String accBookCode, String itemCode, List<String> specialCondition, String startYearMonth, String endYearMonth,Boolean startYearMonthSettleState,Boolean endYearMonthSettleState,boolean chargeFlag) {
 
         Map<Integer, Object> params = new HashMap<>();
         StringBuffer itemSql = new StringBuffer(" SELECT CONCAT(t.itemCode, '_', t.specialCode) AS itemSpecial, t.itemCode\n" +
@@ -1142,6 +1142,34 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
                     "                AND acc.year_month_date >= ?5 \n" +
                     "                AND acc.year_month_date <= ?6 ");
         }
+        if(chargeFlag && !endYearMonthSettleState){
+            itemSql.append("UNION ALL \n" +
+                    "\tSELECT t2.acc_book_code, t2.year_month_date, t2.direction_idx AS itemCode, t2.direction_idx_name AS itemName,\n" +
+                    "\t  t2.specialCode,t2.direction_other,t2.debit_dest,t2.credit_dest  FROM \n" +
+                    "        (   SELECT * FROM accmainvoucher am WHERE 1=1 \n" +
+                    "            AND am.center_code IN (?1)\n" +
+                    "            AND am.branch_code IN (?2)\n" +
+                    "            AND am.acc_book_type =  ?3  \n" +
+                    "            AND am.acc_book_code = ?4  \n" +
+                    "            AND am.year_month_date >= ?5\n" +
+                    "            AND am.year_month_date <= ?6  \n" +
+                    "        )  t1 LEFT JOIN \n" +
+                    "        (  SELECT a.acc_book_code, a.year_month_date, a.voucher_no,a.direction_idx,SUBSTRING_INDEX(SUBSTRING_INDEX(a.direction_other,',',b.id+ 1),',' ,- 1) AS specialCode,\n" +
+                    "            a.debit_dest,a.credit_dest,a.direction_idx_name,a.direction_other FROM (\n" +
+                    "                                                  SELECT * FROM accsubvoucher ac WHERE 1=1 \n" +
+                    "                                                  AND ac.center_code IN (?1)\n" +
+                    "                                                  AND ac.branch_code IN (?2)\n" +
+                    "                                                  AND ac.acc_book_type = ?3  \n" +
+                    "                                                  AND ac.acc_book_code = ?4   \n" +
+                    "                                                  AND ac.year_month_date >= ?5\n" +
+                    "                                                  AND ac.year_month_date <= ?6 \n" +
+                    "                                               ) a\n" +
+                    "                                           \n" +
+                    "            JOIN splitstringsort b ON b.id< (LENGTH(a.direction_other) - LENGTH(REPLACE (a.direction_other, ',', '')) + 1) \n" +
+                    "        ) t2 \n" +
+                    "             ON t1.voucher_no = t2.voucher_no WHERE t1.voucher_flag IN ('1', '2')");
+        }
+
         itemSql.append(") t where 1=1  ");
         params.put(1, centerCode);
         params.put(2, branchCode);
