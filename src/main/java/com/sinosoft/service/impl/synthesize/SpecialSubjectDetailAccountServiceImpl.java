@@ -742,7 +742,6 @@ public class SpecialSubjectDetailAccountServiceImpl implements SpecialSubjectDet
         params.put(2, id);
 
         List<?> sqlList = voucherRepository.queryBySqlSC(sql, params);
-        if (sqlList != null && sqlList.size() > 100) {sqlList = sqlList.subList(0, 100);}
         if (sqlList!=null&&sqlList.size()>0) {
             for (Object obj : sqlList) {
                 Map map = (Map) obj;
@@ -886,7 +885,6 @@ public class SpecialSubjectDetailAccountServiceImpl implements SpecialSubjectDet
         params.put(2, id);
 
         List<?> sqlList = voucherRepository.queryBySqlSC(sql, params);
-        if (sqlList != null && sqlList.size() > 100) {sqlList = sqlList.subList(0, 100);}
         if (sqlList!=null&&sqlList.size()>0) {
             for (Object obj : sqlList) {
                 Map map = (Map) obj;
