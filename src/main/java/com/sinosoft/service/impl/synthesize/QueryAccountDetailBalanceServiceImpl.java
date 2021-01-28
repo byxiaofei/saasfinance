@@ -85,7 +85,7 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
         //4.数据封装，返给前端
         List resultList = getDataResult2(accBookCode, itemStart, itemEnd, itemLevelStart, itemLevelEnd, itemSumaryMap, cumulativeAmount);
         System.out.println("科目余额查询用时："+(System.currentTimeMillis()-start)+"ms");
-        RedisUtil.set(redisKey, resultList, 60*3);
+        RedisUtil.set(redisKey, resultList, 60*1);
         return resultList;
     }
 

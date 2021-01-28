@@ -118,7 +118,7 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
         result = balanceLimit(cumulativeAmount, dto, result);
 
         System.out.println("专项科目余额表查询用时："+(System.currentTimeMillis()-time)+" ms");
-        RedisUtil.set(redisKey, result, 60*3);
+        RedisUtil.set(redisKey, result, 60*1);
         return result;
     }
 
