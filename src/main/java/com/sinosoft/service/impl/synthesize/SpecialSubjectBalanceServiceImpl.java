@@ -974,6 +974,14 @@ public class SpecialSubjectBalanceServiceImpl implements SpecialSubjectBalanceSe
                 "join splitstringsort b ON b.id< (length(a.direction_other) - length(REPLACE (a.direction_other, ',', '')) + 1) ");
         sql.append(") t where 1 = 1 ");
 
+        if(!yearMonth.equals(_yearMonth)){
+            sql = new StringBuffer("select accountBookCode,yearMonth,itemCode,specialCode,CAST(SUM(balanceQc) AS CHAR) AS balanceQc,'0.00' as debitBq,'0.00'  as creditBq,CAST(SUM(balanceQm) AS CHAR) as balanceQm,CAST(SUM(debitBn) AS CHAR) as debitBn,CAST(SUM(creditBn) AS CHAR) as creditBn from ( ");
+            sql.append("select a.acc_book_code as accountBookCode,a.year_month_date as yearMonth,a.direction_idx as itemCode,substring_index(substring_index(a.direction_other,',',b.id+ 1),',' ,- 1) as specialCode,cast(a.balance_begin_dest as char) as balanceQc,cast(a.debit_dest as char) as debitBq,cast(a.credit_dest as char) as creditBq,cast(a.balance_dest as char) as balanceQm,cast(debit_dest_year as char) as debitBn,cast(credit_dest_year as char) as creditBn from (" +
+                    "select * from accarticlebalancehis ach where 1=1 and ach.center_code in (?1) and ach.branch_code in (?2)and ach.acc_book_type = ?3 and ach.acc_book_code = ?4 and ach.year_month_date = ?5 ) a " +
+                    "join splitstringsort b ON b.id< (length(a.direction_other) - length(REPLACE (a.direction_other, ',', '')) + 1) ");
+            sql.append(") t where 1 = 1 ");
+        }
+
         Map<Integer, Object> params = new HashMap<>();
         params.put(1, centerCode);
         params.put(2, branchCode);
