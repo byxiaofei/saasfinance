@@ -597,8 +597,8 @@ public class QueryAccountDetailBalanceServiceImpl implements QueryAccountDetailB
                 map.put("debitDest_Bn", "0.00");
                 map.put("creditDest_Bn", "0.00");
                 if(itemSumaryMap.get(itemCode) != null
-                        && (new BigDecimal(itemSumaryMap.get(itemCode).get("debitBn")).compareTo(BigDecimal.ZERO) > 0
-                        || new BigDecimal(itemSumaryMap.get(itemCode).get("creditBn")).compareTo(BigDecimal.ZERO) > 0)){
+                        && (new BigDecimal(itemSumaryMap.get(itemCode).get("debitBn")).abs().compareTo(BigDecimal.ZERO) > 0
+                        || new BigDecimal(itemSumaryMap.get(itemCode).get("creditBn")).abs().compareTo(BigDecimal.ZERO) > 0)){
                     map.put("debitDest_Bn", itemSumaryMap.get(itemCode).get("debitBn"));
                     map.put("creditDest_Bn", itemSumaryMap.get(itemCode).get("creditBn"));
                 }
